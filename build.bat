@@ -12,15 +12,15 @@ REM 使用 PyInstaller 打包您的程序
 pyinstaller --onefile --name=start --icon=resource/icon.ico src/main.py
 
 REM 检查是否存在 bin 目录并复制到 build 文件夹下
-if exist bin (
-    xcopy /s /i bin dist\bin\
-)
+xcopy /s /i bin dist\bin\
 
-xcopy start.bat dist\
+
 
 REM 压缩 build 文件夹为 danmaku.zip
 REM 确保 7z 命令可以在命令行中使用
 pushd dist
+echo start.exe > start.bat
+echo pause >> start.bat
 7z a ../danmaku.zip *
 popd
 

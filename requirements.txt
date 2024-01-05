@@ -1,6 +1,5 @@
 aiohttp
 yarl
-zlib
 brotli
 pydub
 pydantic
