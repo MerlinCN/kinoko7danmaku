@@ -1,0 +1,88 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.11'
+
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          $version = "${{ github.ref }}".Replace('refs/tags/v', '')
+          echo "::set-output name=$version::$version"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+
+
+      - name: Build with PyInstaller
+        run: pyinstaller --onefile --name=start${{ steps.get_version.outputs.version }} --icon=resource/icon.ico src/main.py
+
+      - name: Copy additional files
+        run: |
+          xcopy /s /i bin dist\bin\
+          xcopy start.bat dist\
+
+      - name: Create Zip Archive
+        run: |
+          pushd dist
+          7z a ../kinoko7danmaku${{ steps.get_version.outputs.version }}.zip *
+          popd
+
+      - name: Upload kinoko7danmaku${{ steps.get_version.outputs.version }}.zip artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: kinoko7danmaku${{ steps.get_version.outputs.version }}.zip
+          path: kinoko7danmaku${{ steps.get_version.outputs.version }}.zip
+
+  release:
+    needs: build
+    runs-on: windows-latest
+    steps:
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          $version = "${{ github.ref }}".Replace('refs/tags/v', '')
+          echo "::set-output name=$version::$version"
+
+      - name: Download kinoko7danmaku${{ steps.get_version.outputs.version }}.zip artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: kinoko7danmaku${{ steps.get_version.outputs.version }}.zip
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./kinoko7danmaku${{ steps.get_version.outputs.version }}.zip
+          asset_name: kinoko7danmaku${{ steps.get_version.outputs.version }}.zip
+          asset_content_type: application/zip

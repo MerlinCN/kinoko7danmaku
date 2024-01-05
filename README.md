@@ -4,6 +4,8 @@
 
 _调用GradioAPI来播报哔哩哔哩直播中的弹幕、礼物、舰长等_
 
+[![Build and Release](https://github.com/MerlinCN/kinoko7danmaku/actions/workflows/pyinstaller.yml/badge.svg)](https://github.com/MerlinCN/kinoko7danmaku/actions/workflows/pyinstaller.yml)
+
 </div>
 
 
