@@ -42,7 +42,7 @@ logger = logging.getLogger("kinoko7danmaku")
 class ConfigModel(BaseModel):
     room_id: int = Field(default=213, description="房间号")
     gift_threshold: int = Field(default=5, description="≥这个值（单位：元）才会触发礼物")
-    api_url: str = Field(default="", description="API地址，注意不要带最后的 /")
+    api_url: str = Field(default="", description="API地址，注意要带最后的 /")
     alias: dict = Field(default={}, description="别名，用于替换一些词语，例如：{'Merlin':'么林'}")
     normal_danmaku_on: bool = Field(default=True, description="普通弹幕是否触发")
     guard_on: bool = Field(default=True, description="舰长是否触发")

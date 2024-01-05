@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          submodules: 'true' # 检出所有子模块
 
       - name: Set up Python
         uses: actions/setup-python@v2

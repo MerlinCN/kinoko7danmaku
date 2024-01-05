@@ -12,7 +12,7 @@ logger = logging.getLogger("kinoko7danmaku")
 async def predict(text: str):
     url = gConfig.api_url
     text = pre_format(text)
-    predict_url = f"{url}/run/predict"
+    predict_url = f"{url}run/predict"
     data = {
         "data": [
             text,
