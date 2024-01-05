@@ -135,5 +135,3 @@ if "gConfig" not in globals():
         logger.info("当前别名：无")
 
 
-def get_config() -> ConfigModel:
-    return gConfig
