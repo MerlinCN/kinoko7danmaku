@@ -1,8 +1,7 @@
 <div align="center">
 
-# Kinoko7弹幕姬
+<img src="https://socialify.git.ci/MerlinCN/kinoko7danmaku/image?description=1&forks=1&issues=1&language=1&name=1&owner=1&stargazers=1&theme=Light" alt="kinoko7danmaku" width="640" height="320" />
 
-_调用GradioAPI来播报哔哩哔哩直播中的弹幕、礼物、舰长等_
 
 [![Build and Release](https://github.com/MerlinCN/kinoko7danmaku/actions/workflows/pyinstaller.yml/badge.svg)](https://github.com/MerlinCN/kinoko7danmaku/actions/workflows/pyinstaller.yml)
 
