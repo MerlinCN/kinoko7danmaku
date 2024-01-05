@@ -23,7 +23,7 @@ jobs:
         id: get_version
         run: |
           $version = "${{ github.ref }}".Replace('refs/tags/v', '')
-          echo "::set-output name=$version::$version"
+          echo "::set-output name=version::$version"
 
       - name: Install dependencies
         run: |
