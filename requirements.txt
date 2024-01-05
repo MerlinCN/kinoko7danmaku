@@ -1,0 +1,7 @@
+aiohttp
+yarl
+zlib
+brotli
+pydub
+pydantic
+pyaudio
