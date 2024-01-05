@@ -118,6 +118,8 @@ def save_config(filename: str, config: ConfigModel):
 if "gConfig" not in globals():
     logger.info("正在读取配置...")
     gConfig = load_or_create_config("config.json")
+    if not gConfig.api_url.endswith("/"):
+        gConfig.api_url += "/"
     if not os.path.exists("cookies.json"):
         os.system(r"bin\biliup.exe login")
         if not os.path.exists("cookies.json"):

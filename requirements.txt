@@ -4,4 +4,3 @@ brotli~=1.1.0
 pydub~=0.25.1
 pydantic~=2.5.3
 pyaudio~=0.2.14
-zlib~=1.2.13
