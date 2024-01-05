@@ -59,7 +59,7 @@ jobs:
         id: get_version
         run: |
           $version = "${{ github.ref }}".Replace('refs/tags/v', '')
-          echo "::set-output name=$version::$version"
+          echo "::set-output name=version::$version"
 
       - name: Download kinoko7danmaku${{ steps.get_version.outputs.version }}.zip artifact
         uses: actions/download-artifact@v2
