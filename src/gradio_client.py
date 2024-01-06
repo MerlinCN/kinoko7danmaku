@@ -40,5 +40,5 @@ async def predict(text: str):
             if "data" not in ret:
                 logger.error(f"返回数据格式错误，text:{text} ret: {ret}")
                 return
-            wav_url = f'{url}/file={ret["data"][1]["name"]}'
+            wav_url = f'{url}file={ret["data"][1]["name"]}'
             await gAudioPlayer.play_online_wav(wav_url)
