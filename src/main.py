@@ -39,7 +39,7 @@ async def _(_: Client, message: GiftMessage):
 
 @gEventHandler.on_guard_buy
 async def _(_: Client, message: GuardBuyMessage):
-    if not gConfig.guard_buy_on:
+    if not gConfig.guard_on:
         return
     msg = f"非常感谢 {message.username} 赠送的 一个{message.gift_name}!"
     logger.info(msg)
