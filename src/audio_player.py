@@ -55,6 +55,17 @@ class AudioPlayer:
             raise RuntimeError("Audio stream is not open")
 
     async def play_online_wav(self, wav_url):
+        if wav_url.startswith("data:audio/wav;base64,"):
+            # 处理内嵌的 base64 wav 数据
+            import base64, io
+            header, encoded = wav_url.split(",", 1)
+            data = base64.b64decode(encoded)
+            from pydub import AudioSegment
+            audio = AudioSegment.from_file(io.BytesIO(data), format="wav")
+            self.open_stream(audio.frame_rate, audio.channels, audio.sample_width)
+            self.play(audio.raw_data)
+            return
+
         async with aiohttp.ClientSession() as s:
             async with s.get(wav_url) as resp:
                 if resp.status != 200:

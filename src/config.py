@@ -50,6 +50,8 @@ class ConfigModel(BaseModel):
     voice_name: str = Field(default="C酱", description="模型名")
     voice_channel: int = Field(default=-1, description="声道，默认-1为系统输出，如果有声卡，可以自行修改")
     debug: bool = Field(default=False, description="是否开启调试模式，不开启就行了")
+    api_mode: str = Field(default="bert-vits", description="API模式，可选：bert-vits, gpt-sovits")
+    target_speed: float = Field(default=1.1, description="合成语速设置")
 
 
 # 读取或创建配置
@@ -133,5 +135,3 @@ if "gConfig" not in globals():
             logger.info(f"{k} -> {v}")
     else:
         logger.info("当前别名：无")
-
-
