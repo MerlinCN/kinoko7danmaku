@@ -2,9 +2,9 @@ import io
 
 import httpx
 import pyaudio
+import sounddevice as sd
 from loguru import logger
 from pydub import AudioSegment
-import sounddevice as sd
 
 from config import config_manager
 
@@ -18,25 +18,25 @@ class StreamPlayer:
         """获取设备选择列表（使用sounddevice）- 返回元组列表格式供Gradio使用"""
 
         # 获取所有设备
-        all_devices = sd.query_devices()
-        default_output = sd.default.device[1]
+        all_devices: list[dict] = sd.query_devices()  # type: ignore
+        default_output_index: int = sd.default.device[1]  # type: ignore
 
-        choices = [("默认设备", default_output)]
+        default_output_device: dict = all_devices[default_output_index]  # type: ignore
 
-        default_api = sd.query_hostapis()[all_devices[default_output]["hostapi"]][
-            "name"
-        ]
+        choices = [("默认设备", default_output_index)]
+
+        default_api: str = sd.query_hostapis()[default_output_device["hostapi"]]["name"]  # type: ignore
         # 遍历所有设备，只添加纯输出设备
         for idx, device in enumerate(all_devices):
             if device["max_output_channels"] > 0:  # 只要纯输出设备
                 # 构建设备名称
                 name = device["name"]
                 # 标记默认设备
-                if idx == default_output:
+                if idx == default_output_index:
                     name += " (默认) "
 
                 # 标记推荐的WASAPI接口（通用，不针对特定品牌）
-                api_name = sd.query_hostapis()[device["hostapi"]]["name"]
+                api_name: str = sd.query_hostapis()[device["hostapi"]]["name"]  # type: ignore
                 if default_api not in api_name:
                     continue
                 choices.append((name, idx))  # (显示名称, 实际索引)
@@ -48,9 +48,9 @@ class StreamPlayer:
         """设置输出设备"""
         try:
             if device_index == -1:
-                device_index = sd.default.device[1]
-            device_info = sd.query_devices(device_index)
-            if int(device_info["max_output_channels"]) > 0:
+                device_index = sd.default.device[1]  # type: ignore
+            device_info: dict = sd.query_devices(device_index)  # type: ignore
+            if int(device_info["max_output_channels"]) > 0:  # type: ignore
                 logger.info(f"已设置输出设备: {device_info['name']}")
                 self.device_index = device_index
                 return True
@@ -97,7 +97,7 @@ class StreamPlayer:
     ):
         """使用指定参数播放文本转语音"""
         # 从配置中获取 API URL
-        url = config_manager.get_api_url()
+        url = config_manager.config.api_url
         format_text = str(text)
         data = {
             "text": format_text,
