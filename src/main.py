@@ -1,5 +1,7 @@
+import json
 import tempfile
 from pathlib import Path
+from typing import get_origin
 
 import gradio as gr
 import gradio.themes as themes
@@ -102,6 +104,8 @@ def create_config_interface():
     """创建配置界面"""
     # 使用新的构建器
     builder = PydanticGradioBuilder(TTSConfig)
+    # 从文件重新加载配置，确保显示最新值
+    config_manager.load_config()
     current_config = config_manager.config
 
     with gr.Blocks() as config_tab:
@@ -127,9 +131,38 @@ def create_config_interface():
 
         # 创建更新函数并绑定事件
         update_function = builder.create_update_function(config_manager)
+
+        # 创建刷新函数
+        def refresh_config():
+            """从文件中刷新配置"""
+            # 重新从文件加载配置
+            config_manager.load_config()
+            current_config = config_manager.config
+
+            # 为所有字段返回最新值
+            return_values = []
+            for field_name in builder.field_names:
+                value = getattr(current_config, field_name)
+                if get_origin(builder.field_info[field_name].annotation) is dict:
+                    return_values.append(
+                        json.dumps(value, ensure_ascii=False, indent=4)
+                    )
+                else:
+                    return_values.append(value)
+
+            return tuple(return_values)
+
+        # 绑定保存按钮
         save_btn.click(
             fn=update_function,
             inputs=config_inputs,
+            outputs=config_inputs,
+        )
+
+        # 界面加载时自动刷新配置
+        config_tab.load(
+            fn=refresh_config,
+            inputs=[],
             outputs=config_inputs,
         )
 
@@ -349,18 +382,6 @@ def create_gradio_interface():
         ["🎵 语音合成", "⚙️ 系统配置"],
         title="AI 小肉包",
         theme=themes.Soft(),
-        css="""
-        .gradio-container {
-            max-width: 1200px !important;
-            margin: 0 auto !important;
-        }
-        .parameter-group {
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 10px 0;
-        }
-        """,
     )
 
     return demo
