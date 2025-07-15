@@ -1,5 +1,9 @@
 import io
+import tempfile
+from pathlib import Path
+from typing import Optional
 
+import gradio as gr
 import httpx
 import pyaudio
 import sounddevice as sd
@@ -122,3 +126,107 @@ class StreamPlayer:
             self.play_bytes(response.content)
 
             return response.content
+
+
+# ============================================================================
+# 全局实例管理和辅助功能
+# ============================================================================
+
+# 全局 StreamPlayer 实例
+_stream_player = StreamPlayer()
+
+# 存储临时文件列表用于清理 (使用 pathlib.Path)
+temp_files: list[Path] = []
+
+
+def cleanup_temp_file(file_path: Path):
+    """清理临时文件"""
+    try:
+        if file_path and file_path.exists():
+            file_path.unlink()
+            if file_path in temp_files:
+                temp_files.remove(file_path)
+    except Exception as e:
+        logger.warning(f"清理临时文件失败: {e}")
+
+
+def cleanup_all_temp_files():
+    """清理所有临时文件"""
+    for file_path in temp_files.copy():
+        cleanup_temp_file(file_path)
+
+
+async def play_audio_with_params(
+    text: str,
+    device_choice: int,  # 改为接收整数索引
+    chunk_length: int,
+    seed: int,
+    use_memory_cache: str,
+    normalize: bool,
+    streaming: bool,
+    max_new_tokens: int,
+    top_p: float,
+    repetition_penalty: float,
+    temperature: float,
+) -> Optional[str]:
+    """使用指定参数播放音频"""
+    if not text.strip():
+        return "❌ 请输入要播放的文本"
+
+    try:
+        # 设置播放设备
+        _stream_player.set_output_device(device_choice)
+
+        # 使用指定参数播放并获取音频数据
+        audio_data = await _stream_player.play_from_text(
+            text=text,
+            chunk_length=chunk_length,
+            seed=seed,
+            use_memory_cache=use_memory_cache,
+            normalize=normalize,
+            streaming=streaming,
+            max_new_tokens=max_new_tokens,
+            top_p=top_p,
+            repetition_penalty=repetition_penalty,
+            temperature=temperature,
+        )
+
+        status_msg = f"✅ 成功播放音频: {text[:50]}{'...' if len(text) > 50 else ''}"
+        gr.Info(status_msg)
+
+        # 将音频数据保存为临时文件
+        if audio_data:
+            # 使用pathlib创建临时文件
+            temp_dir = Path(tempfile.gettempdir())
+            # 创建带有唯一名称的临时文件路径
+            with tempfile.NamedTemporaryFile(
+                delete=False, suffix=".wav", dir=temp_dir
+            ) as temp_file:
+                temp_file_path = Path(temp_file.name)
+
+            # 写入音频数据
+            temp_file_path.write_bytes(audio_data)
+
+            # 添加到临时文件列表
+            temp_files.append(temp_file_path)
+
+            return str(temp_file_path)  # Gradio需要字符串路径
+        else:
+            return None
+
+    except Exception as e:
+        error_msg = f"❌ 播放失败: {str(e)}"
+        logger.error(error_msg)
+        gr.Error(error_msg)
+        return None
+
+
+def get_stream_player():
+    """获取全局 StreamPlayer 实例"""
+    return _stream_player
+
+
+def close_stream_player():
+    """关闭 StreamPlayer 并清理资源"""
+    _stream_player.close()
+    cleanup_all_temp_files()

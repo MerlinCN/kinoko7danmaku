@@ -30,8 +30,8 @@ class TTSConfig(BaseModel):
 
     # 触发开关
     normal_danmaku_on: bool = Field(default=False, title="普通弹幕是否触发")
-    guard_on: bool = Field(default=False, title="舰长是否触发")
-    super_chat_on: bool = Field(default=False, title="醒目留言是否触发")
+    guard_on: bool = Field(default=True, title="舰长是否触发")
+    super_chat_on: bool = Field(default=True, title="醒目留言是否触发")
 
     # 调试配置
     debug: bool = Field(
