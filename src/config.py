@@ -18,27 +18,11 @@ class TTSConfig(BaseModel):
     api_url: str = Field(
         default="http://localhost:8080/v1/tts", description="TTS API 服务地址"
     )
-    api_mode: str = Field(
-        default="bert-vits", description="API模式，可选：bert-vits, gpt-sovits"
-    )
 
     # 触发开关
     normal_danmaku_on: bool = Field(default=True, description="普通弹幕是否触发")
     guard_on: bool = Field(default=True, description="舰长是否触发")
     super_chat_on: bool = Field(default=True, description="醒目留言是否触发")
-
-    # 语音配置
-    voice_name: str = Field(default="C酱", description="模型名")
-    voice_channel: int = Field(
-        default=-1, description="声道，默认-1为系统输出，如果有声卡，可以自行修改"
-    )
-    target_speed: float = Field(default=1.1, description="合成语速设置")
-
-    # 别名配置
-    alias: dict = Field(
-        default_factory=dict,
-        description="别名，用于替换一些词语，例如：{'Merlin':'么林'}",
-    )
 
     # 调试配置
     debug: bool = Field(default=False, description="是否开启调试模式，不开启就行了")
@@ -87,19 +71,10 @@ class ConfigManager:
             logger.error(f"保存配置失败: {e}")
             return False
 
-    def update_config(self, **kwargs) -> bool:
+    def update_config(self, config: TTSConfig) -> bool:
         """更新配置"""
-        try:
-            # 创建新的配置对象以验证数据
-            current_data = self._config.model_dump()
-            current_data.update(kwargs)
-            new_config = TTSConfig(**current_data)
-
-            self._config = new_config
-            return self.save_config()
-        except Exception as e:
-            logger.error(f"更新配置失败: {e}")
-            return False
+        self._config = config
+        return self.save_config()
 
     @property
     def config(self) -> TTSConfig:

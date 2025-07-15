@@ -4,6 +4,7 @@ import httpx
 import pyaudio
 from loguru import logger
 from pydub import AudioSegment
+import sounddevice as sd
 
 from config import config_manager
 
@@ -11,35 +12,47 @@ from config import config_manager
 class StreamPlayer:
     def __init__(self):
         self.p = pyaudio.PyAudio()
-        default_device_info = self.p.get_default_output_device_info()
-        self.device_index = int(default_device_info["index"])
+        self.device_index = sd.default.device[1]
 
     def get_output_devices(self):
-        """获取所有输出设备列表"""
-        devices = []
-        device_count = self.p.get_device_count()
+        """获取设备选择列表（使用sounddevice）- 返回元组列表格式供Gradio使用"""
 
-        for i in range(device_count):
-            device_info = self.p.get_device_info_by_index(i)
-            # 只返回有输出通道的设备
-            if int(device_info["maxOutputChannels"]) > 0:
-                devices.append(
-                    {
-                        "index": i,
-                        "name": device_info["name"],
-                        "is_default": i == self.device_index,
-                    }
-                )
+        # 获取所有设备
+        all_devices = sd.query_devices()
+        default_output = sd.default.device[1]
 
-        return devices
+        choices = [("默认设备", default_output)]
+
+        default_api = sd.query_hostapis()[all_devices[default_output]["hostapi"]][
+            "name"
+        ]
+        # 遍历所有设备，只添加纯输出设备
+        for idx, device in enumerate(all_devices):
+            if device["max_output_channels"] > 0:  # 只要纯输出设备
+                # 构建设备名称
+                name = device["name"]
+                # 标记默认设备
+                if idx == default_output:
+                    name += " (默认) "
+
+                # 标记推荐的WASAPI接口（通用，不针对特定品牌）
+                api_name = sd.query_hostapis()[device["hostapi"]]["name"]
+                if default_api not in api_name:
+                    continue
+                choices.append((name, idx))  # (显示名称, 实际索引)
+
+        logger.info(f"检测到 {len(choices) - 1} 个纯输出设备")
+        return choices
 
     def set_output_device(self, device_index: int):
         """设置输出设备"""
         try:
-            device_info = self.p.get_device_info_by_index(device_index)
-            if int(device_info["maxOutputChannels"]) > 0:
-                self.device_index = device_index
+            if device_index == -1:
+                device_index = sd.default.device[1]
+            device_info = sd.query_devices(device_index)
+            if int(device_info["max_output_channels"]) > 0:
                 logger.info(f"已设置输出设备: {device_info['name']}")
+                self.device_index = device_index
                 return True
             else:
                 logger.error(f"设备 {device_index} 不支持音频输出")

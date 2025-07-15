@@ -12,4 +12,5 @@ dependencies = [
     "pyaudio>=0.2.14",
     "pydantic>=2.11.7",
     "pydub>=0.25.1",
+    "sounddevice>=0.5.2",
 ]
