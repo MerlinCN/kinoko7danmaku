@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import Dict
 
 from loguru import logger
 from pydantic import BaseModel, Field
@@ -37,6 +38,11 @@ class TTSConfig(BaseModel):
         default=False,
         title="调试模式",
         description="是否开启调试模式，不开启就行了",
+    )
+
+    alias: Dict[str, str] = Field(
+        default={"Merlin": "么林"},
+        title="别名",
     )
 
     class Config:
