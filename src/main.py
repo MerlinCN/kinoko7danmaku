@@ -378,8 +378,8 @@ def create_gradio_interface():
 
     # 使用 TabbedInterface 组合页签
     demo = gr.TabbedInterface(
-        [tts_tab, config_tab],
-        ["🎵 语音合成", "⚙️ 系统配置"],
+        [config_tab, tts_tab],
+        ["⚙️ 系统配置", "🎵 语音合成"],
         title="AI 小肉包",
         theme=themes.Soft(),
     )
