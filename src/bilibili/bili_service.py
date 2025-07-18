@@ -8,8 +8,11 @@ from config import config_manager
 
 class BiliService:
     def __init__(self):
-        self.credential: Credential | None = None
-        self.room_obj: live.LiveDanmaku | None = None
+        self.credential: Credential = self.load_credential()
+        self.room_obj: live.LiveDanmaku = live.LiveDanmaku(
+            config_manager.config.room_id,
+            credential=self.credential,
+        )
 
     @staticmethod
     def load_credential():
@@ -34,9 +37,4 @@ class BiliService:
         )
 
     async def run(self):
-        self.credential = self.load_credential()
-        self.room_obj = live.LiveDanmaku(
-            config_manager.config.room_id,
-            credential=self.credential,
-        )
         await self.room_obj.connect()

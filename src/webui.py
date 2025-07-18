@@ -229,6 +229,19 @@ def create_tts_interface():
                 choices=stream_player.get_output_devices(), value=sd.default.device[1]
             )
 
+        def on_device_change(device_choice):
+            """设备选择变更时的处理函数"""
+            try:
+                result = stream_player.set_output_device(device_choice)
+                device_info: dict = sd.query_devices(device_choice)
+                if result:
+                    gr.Info(f"✅ 已切换到设备: {device_info['name']}")
+                else:
+                    gr.Warning(f"⚠️ 设备切换失败: {device_choice}")
+            except Exception as e:
+                gr.Error(f"❌ 设备切换错误: {str(e)}")
+            return device_choice
+
         def set_high_quality_preset():
             return [300, -1, "on", True, False, 1024, 0.9, 1.0, 0.7]
 
@@ -244,7 +257,6 @@ def create_tts_interface():
         # 绑定主要播放事件
         play_inputs = [
             text_input,
-            device_dropdown,
             chunk_length,
             seed,
             use_memory_cache,
@@ -262,10 +274,9 @@ def create_tts_interface():
             outputs=[audio_output],
         )
 
-        text_input.submit(
-            fn=play_audio_with_params,
-            inputs=play_inputs,
-            outputs=[audio_output],
+        # 设备选择变更事件
+        device_dropdown.change(
+            fn=on_device_change, inputs=[device_dropdown], outputs=[device_dropdown]
         )
 
         # 刷新设备

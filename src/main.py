@@ -1,5 +1,6 @@
 import platform
 import subprocess
+import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -11,7 +12,9 @@ from loguru import logger
 
 from audio_player import close_stream_player
 from config import config_manager
+from bilibili import BiliService
 from webui import create_gradio_interface
+from bilibili.model import DanmuMessage, SendGift
 
 
 def login_biliup():
@@ -33,8 +36,29 @@ def login_biliup():
     )
 
 
+login_biliup()
 # 全局变量存储服务实例
-# bili_service = BiliService()
+bili_service = BiliService()
+
+
+@bili_service.room_obj.on("DANMU_MSG")
+async def on_danmaku(event):
+    if not config_manager.config.normal_danmaku_on:
+        return
+    danmu_message = DanmuMessage.parse(event)
+    logger.info(danmu_message)
+
+
+@bili_service.room_obj.on("SEND_GIFT")
+async def on_send_gift(event):
+    gift_message = SendGift.parse(event)
+    if (
+        gift_message.gift_price / 1000 * gift_message.gift_num
+        < config_manager.config.gift_threshold
+    ):
+        return
+    logger.info(gift_message)
+    await bili_service.send_gift(gift_message)
 
 
 @asynccontextmanager
@@ -48,8 +72,8 @@ async def lifespan(app: FastAPI):
     logger.info(f"当前 API URL: {config_manager.config.api_url}")
 
     # 启动 bilibili 服务
-    # logger.info("启动 bilibili 直播间连接...")
-    # asyncio.create_task(bili_service.run())
+    logger.info("启动 bilibili 直播间连接...")
+    asyncio.create_task(bili_service.run())
 
     yield
 
@@ -94,14 +118,20 @@ async def get_config():
 
 def main():
     # 登录 bilibili
-    login_biliup()
+
     """主函数"""
     # 创建 Gradio 界面
     demo = create_gradio_interface()
 
     # 将 Gradio 挂载到 FastAPI
     app = gr.mount_gradio_app(fastapi_app, demo, path="/gradio")
-    uvicorn.run(app, host="127.0.0.1", port=7860, log_level="info", access_log=False)
+    uvicorn.run(
+        app,
+        host="127.0.0.1",
+        port=7860,
+        log_level="info",
+        access_log=False,
+    )
 
 
 if __name__ == "__main__":

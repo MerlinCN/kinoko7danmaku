@@ -158,7 +158,6 @@ def cleanup_all_temp_files():
 
 async def play_audio_with_params(
     text: str,
-    device_choice: int,  # 改为接收整数索引
     chunk_length: int,
     seed: int,
     use_memory_cache: str,
@@ -174,9 +173,6 @@ async def play_audio_with_params(
         return "❌ 请输入要播放的文本"
 
     try:
-        # 设置播放设备
-        _stream_player.set_output_device(device_choice)
-
         # 使用指定参数播放并获取音频数据
         audio_data = await _stream_player.play_from_text(
             text=text,
