@@ -1,72 +1,100 @@
-import asyncio
-import logging
+from contextlib import asynccontextmanager
 
-from config import gConfig
-from custom_typing import Client, DanmakuMessage, GiftMessage, SuperChatMessage, GuardBuyMessage
-from danmaku_client import run_client
-from event_handler import gEventHandler
-from gradio_client import predict
+import gradio as gr
+import uvicorn
+from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
+from loguru import logger
 
-logger = logging.getLogger("kinoko7danmaku")
+from audio_player import close_stream_player, get_stream_player
+from bilibili.bili_service import get_bili_service
+from config import config_manager
+from webui import create_gradio_interface
 
-if gConfig.debug:
-    logger.setLevel(logging.DEBUG)
-else:
-    bilidm_logger = logging.getLogger("blivedm")
-    bilidm_logger.setLevel(logging.ERROR)
-
-
-@gEventHandler.on_client_init
-async def _(_: Client):
-    if gConfig.room_id != 0:
-        logger.info(f"当前房间号为 {gConfig.room_id}")
-    await predict("弹幕姬！启动！")
+LOCAL_HOST = "127.0.0.1"
+LOCAL_PORT = 7860
 
 
-@gEventHandler.on_gift
-async def _(_: Client, message: GiftMessage):
-    is_paid = message.coin_type == "gold"
-    gift_num = message.num
-    if not is_paid:
-        return
-    total_coin = message.price * gift_num
-    if total_coin < gConfig.gift_threshold * 1000:
-        return
-    msg = f"非常感谢 {message.uname} 赠送的 {gift_num}个{message.gift_name}!"
-    logger.info(msg)
-    await predict(msg)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """应用生命周期管理"""
+
+    # 启动时初始化
+    logger.info("启动应用...")
+    logger.info("初始化音频设备...")
+    logger.info(f"当前 API URL: {config_manager.config.api_url}")
+
+    # 启动 bilibili 服务
+    logger.info("启动 bilibili 直播间连接...")
+    bili_service = get_bili_service()
+    await bili_service.run()
+
+    # 启动 bilibili 服务
+    logger.info("启动 bilibili 直播间连接完成")
+    if config_manager.config.welcome_on:
+        stream_player = get_stream_player()
+        await stream_player.play_from_text("弹幕姬，启动！")
+
+    logger.info(f"配置和测试地址: http://{LOCAL_HOST}:{LOCAL_PORT}")
+
+    yield
+
+    # 关闭时清理资源
+    logger.info("关闭应用...")
+    close_stream_player()
 
 
-@gEventHandler.on_guard_buy
-async def _(_: Client, message: GuardBuyMessage):
-    if not gConfig.guard_on:
-        return
-    msg = f"非常感谢 {message.username} 赠送的 一个{message.gift_name}!"
-    logger.info(msg)
-    await predict(msg)
+# 创建 FastAPI 应用
+fastapi_app = FastAPI(
+    title="Kinoko7 弹幕系统",
+    description="B站直播弹幕处理系统",
+    version="0.1.0",
+    lifespan=lifespan,
+)
 
 
-@gEventHandler.on_super_chat
-async def _(_: Client, message: SuperChatMessage):
-    if not gConfig.super_chat_on:
-        return
-    msg = f"{message.uname}发送了一条醒目留言 说 {message.message}"
-    logger.info(msg)
-    await predict(msg)
+@fastapi_app.get("/")
+async def root():
+    """根路径重定向到 Gradio 界面"""
+    return RedirectResponse(url="/gradio")
 
 
-@gEventHandler.on_danmaku
-async def _(_: Client, message: DanmakuMessage):
-    if not gConfig.normal_danmaku_on:
-        return
-    msg = f"{message.uname}说 {message.msg}"
-    logger.info(msg)
-    await predict(msg)
+@fastapi_app.get("/api/health")
+async def health_check():
+    """健康检查接口"""
+    return {
+        "status": "healthy",
+        "message": "Kinoko7 弹幕系统运行正常",
+        "config": {
+            "room_id": config_manager.config.room_id,
+            "api_url": config_manager.config.api_url,
+        },
+    }
 
 
-async def main():
-    await run_client()
+@fastapi_app.get("/api/config")
+async def get_config():
+    """获取当前配置"""
+    return config_manager.config.model_dump()
 
 
-if __name__ == '__main__':
-    asyncio.run(main())
+def main():
+    # 登录 bilibili
+
+    """主函数"""
+    # 创建 Gradio 界面
+    demo = create_gradio_interface()
+
+    # 将 Gradio 挂载到 FastAPI
+    app = gr.mount_gradio_app(fastapi_app, demo, path="/gradio")
+    uvicorn.run(
+        app,
+        host=LOCAL_HOST,
+        port=LOCAL_PORT,
+        log_level="info",
+        access_log=False,
+    )
+
+
+if __name__ == "__main__":
+    main()

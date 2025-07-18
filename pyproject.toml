@@ -1,0 +1,18 @@
+[project]
+name = "kinoko7danmaku"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "aiohttp>=3.12.14",
+    "bilibili-api-python>=17.3.0",
+    "fastapi>=0.116.1",
+    "gradio==5.35.0",
+    "gradio-client>=1.10.4",
+    "httpx[socks]>=0.28.1",
+    "loguru>=0.7.3",
+    "pyaudio>=0.2.14",
+    "pydantic>=2.11.7",
+    "pydub>=0.25.1",
+    "sounddevice>=0.5.2",
+    "uvicorn[standard]>=0.34.0",
+]

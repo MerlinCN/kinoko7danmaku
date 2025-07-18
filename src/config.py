@@ -1,137 +1,133 @@
 import json
-import logging
-import os
-import sys
-from logging.handlers import TimedRotatingFileHandler
+from pathlib import Path
+from typing import Dict
 
+from loguru import logger
 from pydantic import BaseModel, Field
 
 
-def setup_logger():
-    if not os.path.exists("log"):
-        os.mkdir("log")
-    log_file = "log/run.log"
-    formatter = logging.Formatter(
-        fmt="%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d - %(funcName)1s() ] - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S"
+class TTSConfig(BaseModel):
+    """TTS 配置模型"""
+
+    # 直播间配置
+    room_id: int = Field(
+        default=213,
+        title="房间号",
+        description="短号长号都可以",
+    )
+    gift_threshold: int = Field(
+        default=5,
+        title="礼物阈值（元）",
+        description="≥这个值（单位：元）才会触发礼物",
     )
 
-    # 创建一个 handler，用于写入日志文件，每小时更换一次文件
-    handler = TimedRotatingFileHandler(log_file, when="H", interval=1, backupCount=5, encoding="utf-8")
-    handler.setFormatter(formatter)
+    # API 配置
+    api_url: str = Field(
+        default="http://localhost:8080/v1/tts",
+        title="TTS API 服务地址",
+        description="TTS API 服务地址",
+    )
 
-    # 创建一个 handler，用于将日志输出到控制台
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(formatter)
+    # 触发开关
+    normal_danmaku_on: bool = Field(default=False, title="普通弹幕是否触发")
+    guard_on: bool = Field(default=True, title="舰长是否触发")
+    super_chat_on: bool = Field(default=True, title="醒目留言是否触发")
+    welcome_on: bool = Field(default=True, title="启动成功后语音播报")
 
-    # 获取或创建一个 logger
-    my_logger = logging.getLogger("kinoko7danmaku")
-    my_logger.setLevel(logging.INFO)
-    my_logger.addHandler(handler)
-    my_logger.addHandler(console_handler)
+    # 调试配置
+    debug: bool = Field(
+        default=False,
+        title="调试模式",
+        description="是否开启调试模式，不开启就行了",
+    )
 
+    alias: Dict[str, str] = Field(
+        default={"Merlin": "么林"},
+        title="别名",
+    )
 
-if "gInit" not in globals():
-    setup_logger()
-    gInit = True
+    gift_on_text: str = Field(
+        default="“{user_name}” 赠送了{gift_num}个{gift_name}",
+        title="礼物触发文本",
+    )
 
-logger = logging.getLogger("kinoko7danmaku")
+    danmaku_on_text: str = Field(
+        default="“{user_name}”说:“{message}”",
+        title="弹幕触发文本",
+    )
 
+    guard_on_text: str = Field(
+        default="感谢 “{user_name}” 赠送的{guard_name}，祝你熬夜不秃头，瞎吃不长胖！",
+        title="舰长触发文本",
+    )
+    super_chat_on_text: str = Field(
+        default="“{user_name}” 发送了一条醒目留言，他说“{message}”",
+        title="醒目留言触发文本",
+    )
 
-# 定义模型，包含默认值
-class ConfigModel(BaseModel):
-    room_id: int = Field(default=213, description="房间号")
-    gift_threshold: int = Field(default=5, description="≥这个值（单位：元）才会触发礼物")
-    api_url: str = Field(default="", description="API地址，注意要带最后的 /")
-    alias: dict = Field(default={}, description="别名，用于替换一些词语，例如：{'Merlin':'么林'}")
-    normal_danmaku_on: bool = Field(default=True, description="普通弹幕是否触发")
-    guard_on: bool = Field(default=True, description="舰长是否触发")
-    super_chat_on: bool = Field(default=True, description="醒目留言是否触发")
-    voice_name: str = Field(default="C酱", description="模型名")
-    voice_channel: int = Field(default=-1, description="声道，默认-1为系统输出，如果有声卡，可以自行修改")
-    debug: bool = Field(default=False, description="是否开启调试模式，不开启就行了")
-    api_mode: str = Field(default="bert-vits", description="API模式，可选：bert-vits, gpt-sovits")
-    target_speed: float = Field(default=1.1, description="合成语速设置")
-
-
-# 读取或创建配置
-def load_or_create_config(filename: str) -> ConfigModel:
-    if not os.path.exists(filename):
-        logger.info(f"{filename} 不存在，正在创建并初始化...")
-        config = create_config_interactively({})
-        save_config(filename, config)
-    else:
-        with open(filename, "r", encoding='utf8') as file:
-            data = json.load(file)
-        # 检查并填充缺失的值
-        config = create_config_interactively(data)
-        save_config(filename, config)
-    return config
+    class Config:
+        json_encoders = {
+            # 如果以后需要处理特殊类型的序列化
+        }
 
 
-# 与用户交互以获取配置
-def create_config_interactively(config_data: dict) -> ConfigModel:
-    if len(config_data) != len(ConfigModel.model_fields):
-        print("请按提示输入配置信息，直接回车则使用默认值")
-    for field_name, field in ConfigModel.model_fields.items():
-        if field_name not in config_data or config_data[field_name] is None:
-            while True:
-                sys.stdout.flush()
-                # 检查字段类型是否为布尔型
-                if isinstance(field.default, bool):
-                    user_input = input(
-                        f"请输入{field_name}（{field.description}）【y/n，默认值：{'y' if field.default else 'n'}】：").lower()
-                    if user_input in ["", "y", "n"]:
-                        user_input = (user_input.lower() == "y") if user_input else field.default
-                        config_data[field_name] = user_input
-                        break
-                    else:
-                        print("请输入 'y' 或 'n'")
-                elif isinstance(field.default, dict):
-                    config_data[field_name] = field.default
-                    break
-                elif isinstance(field.default, str):
-                    user_input = input(
-                        f"请输入{field_name}（{field.description}）【默认值：{field.default if field.default else '空'}】：") or field.default
-                    try:
-                        config_data[field_name] = str(user_input)
-                        break
-                    except ValueError:
-                        print(f"输入的值类型不正确，请重新输入 {field_name}")
-                else:
-                    user_input = input(
-                        f"请输入{field_name}（{field.description}）【默认值：{field.default}】：") or field.default
-                    # 转换为正确的类型
-                    correct_type = type(field.default)
-                    try:
-                        config_data[field_name] = correct_type(user_input)
-                        break
-                    except ValueError:
-                        print(f"输入的值类型不正确，请重新输入 {field_name}")
-    return ConfigModel(**config_data)
+class ConfigManager:
+    """配置管理器"""
+
+    def __init__(self, config_file: Path = Path("config.json")):
+        self.config_file = config_file
+        self._config: TTSConfig = TTSConfig()  # 初始化为默认配置
+        self.load_config()
+
+    def load_config(self) -> TTSConfig:
+        """加载配置"""
+        try:
+            if self.config_file.exists():
+                with open(self.config_file, "r", encoding="utf-8") as f:
+                    config_data = json.load(f)
+                self._config = TTSConfig(**config_data)
+                logger.info(f"配置已从 {self.config_file} 加载")
+            else:
+                self._config = TTSConfig()
+                logger.info("使用默认配置")
+                self.save_config()  # 保存默认配置
+        except Exception as e:
+            logger.error(f"加载配置失败: {e}")
+            self._config = TTSConfig()
+            logger.info("使用默认配置")
+
+        return self._config
+
+    def save_config(self) -> bool:
+        """保存配置"""
+        try:
+            with open(self.config_file, "w", encoding="utf-8") as f:
+                json.dump(self._config.model_dump(), f, indent=4, ensure_ascii=False)
+            logger.info(f"配置已保存到 {self.config_file}")
+            return True
+        except Exception as e:
+            logger.error(f"保存配置失败: {e}")
+            return False
+
+    def update_config(self, config: TTSConfig) -> bool:
+        """更新配置"""
+        self._config = config
+        return self.save_config()
+
+    @property
+    def config(self) -> TTSConfig:
+        """获取当前配置"""
+        return self._config
+
+    def reset_to_default(self) -> bool:
+        """重置为默认配置"""
+        try:
+            self._config = TTSConfig()
+            return self.save_config()
+        except Exception as e:
+            logger.error(f"重置配置失败: {e}")
+            return False
 
 
-# 保存配置到文件
-def save_config(filename: str, config: ConfigModel):
-    with open(filename, "w", encoding="utf8") as file:
-        json.dump(config.model_dump(), file, indent=4, ensure_ascii=False)
-
-
-if "gConfig" not in globals():
-    logger.info("正在读取配置...")
-    gConfig = load_or_create_config("config.json")
-    if not gConfig.api_url.endswith("/"):
-        gConfig.api_url += "/"
-    if not os.path.exists("cookies.json"):
-        os.system(r"bin\biliup.exe login")
-        if not os.path.exists("cookies.json"):
-            logger.error("登录失败")
-            exit(-1)
-    logger.info("当前配置：")
-    logger.info(gConfig.model_dump())
-    if gConfig.alias:
-        logger.info("当前别名：")
-        for k, v in gConfig.alias.items():
-            logger.info(f"{k} -> {v}")
-    else:
-        logger.info("当前别名：无")
+# 全局配置管理器实例
+config_manager = ConfigManager()
