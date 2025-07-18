@@ -69,12 +69,14 @@ class PydanticGradioBuilder:
                     # 从Code文本框中获取值
                     code_value = config_dict.get(field_name, "{}")
                     try:
-                        # 尝试解析Python字典格式的字符串
-                        dict_value = eval(code_value) if code_value.strip() else {}
+                        # 尝试解析JSON格式的字符串
+                        dict_value = (
+                            json.loads(code_value) if code_value.strip() else {}
+                        )
                         if not isinstance(dict_value, dict):
                             raise ValueError("不是有效的字典格式")
-                    except (SyntaxError, ValueError, NameError) as e:
-                        gr.Error(f"字段 '{field.title}' 的Python字典格式有误: {str(e)}")
+                    except (json.JSONDecodeError, ValueError) as e:
+                        gr.Error(f"字段 '{field.title}' 的JSON格式有误: {str(e)}")
                         return args
                     config_dict[field_name] = dict_value
 

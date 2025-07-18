@@ -23,6 +23,9 @@ class StreamPlayer:
 
         # 获取所有设备
         all_devices: list[dict] = sd.query_devices()  # type: ignore
+        # 如果没有输出设备就报错
+        if len(all_devices) == 0:
+            raise RuntimeError("没有找到输出设备")
         default_output_index: int = sd.default.device[1]  # type: ignore
 
         default_output_device: dict = all_devices[default_output_index]  # type: ignore
@@ -70,18 +73,22 @@ class StreamPlayer:
         raw = audio.raw_data
         sw, ch, rate = audio.sample_width, audio.channels, audio.frame_rate
 
-        stream = self.p.open(
-            format=self.p.get_format_from_width(sw),
-            channels=ch,
-            rate=rate,
-            output=True,
-            output_device_index=self.device_index,
-        )
-        chunk = 4096
-        for i in range(0, len(raw), chunk):
-            stream.write(raw[i : i + chunk])
-        stream.stop_stream()
-        stream.close()
+        stream = None
+        try:
+            stream = self.p.open(
+                format=self.p.get_format_from_width(sw),
+                channels=ch,
+                rate=rate,
+                output=True,
+                output_device_index=self.device_index,
+            )
+            chunk = 4096
+            for i in range(0, len(raw), chunk):
+                stream.write(raw[i : i + chunk])
+            stream.stop_stream()
+        finally:
+            if stream:
+                stream.close()
 
     def close(self):
         self.p.terminate()
@@ -102,7 +109,7 @@ class StreamPlayer:
         """使用指定参数播放文本转语音"""
         # 从配置中获取 API URL
         url = config_manager.config.api_url
-        format_text = str(text)
+        format_text = text
         for k, v in config_manager.config.alias.items():
             format_text = format_text.replace(k, v)
         data = {

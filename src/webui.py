@@ -225,7 +225,7 @@ def create_tts_interface():
 
         # 事件绑定
         def refresh_devices():
-            return gr.Dropdown(
+            return gr.update(
                 choices=stream_player.get_output_devices(), value=sd.default.device[1]
             )
 
