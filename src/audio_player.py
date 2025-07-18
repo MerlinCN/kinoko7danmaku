@@ -103,6 +103,8 @@ class StreamPlayer:
         # 从配置中获取 API URL
         url = config_manager.config.api_url
         format_text = str(text)
+        for k, v in config_manager.config.alias.items():
+            format_text = format_text.replace(k, v)
         data = {
             "text": format_text,
             "chunk_length": chunk_length,
@@ -120,7 +122,7 @@ class StreamPlayer:
         async with httpx.AsyncClient() as client:
             response = await client.post(url, json=data)
             response.raise_for_status()
-            logger.info(f"播放音频: {text}")
+            logger.info(f"播放音频: {format_text}")
 
             # 播放音频
             self.play_bytes(response.content)

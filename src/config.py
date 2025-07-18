@@ -32,6 +32,7 @@ class TTSConfig(BaseModel):
     normal_danmaku_on: bool = Field(default=False, title="普通弹幕是否触发")
     guard_on: bool = Field(default=True, title="舰长是否触发")
     super_chat_on: bool = Field(default=True, title="醒目留言是否触发")
+    welcome_on: bool = Field(default=True, title="启动成功后语音播报")
 
     # 调试配置
     debug: bool = Field(
@@ -43,6 +44,25 @@ class TTSConfig(BaseModel):
     alias: Dict[str, str] = Field(
         default={"Merlin": "么林"},
         title="别名",
+    )
+
+    gift_on_text: str = Field(
+        default="“{user_name}” 赠送了{gift_num}个{gift_name}",
+        title="礼物触发文本",
+    )
+
+    danmaku_on_text: str = Field(
+        default="“{user_name}”说:“{message}”",
+        title="弹幕触发文本",
+    )
+
+    guard_on_text: str = Field(
+        default="感谢 “{user_name}” 赠送的{guard_name}，祝你熬夜不秃头，瞎吃不长胖！",
+        title="舰长触发文本",
+    )
+    super_chat_on_text: str = Field(
+        default="“{user_name}” 发送了一条醒目留言，他说“{message}”",
+        title="醒目留言触发文本",
     )
 
     class Config:

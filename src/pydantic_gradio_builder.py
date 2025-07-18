@@ -2,7 +2,11 @@ import json
 from typing import Any, get_origin
 
 import gradio as gr
+from loguru import logger
 from pydantic import BaseModel
+
+from bilibili.bili_service import get_bili_service
+from config import TTSConfig
 
 
 class PydanticGradioBuilder:
@@ -56,7 +60,7 @@ class PydanticGradioBuilder:
     def create_update_function(self, config_manager):
         """创建配置更新函数"""
 
-        def update_config(*args) -> tuple:
+        async def update_config(*args) -> tuple:
             config_dict = dict(zip(self.field_names, args))
 
             # 处理字典字段 - 从Code文本框中解析值
@@ -74,7 +78,7 @@ class PydanticGradioBuilder:
                         return args
                     config_dict[field_name] = dict_value
 
-            config = self.model_class(**config_dict)
+            config: TTSConfig = self.model_class(**config_dict)
 
             # 自定义验证逻辑
             config_dict_check = config.model_dump()
@@ -88,6 +92,11 @@ class PydanticGradioBuilder:
             if "room_id" in config_dict_check and config_dict_check["room_id"] <= 0:
                 gr.Error("房间号必须大于0")
                 return args
+
+            if config.room_id != config_manager.config.room_id:
+                logger.info(f"房间号已更改，重新连接直播间: {config.room_id}")
+                bili_service = get_bili_service()
+                await bili_service.reload(config.room_id)
 
             success = config_manager.update_config(config)
 

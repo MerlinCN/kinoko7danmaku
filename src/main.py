@@ -1,8 +1,4 @@
-import platform
-import subprocess
-import asyncio
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 import gradio as gr
 import uvicorn
@@ -10,61 +6,18 @@ from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from loguru import logger
 
-from audio_player import close_stream_player
+from audio_player import close_stream_player, get_stream_player
+from bilibili.bili_service import get_bili_service
 from config import config_manager
-from bilibili import BiliService
 from webui import create_gradio_interface
-from bilibili.model import DanmuMessage, SendGift
 
-
-def login_biliup():
-    biliup_path = Path("bin") / "biliup.exe"
-    if platform.system() == "Darwin" and platform.machine() == "arm64":
-        biliup_path = Path("bin") / "biliup-aarch64-macos"
-
-    cookies_path = Path("cookies.json")
-    if cookies_path.exists():
-        # todo: 做登录校验
-        subprocess.run([biliup_path, "renew"])
-        return
-
-    subprocess.run(
-        [
-            biliup_path,
-            "login",
-        ]
-    )
-
-
-login_biliup()
-# 全局变量存储服务实例
-bili_service = BiliService()
-
-
-@bili_service.room_obj.on("DANMU_MSG")
-async def on_danmaku(event):
-    if not config_manager.config.normal_danmaku_on:
-        return
-    danmu_message = DanmuMessage.parse(event)
-    logger.info(danmu_message)
-
-
-@bili_service.room_obj.on("SEND_GIFT")
-async def on_send_gift(event):
-    gift_message = SendGift.parse(event)
-    if (
-        gift_message.gift_price / 1000 * gift_message.gift_num
-        < config_manager.config.gift_threshold
-    ):
-        return
-    logger.info(gift_message)
-    await bili_service.send_gift(gift_message)
+LOCAL_HOST = "127.0.0.1"
+LOCAL_PORT = 7860
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """应用生命周期管理"""
-    # global bili_service
 
     # 启动时初始化
     logger.info("启动应用...")
@@ -73,7 +26,16 @@ async def lifespan(app: FastAPI):
 
     # 启动 bilibili 服务
     logger.info("启动 bilibili 直播间连接...")
-    asyncio.create_task(bili_service.run())
+    bili_service = get_bili_service()
+    await bili_service.run()
+
+    # 启动 bilibili 服务
+    logger.info("启动 bilibili 直播间连接完成")
+    if config_manager.config.welcome_on:
+        stream_player = get_stream_player()
+        await stream_player.play_from_text("弹幕姬，启动！")
+
+    logger.info(f"配置和测试地址: http://{LOCAL_HOST}:{LOCAL_PORT}")
 
     yield
 
@@ -127,8 +89,8 @@ def main():
     app = gr.mount_gradio_app(fastapi_app, demo, path="/gradio")
     uvicorn.run(
         app,
-        host="127.0.0.1",
-        port=7860,
+        host=LOCAL_HOST,
+        port=LOCAL_PORT,
         log_level="info",
         access_log=False,
     )

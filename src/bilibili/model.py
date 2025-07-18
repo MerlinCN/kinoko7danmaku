@@ -18,23 +18,25 @@ class GuardLevel(Enum):
     LIEUTENANT = 2  # 提督
     CAPTAIN = 3  # 舰长
 
-    @classmethod
-    def get_name(cls, level: int) -> str:
-        """获取舰长等级的中文名称
-
-        Args:
-            level (int): 舰长等级
-
-        Returns:
-            str: 等级中文名称
-        """
-        level_map = {
-            cls.NONE.value: "非舰长",
-            cls.GOVERNOR.value: "总督",
-            cls.LIEUTENANT.value: "提督",
-            cls.CAPTAIN.value: "舰长",
+    @property
+    def name_cn(self) -> str:
+        """获取中文名称"""
+        name_map = {
+            GuardLevel.NONE: "非舰长",
+            GuardLevel.GOVERNOR: "总督",
+            GuardLevel.LIEUTENANT: "提督",
+            GuardLevel.CAPTAIN: "舰长",
         }
-        return level_map.get(level, "未知等级")
+        return name_map.get(self, "未知等级")
+
+
+class EventType(Enum):
+    """事件类型枚举"""
+
+    DANMU_MSG = "DANMU_MSG"  # 弹幕
+    SEND_GIFT = "SEND_GIFT"  # 礼物
+    GUARD_BUY = "GUARD_BUY"  # 舰长
+    SUPER_CHAT_MESSAGE = "SUPER_CHAT_MESSAGE"  # 醒目留言
 
 
 class DanmuMessage(BaseModel):
@@ -108,7 +110,7 @@ class DanmuMessage(BaseModel):
     def __str__(self):
         result = ""
         if self.guard_level.value:
-            result += f"[{self.guard_level.get_name(self.guard_level.value)}]"
+            result += f"[{self.guard_level.name_cn}]"
         if self.fans_medal_name and self.fans_medal_level:
             result += f"[{self.fans_medal_name}({self.fans_medal_level})]"
         result += f"{self.user_name}:{self.message}"
@@ -164,6 +166,9 @@ class GuardBuy(BaseModel):
         instance.timestamp = int(time.time())
         return instance
 
+    def __str__(self):
+        return f"{self.user_name}[{self.user_mid}] 购买了 {self.guard_level.name_cn}，价值 {self.price} 元"
+
 
 class SuperChatMessage(BaseModel):
     room_id: int = Field(default=0, description="房间 ID")
@@ -195,8 +200,11 @@ class SuperChatMessage(BaseModel):
 
         return instance
 
+    def __str__(self):
+        return f"{self.user_name}[{self.user_mid}] 发送了一条醒目留言，他说“{self.message}”，价值 {self.price} 元"
 
-class SendGift(BaseModel):
+
+class GiftMessage(BaseModel):
     room_id: int = Field(default=0, description="房间 ID")
     user_mid: int = Field(default=0, description="用户 ID")
     user_name: str = Field(default="", description="用户名")
@@ -206,7 +214,7 @@ class SendGift(BaseModel):
     timestamp: int = Field(default=0, description="发送时的 UNIX 毫秒时间戳")
 
     @classmethod
-    def parse(cls, event_data: Dict[str, Any]) -> "SendGift":
+    def parse(cls, event_data: Dict[str, Any]) -> "GiftMessage":
         instance = cls()
         instance.room_id = int(event_data["room_display_id"])
         data = event_data["data"]["data"]
@@ -217,6 +225,9 @@ class SendGift(BaseModel):
         instance.gift_price = data["price"]
         instance.timestamp = int(time.time())
         return instance
+
+    def __str__(self):
+        return f"{self.user_name}[{self.user_mid}] 赠送了 {self.gift_num} 个 {self.gift_name}，价值 {self.gift_price} 元"
 
 
 class OnlineCount(BaseModel):
