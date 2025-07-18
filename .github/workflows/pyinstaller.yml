@@ -2,8 +2,6 @@ name: Build and Release
 
 on:
   push:
-    branches:
-      - main
     tags:
       - 'v*'
 
@@ -30,7 +28,11 @@ jobs:
       - name: Extract version from tag
         id: get_version
         run: |
-          $version = "${{ github.ref }}".Replace('refs/tags/v', '')
+          if ("${{ github.ref }}" -like "refs/tags/v*") {
+            $version = "${{ github.ref }}".Replace('refs/tags/v', '')
+          } else {
+            $version = "dev"
+          }
           echo "version=$version" >> $env:GITHUB_OUTPUT
 
       - name: Install dependencies
@@ -39,11 +41,13 @@ jobs:
           uv add pyinstaller
 
       - name: Build with PyInstaller
-        run: uv run pyinstaller --onefile --name=start${{ steps.get_version.outputs.version }} --icon=resource/icon.ico src/main.py
+        run: uv run pyinstaller --onefile --name=start${{ steps.get_version.outputs.version }} --icon=resource/icon.ico --add-data "bin;bin" src/main.py
 
       - name: Copy additional files
         run: |
-          xcopy /s /i bin dist\bin
+          if (Test-Path "bin") {
+            xcopy /s /i bin dist\bin
+          }
 
       - name: Create Zip Archive
         run: |
@@ -61,7 +65,6 @@ jobs:
           retention-days: 30
 
   release:
-    if: startsWith(github.ref, 'refs/tags/')
     needs: build
     runs-on: ubuntu-latest
     permissions:
