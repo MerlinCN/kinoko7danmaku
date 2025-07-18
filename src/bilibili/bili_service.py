@@ -144,8 +144,11 @@ def login_biliup():
 
 
 # 全局变量存储服务实例
-bili_service = BiliService()
+bili_service: BiliService | None = None
 
 
 def get_bili_service():
+    global bili_service
+    if bili_service is None:
+        bili_service = BiliService()
     return bili_service
