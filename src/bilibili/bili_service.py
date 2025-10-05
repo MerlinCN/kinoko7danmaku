@@ -36,12 +36,12 @@ class BiliService:
                 return
             danmu_message = DanmuMessage.parse(event)
             stream_player = get_stream_player()
+            logger.info(danmu_message)
             await stream_player.play_from_text(
                 config_manager.config.danmaku_on_text.format(
                     user_name=danmu_message.user_name, message=danmu_message.message
                 )
             )
-            logger.info(danmu_message)
 
         @self.room_obj.on(EventType.SEND_GIFT.value)
         async def on_send_gift(event):
@@ -111,8 +111,21 @@ class BiliService:
             dedeuserid=dedeuserid,
         )
 
+    async def check_room_status(self):
+        while True:
+            await asyncio.sleep(1)
+            if self.room_obj.get_status() == live.LiveDanmaku.STATUS_CLOSED:
+                logger.error("直播间已关闭")
+                self.run_task.cancel()
+                self.room_obj = live.LiveDanmaku(
+                    config_manager.config.room_id,
+                    credential=self.credential,
+                )
+                self.run_task = asyncio.create_task(self.room_obj.connect())
+
     async def run(self):
         self.run_task = asyncio.create_task(self.room_obj.connect())
+        asyncio.create_task(self.check_room_status())
 
     async def reload(self, room_id: int):
         if self.run_task:

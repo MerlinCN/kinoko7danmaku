@@ -127,7 +127,7 @@ class StreamPlayer:
         }
 
         async with httpx.AsyncClient() as client:
-            response = await client.post(url, json=data)
+            response = await client.post(url, json=data, timeout=10)
             response.raise_for_status()
             logger.info(f"播放音频: {format_text}")
 

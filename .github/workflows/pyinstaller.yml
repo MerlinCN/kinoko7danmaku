@@ -41,7 +41,7 @@ jobs:
           uv add pyinstaller
 
       - name: Build with PyInstaller
-        run: uv run pyinstaller --onefile --name=start${{ steps.get_version.outputs.version }} --icon=resource/icon.ico --add-data "bin;bin" src/main.py
+        run: uv run pyinstaller --onefile --icon=resource/icon.ico --add-data "bin;bin" src/main.py
 
       - name: Copy additional files
         run: |

@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import logging
 
 import gradio as gr
 import uvicorn
@@ -27,8 +28,7 @@ async def lifespan(app: FastAPI):
     # 启动 bilibili 服务
     logger.info("启动 bilibili 直播间连接...")
     bili_service = get_bili_service()
-    await bili_service.run()
-
+    # bili_service.room_obj.logger.setLevel(logging.DEBUG)
     # 启动 bilibili 服务
     logger.info("启动 bilibili 直播间连接完成")
     if config_manager.config.welcome_on:
@@ -36,7 +36,7 @@ async def lifespan(app: FastAPI):
         await stream_player.play_from_text("弹幕姬，启动！")
 
     logger.info(f"配置和测试地址: http://{LOCAL_HOST}:{LOCAL_PORT}")
-
+    await bili_service.run()
     yield
 
     # 关闭时清理资源
