@@ -1,3 +1,3 @@
-from .bili_service import BiliService
+from .bili_service import BiliService, bili_service
 
-__all__ = ["BiliService"]
+__all__ = ["BiliService", "bili_service"]

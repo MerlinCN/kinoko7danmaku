@@ -30,7 +30,7 @@ class GuardLevel(Enum):
         return name_map.get(self, "未知等级")
 
 
-class EventType(Enum):
+class EventType(str, Enum):
     """事件类型枚举"""
 
     DANMU_MSG = "DANMU_MSG"  # 弹幕
