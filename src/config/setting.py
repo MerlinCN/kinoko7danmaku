@@ -113,6 +113,7 @@ class Setting(BaseSettings):
     tts_service: TTSServiceConfig = Field(
         default_factory=TTSServiceConfig, title="TTS服务配置"
     )
+    player_device: str = Field(default="", title="输出设备")
 
     @classmethod
     def settings_customise_sources(

@@ -6,6 +6,8 @@ import sounddevice as sd
 from loguru import logger
 from pydub import AudioSegment
 
+from config import setting
+
 
 class StreamPlayer:
     def __init__(self):
@@ -44,6 +46,19 @@ class StreamPlayer:
 
         logger.info(f"检测到 {len(choices) - 1} 个纯输出设备")
         return choices
+
+    def print_output_devices(self):
+        """打印输出设备"""
+        for device in self.get_output_devices():
+            logger.info(f"设备: {device[0]} - {device[1]}")
+
+    def set_output_device_by_name(self, device_name: str):
+        """根据设备名称设置输出设备"""
+        for device in self.get_output_devices():
+            if device_name in device[0]:
+                self.set_output_device(device[1])
+                return
+        logger.error(f"未找到设备: {device_name}")
 
     def set_output_device(self, device_index: int):
         """设置输出设备"""
@@ -94,7 +109,9 @@ class StreamPlayer:
 
 # 全局 StreamPlayer 实例
 _stream_player = StreamPlayer()
-
+_stream_player.print_output_devices()
+if setting.player_device:
+    _stream_player.set_output_device_by_name(setting.player_device)
 # 存储临时文件列表用于清理 (使用 pathlib.Path)
 temp_files: list[Path] = []
 

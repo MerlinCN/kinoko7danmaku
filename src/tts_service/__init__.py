@@ -34,8 +34,6 @@ def get_tts_service() -> FishSpeechService | GPTSovitsService | MinimaxService:
                 setting.tts_service.minimax.model,
             )
             break
-        else:
-            raise ValueError(f"Invalid TTS service type: {model_type}")
     if _default_tts_service is None:
         raise ValueError("No TTS service is active")
     return _default_tts_service

@@ -1,5 +1,6 @@
 import httpx
 from loguru import logger
+from tenacity import retry, retry_if_exception_type, stop_after_attempt
 
 from config import setting
 from schema.minimax import (
@@ -37,6 +38,11 @@ class MinimaxService(TTSService):
             await self._client.aclose()
             self._client = None
 
+    @retry(
+        stop=stop_after_attempt(3),
+        retry=retry_if_exception_type(httpx.ConnectError),
+        reraise=True,
+    )
     async def text_to_speech(
         self,
         text: str,
