@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict
 
 from pydantic import Field
 from pydantic_settings import (
@@ -48,13 +48,47 @@ class BiliServiceConfig(BaseSettings):
     )
 
 
+class FishSpeechConfig(BaseSettings):
+    """Fish Speech服务配置"""
+
+    api_url: str = Field(
+        default="http://localhost:8080/v1/tts", title="Fish Speech API 服务地址"
+    )
+
+
+class GPTSovitsConfig(BaseSettings):
+    """GPTSovits服务配置"""
+
+    api_url: str = Field(
+        default="http://localhost:19874", title="GPTSovits API 服务地址"
+    )
+    sovits_model: str = Field("", description="SoVITS 模型权重")
+    gpt_model: str = Field("", description="GPT 模型权重")
+    text_lang: str = Field("auto", description="文本语言")
+    ref_audio_path: str = Field("", description="参考音频路径")
+    ref_text: str = Field("", description="参考文本")
+    ref_text_lang: str = Field("auto", description="参考文本语言")
+    top_k: int = Field(5, description="Top K")
+    top_p: float = Field(1.0, description="Top P")
+    temperature: float = Field(1.0, description="采样温度")
+    text_split_method: str = Field("不切", description="文本切分方式")
+    speed_factor: float = Field(1.0, description="语速调整")
+    ref_text_free: bool = Field(False, description="无参考文本模式")
+    sample_steps: int = Field(8, description="采样步数")
+    super_sampling: bool = Field(False, description="超采样")
+    pause_seconds: float = Field(0.3, description="句间停顿秒数")
+
+
 class Setting(BaseSettings):
     """全局配置"""
 
     model_config = SettingsConfigDict(toml_file="config.toml")
 
-    tts_service: List[TTSServiceConfig] = Field(
-        default=[TTSServiceConfig()], title="TTS服务配置"
+    fish_speech: FishSpeechConfig = Field(
+        default_factory=FishSpeechConfig, title="Fish Speech服务配置"
+    )
+    gpt_sovits: GPTSovitsConfig = Field(
+        default_factory=GPTSovitsConfig, title="GPTSovits服务配置"
     )
     bili_service: BiliServiceConfig = Field(
         default_factory=BiliServiceConfig, title="Bilibili服务配置"

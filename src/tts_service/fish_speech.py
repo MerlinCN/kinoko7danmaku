@@ -68,7 +68,7 @@ class FishSpeechService(TTSService):
         }
 
         async with httpx.AsyncClient() as client:
-            response = await client.post(self.api_url, json=data, timeout=10)
+            response = await client.post(self.api_url, json=data, timeout=300)
             response.raise_for_status()
             logger.info(f"Fish Speech TTS 成功: {format_text}")
 

@@ -1,0 +1,38 @@
+# Bilibili相关配置
+[bili_service]
+room_id = 213
+gift_threshold = 5
+normal_danmaku_on = true
+guard_on = true
+super_chat_on = true
+welcome_on = true
+debug = false
+gift_on_text = '"{user_name}" 赠送了{gift_num}个{gift_name}'
+danmaku_on_text = '"{user_name}"说:"{message}"'
+guard_on_text = '感谢 "{user_name}" 赠送的{guard_name}，祝你熬夜不秃头，瞎吃不长胖！'
+super_chat_on_text = '"{user_name}" 发送了一条醒目留言，他说"{message}"'
+
+# 别名配置
+[bili_service.alias]
+Merlin = "么林"
+
+[fish_speech]
+api_url = "http://localhost:28080/v1/tts"
+
+[gpt_sovits]
+api_url = "http://localhost:19872"
+sovits_model = "SoVITS_weights_v4/Isabel_v2_e2_s136_l32.pth"
+gpt_model = "GPT_weights_v4/Isabel_v2-e15.ckpt"
+text_lang = "Multilingual Mixed"
+ref_audio_path = "ref_audio/ref.wav"
+ref_text = "啊，春夏交替的时节。"
+ref_text_lang = "Chinese"
+top_k = 5
+top_p = 1.0
+temperature = 1.0
+text_split_method = "凑四句一切"
+speed_factor = 1.0
+ref_text_free = false
+sample_steps = 8
+super_sampling = false
+pause_seconds = 0.3
