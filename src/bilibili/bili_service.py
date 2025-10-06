@@ -7,15 +7,16 @@ from pathlib import Path
 from bilibili_api import Credential, live
 from loguru import logger
 
-from audio_player import get_stream_player
-from bilibili.model import (
+from config import setting
+from player import StreamPlayer
+from schema.bilibili import (
     DanmuMessage,
     EventType,
     GiftMessage,
     GuardBuy,
     SuperChatMessage,
 )
-from config import config_manager
+from tts_service import get_tts_service
 
 
 class BiliService:
@@ -23,70 +24,78 @@ class BiliService:
         login_biliup()
         self.credential: Credential = self.load_credential()
         self.room_obj: live.LiveDanmaku = live.LiveDanmaku(
-            config_manager.config.room_id,
+            setting.bili_service.room_id,
             credential=self.credential,
         )
         self.run_task = None
         self.add_event_listener()
 
     def add_event_listener(self):
-        @self.room_obj.on(EventType.DANMU_MSG.value)
+        @self.room_obj.on(EventType.DANMU_MSG)
         async def on_danmaku(event):
-            if not config_manager.config.normal_danmaku_on:
+            if not setting.bili_service.normal_danmaku_on:
                 return
             danmu_message = DanmuMessage.parse(event)
-            stream_player = get_stream_player()
+            stream_player = StreamPlayer()
             logger.info(danmu_message)
-            await stream_player.play_from_text(
-                config_manager.config.danmaku_on_text.format(
+            tts_service = get_tts_service()
+            audio = await tts_service.text_to_speech(
+                setting.bili_service.danmaku_on_text.format(
                     user_name=danmu_message.user_name, message=danmu_message.message
                 )
             )
+            stream_player.play_bytes(audio)
 
-        @self.room_obj.on(EventType.SEND_GIFT.value)
+        @self.room_obj.on(EventType.SEND_GIFT)
         async def on_send_gift(event):
             gift_message = GiftMessage.parse(event)
             if (
                 gift_message.gift_price / 1000 * gift_message.gift_num
-                < config_manager.config.gift_threshold
+                < setting.bili_service.gift_threshold
             ):
                 return
-            stream_player = get_stream_player()
-            await stream_player.play_from_text(
-                config_manager.config.gift_on_text.format(
+            stream_player = StreamPlayer()
+            tts_service = get_tts_service()
+            audio = await tts_service.text_to_speech(
+                setting.bili_service.gift_on_text.format(
                     user_name=gift_message.user_name,
                     gift_name=gift_message.gift_name,
                     gift_num=gift_message.gift_num,
                 )
             )
+            stream_player.play_bytes(audio)
             logger.info(gift_message)
 
-        @self.room_obj.on(EventType.GUARD_BUY.value)
+        @self.room_obj.on(EventType.GUARD_BUY)
         async def on_guard_buy(event):
-            if not config_manager.config.guard_on:
+            if not setting.bili_service.guard_on:
                 return
             guard_buy_message = GuardBuy.parse(event)
-            stream_player = get_stream_player()
-            await stream_player.play_from_text(
-                config_manager.config.guard_on_text.format(
+            stream_player = StreamPlayer()
+            tts_service = get_tts_service()
+            audio = await tts_service.text_to_speech(
+                setting.bili_service.guard_on_text.format(
                     user_name=guard_buy_message.user_name,
                     guard_name=guard_buy_message.guard_level.name_cn,
                 )
             )
+            stream_player.play_bytes(audio)
             logger.info(guard_buy_message)
 
-        @self.room_obj.on(EventType.SUPER_CHAT_MESSAGE.value)
+        @self.room_obj.on(EventType.SUPER_CHAT_MESSAGE)
         async def on_super_chat_message(event):
-            if not config_manager.config.super_chat_on:
+            if not setting.bili_service.super_chat_on:
                 return
             super_chat_message = SuperChatMessage.parse(event)
-            stream_player = get_stream_player()
-            await stream_player.play_from_text(
-                config_manager.config.super_chat_on_text.format(
+            stream_player = StreamPlayer()
+            tts_service = get_tts_service()
+            audio = await tts_service.text_to_speech(
+                setting.bili_service.super_chat_on_text.format(
                     user_name=super_chat_message.user_name,
                     message=super_chat_message.message,
                 )
             )
+            stream_player.play_bytes(audio)
             logger.info(super_chat_message)
 
     @staticmethod
@@ -118,7 +127,7 @@ class BiliService:
                 logger.error("直播间已关闭")
                 self.run_task.cancel()
                 self.room_obj = live.LiveDanmaku(
-                    config_manager.config.room_id,
+                    setting.bili_service.room_id,
                     credential=self.credential,
                 )
                 self.run_task = asyncio.create_task(self.room_obj.connect())
@@ -156,12 +165,4 @@ def login_biliup():
     )
 
 
-# 全局变量存储服务实例
-bili_service: BiliService | None = None
-
-
-def get_bili_service():
-    global bili_service
-    if bili_service is None:
-        bili_service = BiliService()
-    return bili_service
+bili_service = BiliService()
