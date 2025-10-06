@@ -72,4 +72,4 @@ class FishSpeechService(TTSService):
             response.raise_for_status()
             logger.info(f"Fish Speech TTS 成功: {format_text}")
 
-            return response.content
+        return response.content

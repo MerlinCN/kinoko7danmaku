@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 
 from pydantic import Field
 from pydantic_settings import (
@@ -8,15 +8,6 @@ from pydantic_settings import (
 )
 
 from schema.const import ModelType
-
-
-class TTSServiceConfig(BaseSettings):
-    """TTS服务配置"""
-
-    type: ModelType = Field(default=ModelType.FISH_SPEECH, title="TTS服务类型")
-    api_url: str = Field(
-        default="http://localhost:8080/v1/tts", title="TTS API 服务地址"
-    )
 
 
 class BiliServiceConfig(BaseSettings):
@@ -79,10 +70,27 @@ class GPTSovitsConfig(BaseSettings):
     pause_seconds: float = Field(0.3, description="句间停顿秒数")
 
 
-class Setting(BaseSettings):
-    """全局配置"""
+class MinimaxConfig(BaseSettings):
+    """MiniMax TTS服务配置"""
 
-    model_config = SettingsConfigDict(toml_file="config.toml")
+    api_url: str = Field(
+        default="https://api.minimaxi.chat/v1/t2a_v2",
+        description="MiniMax API 服务地址",
+    )
+    api_key: str = Field(default="", description="MiniMax API密钥")
+    model: str = Field(default="speech-2.5-hd-preview", description="TTS模型")
+    voice_id: str = Field(default="audiobook_male_1", description="音色ID")
+    speed: float = Field(default=1.0, description="语速", ge=0.5, le=2.0)
+    vol: float = Field(default=1.0, description="音量", ge=0.0, le=2.0)
+    pitch: int = Field(default=0, description="音调", ge=-12, le=12)
+
+
+class TTSServiceConfig(BaseSettings):
+    """TTS服务配置"""
+
+    active: List[ModelType] = Field(
+        default=[ModelType.MINIMAX], title="激活的TTS服务类型"
+    )
 
     fish_speech: FishSpeechConfig = Field(
         default_factory=FishSpeechConfig, title="Fish Speech服务配置"
@@ -90,9 +98,22 @@ class Setting(BaseSettings):
     gpt_sovits: GPTSovitsConfig = Field(
         default_factory=GPTSovitsConfig, title="GPTSovits服务配置"
     )
+    minimax: MinimaxConfig = Field(
+        default_factory=MinimaxConfig, title="MiniMax服务配置"
+    )
+
+
+class Setting(BaseSettings):
+    """全局配置"""
+
+    model_config = SettingsConfigDict(toml_file="config.toml")
     bili_service: BiliServiceConfig = Field(
         default_factory=BiliServiceConfig, title="Bilibili服务配置"
     )
+    tts_service: TTSServiceConfig = Field(
+        default_factory=TTSServiceConfig, title="TTS服务配置"
+    )
+    player_device: str = Field(default="", title="输出设备")
 
     @classmethod
     def settings_customise_sources(
