@@ -7,6 +7,10 @@
 
 </div>
 
+## 简介
+
+B站直播间弹幕姬，支持多种 TTS 服务，实时将弹幕、礼物、舰长等信息转为语音播报。
+
 ## 环境要求
 
 - Python 3.12+
@@ -25,117 +29,222 @@
 
 感谢 [ForgQi/biliup-rs](https://github.com/ForgQi/biliup-rs) 项目提供的登录支持！
 
-## 克隆
+## 快速开始
 
-直接克隆项目即可：
+### 1. 克隆项目
 
 ```bash
 git clone https://github.com/MerlinCN/kinoko7danmaku.git
 cd kinoko7danmaku
 ```
 
-## 安装环境
-
-### 使用 uv (推荐)
-
-首先安装 uv：
+### 2. 安装 uv (推荐)
 
 ```bash
-# 方式1: 使用官方安装脚本 (推荐)
 # macOS/Linux
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Windows
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 
-# 方式2: 使用 pip 安装
+# 或使用 pip 安装
 pip install uv
 ```
 
-然后安装项目依赖：
+### 3. 安装依赖
 
 ```bash
 uv sync
 ```
 
-### 使用 pip
+### 4. 配置项目
 
-如果你更喜欢使用传统的 pip：
+复制配置示例文件并修改：
 
 ```bash
-pip install -e .
+cp config.example.toml config.toml
 ```
 
-## 开始使用
+编辑 `config.toml`，配置你的 TTS 服务和直播间信息。
+
+### 5. 运行程序
 
 ```bash
 # 使用 uv
 uv run python src/main.py
 
-# 或者使用 python
+# 或直接使用 python
 python src/main.py
 ```
 
-启动后访问：http://127.0.0.1:7860
-
-注意工作目录要在根目录下
-
 ## 配置说明
 
-项目使用 `config.json` 文件进行配置，首次运行会自动生成默认配置。主要配置项说明：
+项目使用 `config.toml` 文件进行配置。配置文件采用 TOML 格式，支持类型安全的配置管理。
 
-### 直播间配置
-- `room_id` (int): 直播间的房间号，默认为 `213`。支持短号和长号。
-- `gift_threshold` (int): 礼物触发阈值（单位：元）。只有当收到的礼物价值大于或等于这个值时，才会触发语音播报。默认值为 `5`。
+### 直播间配置 `[bili_service]`
 
-### TTS API 配置
-- `api_url` (str): TTS API 服务地址，默认为 `"http://localhost:8080/v1/tts"`。支持 Fish-Speech API 格式。
+```toml
+[bili_service]
+room_id = 213                    # 直播间房间号（支持短号/长号）
+gift_threshold = 5               # 礼物触发阈值（元）
+normal_danmaku_on = true         # 普通弹幕触发开关
+guard_on = true                  # 舰长触发开关
+super_chat_on = true             # 醒目留言触发开关
+welcome_on = true                # 启动语音播报开关
+debug = false                    # 调试模式
 
-### 功能开关
-- `normal_danmaku_on` (bool): 普通弹幕触发开关。默认为 `False`。
-- `guard_on` (bool): 舰长功能触发开关。默认为 `True`。
-- `super_chat_on` (bool): 醒目留言功能触发开关。默认为 `True`。
-- `welcome_on` (bool): 启动成功后语音播报开关。默认为 `True`。
+# 文本模板（支持变量替换）
+gift_on_text = '"{user_name}" 赠送了{gift_num}个{gift_name}'
+danmaku_on_text = '"{user_name}"说:"{message}"'
+guard_on_text = '感谢 "{user_name}" 赠送的{guard_name}，祝你熬夜不秃头，瞎吃不长胖！'
+super_chat_on_text = '"{user_name}" 发送了一条醒目留言，他说"{message}"'
+```
 
-### 文本处理
-- `alias` (dict): 别名字典。用于替换某些特定的词语以改善发音。例如：`{"Merlin": "么林"}`。默认包含 `{"Merlin": "么林"}`。
+### 别名配置 `[bili_service.alias]`
 
-### 文本模板
-- `gift_on_text` (str): 礼物触发文本模板。默认为 `""{user_name}" 赠送了{gift_num}个{gift_name}"`。
-- `danmaku_on_text` (str): 弹幕触发文本模板。默认为 `""{user_name}"说:"{message}""`。
-- `guard_on_text` (str): 舰长触发文本模板。默认为 `"感谢 "{user_name}" 赠送的{guard_name}，祝你熬夜不秃头，瞎吃不长胖！"`。
-- `super_chat_on_text` (str): 醒目留言触发文本模板。默认为 `""{user_name}" 发送了一条醒目留言，他说"{message}""`。
+用于替换特定词语以改善发音效果：
 
-### 调试配置
-- `debug` (bool): 调试模式开关。默认为 `False`。
+```toml
+[bili_service.alias]
+Merlin = "么林"
+Claude = "克劳德"
+```
 
-## TTS API 服务
+### TTS 服务配置
 
-本项目默认使用 Fish-Speech TTS API。如果要使用别的TTS API 可以修改`play_from_text`, 欢迎PR。你可以：
+项目支持多种 TTS 服务，可在 `[tts_service]` 中指定激活的服务：
 
-### 本地部署 Fish-Speech
+```toml
+[tts_service]
+active = ["minimax"]  # 可选: fish_speech, gpt_sovits, minimax
+```
 
-参考 [Fish-Speech 官方文档](https://speech.fish.audio/) 进行本地部署
+#### MiniMax TTS（推荐）
 
+高质量云端 TTS 服务，支持多语言、多音色、情感表达：
 
-### 使用在线服务
+```toml
+[tts_service.minimax]
+api_url = "https://api.minimaxi.chat/v1/t2a_v2"
+api_key = "your_api_key_here"       # 在 minimax.ai 获取
+model = "speech-2.5-hd-preview"     # 模型版本
+voice_id = "audiobook_male_1"       # 音色ID（300+可选）
+speed = 1.0                         # 语速 (0.5-2.0)
+vol = 1.0                           # 音量 (0.0-2.0)
+pitch = 0                           # 音调 (-12-12)
+```
 
-你也可以使用兼容 Fish-Speech API 格式的在线服务，在配置中修改 `api_url` 即可。
+**获取 API Key:**
+1. 访问 [MiniMax 开放平台](https://www.minimaxi.com/platform_overview)
+2. 注册并创建应用
+3. 获取 API Key 和 Group ID
 
-### API 参数
+#### Fish Speech
 
-项目支持以下 TTS 参数的配置：
-- `chunk_length`: 文本分块长度，默认 200
-- `max_new_tokens`: 最大新生成 token 数，默认 1024
-- `top_p`: 采样参数，默认 0.8
-- `repetition_penalty`: 重复惩罚，默认 1.1
-- `temperature`: 温度参数，默认 0.8
+本地部署的高质量开源 TTS：
+
+```toml
+[tts_service.fish_speech]
+api_url = "http://localhost:28080/v1/tts"
+```
+
+**部署方法：** 参考 [Fish-Speech 官方文档](https://speech.fish.audio/)
+
+#### GPT-SoVITS
+
+支持声音克隆的本地 TTS：
+
+```toml
+[tts_service.gpt_sovits]
+api_url = "http://localhost:19872"
+sovits_model = "SoVITS_weights_v4/model.pth"
+gpt_model = "GPT_weights_v4/model.ckpt"
+text_lang = "Multilingual Mixed"
+ref_audio_path = "ref_audio/ref.wav"
+ref_text = "参考文本"
+ref_text_lang = "Chinese"
+# ... 更多参数见 config.example.toml
+```
+
+**部署方法：** 参考 [GPT-SoVITS 项目](https://github.com/RVC-Boss/GPT-SoVITS)
+
+## 功能特性
+
+- ✨ 支持多种 TTS 服务（MiniMax、Fish Speech、GPT-SoVITS）
+- 🎯 灵活的触发条件配置
+- 📝 自定义文本模板和别名
+- 🔊 音频设备选择
+- 🚀 基于 Pydantic 的类型安全配置
+- 🔄 自动重连和错误重试
+- 📊 详细的日志记录
+
+## 项目结构
+
+```
+kinoko7danmaku/
+├── src/
+│   ├── bilibili/          # B站直播间连接
+│   ├── config/            # 配置管理
+│   ├── player/            # 音频播放器
+│   ├── schema/            # 数据模型
+│   ├── tts_service/       # TTS 服务适配器
+│   └── main.py            # 主程序入口
+├── bin/                   # biliup 可执行文件
+├── config.toml            # 配置文件（需自行创建）
+├── config.example.toml    # 配置示例
+└── pyproject.toml         # 项目依赖
+```
+
+## 开发指南
+
+### 添加新的 TTS 服务
+
+1. 在 `src/tts_service/` 创建新的适配器类
+2. 继承 `TTSService` 基类
+3. 实现 `text_to_speech` 方法
+4. 在 `src/schema/const.py` 添加服务类型枚举
+5. 在 `src/config/setting.py` 添加配置类
+6. 在 `src/tts_service/__init__.py` 注册服务
+
+### 代码规范
+
+- 使用 `ruff` 进行代码检查和格式化
+- 使用类型注解
+- 添加 docstring 文档
+
+```bash
+# 运行代码检查
+uv run ruff check --fix src/
+```
+
+## 常见问题
+
+### 1. 找不到输出设备
+
+检查系统音频设备，可在 `config.toml` 中配置：
+
+```toml
+[setting]
+player_device = "your_device_name"
+```
+
+### 2. TTS 请求超时
+
+- 检查网络连接
+- 确认 API 服务可访问
+- 增加超时时间配置
+
+### 3. 音频播放卡顿
+
+- 检查系统音频驱动
+- 尝试更换输出设备
+- 降低 TTS 并发数
 
 ## 支持与贡献
 
 觉得好用可以给这个项目点个 Star 或者去 [爱发电](https://afdian.net/a/MerlinCN) 投喂我。
 
-有意见或者建议也欢迎提交 Issues 和 Pull requests。
+有意见或建议欢迎提交 Issues 和 Pull Requests。
 
 ## 许可证
 
