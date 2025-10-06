@@ -4,22 +4,47 @@ from schema.const import ModelType
 from .base import TTSService
 from .fish_speech import FishSpeechService
 from .gpt_sovits import GPTSovitsService
+from .minimax import MinimaxService
 
-DEFAULT_TTS = ModelType.FISH_SPEECH
-
-
-_fish_speech_service = FishSpeechService(setting.fish_speech.api_url)
-_gpt_sovits_service = GPTSovitsService(setting.gpt_sovits.api_url)
+_default_tts_service = None
 
 
-def get_tts_service(
-    type: ModelType = DEFAULT_TTS,
-) -> FishSpeechService | GPTSovitsService:
+def get_tts_service() -> FishSpeechService | GPTSovitsService | MinimaxService:
     """获取TTS服务"""
-    if type == ModelType.FISH_SPEECH:
-        return _fish_speech_service
-    elif type == ModelType.GPT_SOVITS:
-        return _gpt_sovits_service
+
+    global _default_tts_service
+    if _default_tts_service is not None:
+        return _default_tts_service
+    for model_type in setting.tts_service.active:
+        if model_type == ModelType.FISH_SPEECH:
+            _default_tts_service = FishSpeechService(
+                setting.tts_service.fish_speech.api_url
+            )
+            break
+        elif model_type == ModelType.GPT_SOVITS:
+            _default_tts_service = GPTSovitsService(
+                setting.tts_service.gpt_sovits.api_url
+            )
+            break
+        elif model_type == ModelType.MINIMAX:
+            _default_tts_service = MinimaxService(
+                setting.tts_service.minimax.api_url,
+                setting.tts_service.minimax.api_key,
+                setting.tts_service.minimax.voice_id,
+                setting.tts_service.minimax.model,
+            )
+            break
+        else:
+            raise ValueError(f"Invalid TTS service type: {model_type}")
+    if _default_tts_service is None:
+        raise ValueError("No TTS service is active")
+    return _default_tts_service
 
 
-__all__ = ["TTSService", "FishSpeechService", "get_tts_service"]
+__all__ = [
+    "TTSService",
+    "FishSpeechService",
+    "GPTSovitsService",
+    "MinimaxService",
+    "get_tts_service",
+]

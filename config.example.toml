@@ -16,10 +16,14 @@ super_chat_on_text = '"{user_name}" 发送了一条醒目留言，他说"{messag
 [bili_service.alias]
 Merlin = "么林"
 
-[fish_speech]
+# TTS服务配置
+[tts_service]
+active = ["minimax"]
+
+[tts_service.fish_speech]
 api_url = "http://localhost:28080/v1/tts"
 
-[gpt_sovits]
+[tts_service.gpt_sovits]
 api_url = "http://localhost:19872"
 sovits_model = "SoVITS_weights_v4/Isabel_v2_e2_s136_l32.pth"
 gpt_model = "GPT_weights_v4/Isabel_v2-e15.ckpt"
@@ -36,3 +40,12 @@ ref_text_free = false
 sample_steps = 8
 super_sampling = false
 pause_seconds = 0.3
+
+[tts_service.minimax]
+api_url = "https://api.minimaxi.chat/v1/t2a_v2"
+api_key = "your_api_key_here"
+model = "speech-2.5-hd-preview"
+voice_id = "audiobook_male_1"
+speed = 1.0
+vol = 1.0
+pitch = 0

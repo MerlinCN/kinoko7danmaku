@@ -1,4 +1,3 @@
-import asyncio
 import time
 from typing import Any, Dict, List, Optional
 
@@ -128,7 +127,6 @@ class GPTSovitsService(TTSService):
 
     def __init__(self, api_url: str):
         self.client = GradioClient(api_url)
-        self._lock = asyncio.Lock()
 
     async def close(self):
         await self.client.close()
@@ -137,13 +135,13 @@ class GPTSovitsService(TTSService):
         await self.client.ensure()
         result = await self.client.predict(
             "/change_sovits_weights",
-            setting.gpt_sovits.sovits_model,
-            setting.gpt_sovits.text_lang,
-            setting.gpt_sovits.text_lang,
+            setting.tts_service.gpt_sovits.sovits_model,
+            setting.tts_service.gpt_sovits.text_lang,
+            setting.tts_service.gpt_sovits.text_lang,
         )
         logger.info(f"Changed SoVITS weights: {result}")
         result = await self.client.predict(
-            "/change_gpt_weights", setting.gpt_sovits.gpt_model
+            "/change_gpt_weights", setting.tts_service.gpt_sovits.gpt_model
         )
         logger.info(f"Changed GPT weights: {result}")
 
@@ -151,19 +149,19 @@ class GPTSovitsService(TTSService):
     async def text_to_speech(
         self,
         text: str,
-        text_lang: str = setting.gpt_sovits.text_lang,
-        ref_audio_path: str = setting.gpt_sovits.ref_audio_path,
-        ref_text: str = setting.gpt_sovits.ref_text,
-        ref_text_lang: str = setting.gpt_sovits.ref_text_lang,
-        top_k: int = setting.gpt_sovits.top_k,
-        top_p: float = setting.gpt_sovits.top_p,
-        temperature: float = setting.gpt_sovits.temperature,
-        text_split_method: str = setting.gpt_sovits.text_split_method,
-        speed_factor: float = setting.gpt_sovits.speed_factor,
-        ref_text_free: bool = setting.gpt_sovits.ref_text_free,
-        sample_steps: int = setting.gpt_sovits.sample_steps,
-        super_sampling: bool = setting.gpt_sovits.super_sampling,
-        pause_seconds: float = setting.gpt_sovits.pause_seconds,
+        text_lang: str = setting.tts_service.gpt_sovits.text_lang,
+        ref_audio_path: str = setting.tts_service.gpt_sovits.ref_audio_path,
+        ref_text: str = setting.tts_service.gpt_sovits.ref_text,
+        ref_text_lang: str = setting.tts_service.gpt_sovits.ref_text_lang,
+        top_k: int = setting.tts_service.gpt_sovits.top_k,
+        top_p: float = setting.tts_service.gpt_sovits.top_p,
+        temperature: float = setting.tts_service.gpt_sovits.temperature,
+        text_split_method: str = setting.tts_service.gpt_sovits.text_split_method,
+        speed_factor: float = setting.tts_service.gpt_sovits.speed_factor,
+        ref_text_free: bool = setting.tts_service.gpt_sovits.ref_text_free,
+        sample_steps: int = setting.tts_service.gpt_sovits.sample_steps,
+        super_sampling: bool = setting.tts_service.gpt_sovits.super_sampling,
+        pause_seconds: float = setting.tts_service.gpt_sovits.pause_seconds,
     ) -> bytes:
         """
         使用GPTSovits API将文本转换为语音
@@ -187,37 +185,36 @@ class GPTSovitsService(TTSService):
         Returns:
             bytes: 音频数据（WAV格式）
         """
-        async with self._lock:
-            ref_audio_dict = {
-                "path": ref_audio_path,
-                "orig_name": ref_audio_path.split("/")[-1],
-                "meta": {"_type": "gradio.FileData"},
-            }
-            is_freeze = False  # 是否冻结模型
-            inp_refs = None  # 输入的参考音频
-            data = await self.client.predict(
-                "/get_tts_wav",
-                ref_audio_dict,
-                ref_text,
-                ref_text_lang,
-                text,
-                text_lang,
-                text_split_method,
-                top_k,
-                top_p,
-                temperature,
-                ref_text_free,
-                speed_factor,
-                is_freeze,
-                inp_refs,
-                sample_steps,
-                super_sampling,
-                pause_seconds,
-            )
+        ref_audio_dict = {
+            "path": ref_audio_path,
+            "orig_name": ref_audio_path.split("/")[-1],
+            "meta": {"_type": "gradio.FileData"},
+        }
+        is_freeze = False  # 是否冻结模型
+        inp_refs = None  # 输入的参考音频
+        data = await self.client.predict(
+            "/get_tts_wav",
+            ref_audio_dict,
+            ref_text,
+            ref_text_lang,
+            text,
+            text_lang,
+            text_split_method,
+            top_k,
+            top_p,
+            temperature,
+            ref_text_free,
+            speed_factor,
+            is_freeze,
+            inp_refs,
+            sample_steps,
+            super_sampling,
+            pause_seconds,
+        )
 
-            # 读取返回的音频文件
-            audio_path = data[0].get("url")
-            async with httpx.AsyncClient() as client:
-                response = await client.get(audio_path)
-                response.raise_for_status()
-                return response.content
+        # 读取返回的音频文件
+        audio_path = data[0].get("url")
+        async with httpx.AsyncClient() as client:
+            response = await client.get(audio_path)
+            response.raise_for_status()
+            return response.content

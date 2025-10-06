@@ -8,7 +8,7 @@ from bilibili_api import Credential, live
 from loguru import logger
 
 from config import setting
-from player import StreamPlayer
+from player import get_stream_player
 from schema.bilibili import (
     DanmuMessage,
     EventType,
@@ -36,7 +36,7 @@ class BiliService:
             if not setting.bili_service.normal_danmaku_on:
                 return
             danmu_message = DanmuMessage.parse(event)
-            stream_player = StreamPlayer()
+            stream_player = get_stream_player()
             logger.info(danmu_message)
             tts_service = get_tts_service()
             audio = await tts_service.text_to_speech(
@@ -54,7 +54,7 @@ class BiliService:
                 < setting.bili_service.gift_threshold
             ):
                 return
-            stream_player = StreamPlayer()
+            stream_player = get_stream_player()
             tts_service = get_tts_service()
             audio = await tts_service.text_to_speech(
                 setting.bili_service.gift_on_text.format(
@@ -71,7 +71,7 @@ class BiliService:
             if not setting.bili_service.guard_on:
                 return
             guard_buy_message = GuardBuy.parse(event)
-            stream_player = StreamPlayer()
+            stream_player = get_stream_player()
             tts_service = get_tts_service()
             audio = await tts_service.text_to_speech(
                 setting.bili_service.guard_on_text.format(
@@ -87,7 +87,7 @@ class BiliService:
             if not setting.bili_service.super_chat_on:
                 return
             super_chat_message = SuperChatMessage.parse(event)
-            stream_player = StreamPlayer()
+            stream_player = get_stream_player()
             tts_service = get_tts_service()
             audio = await tts_service.text_to_speech(
                 setting.bili_service.super_chat_on_text.format(
