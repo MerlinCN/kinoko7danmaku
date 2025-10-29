@@ -85,7 +85,7 @@ class MinimaxService(TTSService):
             "Content-Type": "application/json",
         }
 
-        logger.info(f"Minimax TTS 请求开始: {text[:50]}...")
+        logger.debug(f"Minimax TTS 请求开始: {text[:50]}...")
 
         client = self._get_client()
         logger.debug(f"发送 POST 请求到: {self.api_url}")
