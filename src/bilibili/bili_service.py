@@ -8,7 +8,7 @@ from bilibili_api import Credential, live
 from loguru import logger
 
 from core import setting
-from player import get_stream_player
+from core.player import audio_player
 from models.bilibili import (
     DanmuMessage,
     EventType,
@@ -36,7 +36,6 @@ class BiliService:
             if not setting.bili_service.normal_danmaku_on:
                 return
             danmu_message = DanmuMessage.parse(event)
-            stream_player = get_stream_player()
             logger.info(danmu_message)
             tts_service = get_tts_service()
             audio = await tts_service.text_to_speech(
@@ -44,7 +43,7 @@ class BiliService:
                     user_name=danmu_message.user_name, message=danmu_message.message
                 )
             )
-            stream_player.play_bytes(audio)
+            audio_player.play_bytes(audio)
 
         @self.room_obj.on(EventType.SEND_GIFT)
         async def on_send_gift(event):
@@ -54,7 +53,6 @@ class BiliService:
                 < setting.bili_service.gift_threshold
             ):
                 return
-            stream_player = get_stream_player()
             tts_service = get_tts_service()
             audio = await tts_service.text_to_speech(
                 setting.bili_service.gift_on_text.format(
@@ -63,7 +61,7 @@ class BiliService:
                     gift_num=gift_message.gift_num,
                 )
             )
-            stream_player.play_bytes(audio)
+            audio_player.play_bytes(audio)
             logger.info(gift_message)
 
         @self.room_obj.on(EventType.GUARD_BUY)
@@ -71,7 +69,6 @@ class BiliService:
             if not setting.bili_service.guard_on:
                 return
             guard_buy_message = GuardBuy.parse(event)
-            stream_player = get_stream_player()
             tts_service = get_tts_service()
             audio = await tts_service.text_to_speech(
                 setting.bili_service.guard_on_text.format(
@@ -79,7 +76,7 @@ class BiliService:
                     guard_name=guard_buy_message.guard_level.name_cn,
                 )
             )
-            stream_player.play_bytes(audio)
+            audio_player.play_bytes(audio)
             logger.info(guard_buy_message)
 
         @self.room_obj.on(EventType.SUPER_CHAT_MESSAGE)
@@ -87,7 +84,6 @@ class BiliService:
             if not setting.bili_service.super_chat_on:
                 return
             super_chat_message = SuperChatMessage.parse(event)
-            stream_player = get_stream_player()
             tts_service = get_tts_service()
             audio = await tts_service.text_to_speech(
                 setting.bili_service.super_chat_on_text.format(
@@ -95,7 +91,7 @@ class BiliService:
                     message=super_chat_message.message,
                 )
             )
-            stream_player.play_bytes(audio)
+            audio_player.play_bytes(audio)
             logger.info(super_chat_message)
 
     @staticmethod

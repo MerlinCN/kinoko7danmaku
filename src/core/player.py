@@ -6,7 +6,8 @@ import sounddevice as sd
 from loguru import logger
 from pydub import AudioSegment
 
-from core import setting
+
+from models.device import OutputDevice
 
 
 class StreamPlayer:
@@ -14,7 +15,11 @@ class StreamPlayer:
         self.p = pyaudio.PyAudio()
         self.device_index = sd.default.device[1]
 
-    def get_output_devices(self):
+    @property
+    def default_output_index(self) -> int:
+        return sd.default.device[1]
+
+    def get_output_devices(self) -> list[OutputDevice]:
         """获取设备选择列表（使用sounddevice）- 返回元组列表格式"""
 
         # 获取所有设备
@@ -26,37 +31,26 @@ class StreamPlayer:
 
         default_output_device: dict = all_devices[default_output_index]  # type: ignore
 
-        choices = [("默认设备", default_output_index)]
+        choices = []
 
         default_api: str = sd.query_hostapis()[default_output_device["hostapi"]]["name"]  # type: ignore
         # 遍历所有设备，只添加纯输出设备
         for idx, device in enumerate(all_devices):
-            if device["max_output_channels"] > 0:  # 只要纯输出设备
-                # 构建设备名称
-                name = device["name"]
-                # 标记默认设备
-                if idx == default_output_index:
-                    name += " (默认) "
+            if device["max_output_channels"] <= 0:
+                continue
+            name = device["name"]
+            api_name: str = sd.query_hostapis()[device["hostapi"]]["name"]  # type: ignore
+            if default_api not in api_name:
+                continue
+            choices.append(OutputDevice(index=idx, name=name))  # (显示名称, 实际索引)
 
-                # 标记推荐的WASAPI接口（通用，不针对特定品牌）
-                api_name: str = sd.query_hostapis()[device["hostapi"]]["name"]  # type: ignore
-                if default_api not in api_name:
-                    continue
-                choices.append((name, idx))  # (显示名称, 实际索引)
-
-        logger.info(f"检测到 {len(choices) - 1} 个纯输出设备")
         return choices
-
-    def print_output_devices(self):
-        """打印输出设备"""
-        for device in self.get_output_devices():
-            logger.info(f"设备: {device[0]} - {device[1]}")
 
     def set_output_device_by_name(self, device_name: str):
         """根据设备名称设置输出设备"""
         for device in self.get_output_devices():
-            if device_name in device[0]:
-                self.set_output_device(device[1])
+            if device_name in device.name:
+                self.set_output_device(device.index)
                 return
         logger.error(f"未找到设备: {device_name}")
 
@@ -74,7 +68,7 @@ class StreamPlayer:
                 logger.error(f"设备 {device_index} 不支持音频输出")
                 return False
         except Exception as e:
-            logger.error(f"设置设备失败: {e}")
+            logger.exception(f"设置设备失败: {e}")
             return False
 
     def play_bytes(self, audio_bytes: bytes):
@@ -104,14 +98,12 @@ class StreamPlayer:
 
 
 # ============================================================================
-# 全局实例管理和辅助功能
+# 全局实例和辅助功能
 # ============================================================================
 
-# 全局 StreamPlayer 实例
-_stream_player = StreamPlayer()
-_stream_player.print_output_devices()
-if setting.player_device:
-    _stream_player.set_output_device_by_name(setting.player_device)
+# 全局 StreamPlayer 单例实例
+audio_player = StreamPlayer()
+
 # 存储临时文件列表用于清理 (使用 pathlib.Path)
 temp_files: list[Path] = []
 
@@ -133,12 +125,7 @@ def cleanup_all_temp_files():
         cleanup_temp_file(file_path)
 
 
-def get_stream_player():
-    """获取全局 StreamPlayer 实例"""
-    return _stream_player
-
-
-def close_stream_player():
+def close_audio_player():
     """关闭 StreamPlayer 并清理资源"""
-    _stream_player.close()
+    audio_player.close()
     cleanup_all_temp_files()

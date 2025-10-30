@@ -20,6 +20,7 @@ from core.const import (
     SUPPORTED_SERVICES,
 )
 from core.qconfig import cfg
+from core.player import audio_player
 from ..components import FloatRangeSettingCard, IntSettingCard, StrSettingCard
 
 
@@ -184,6 +185,7 @@ class SettingsInterface(ScrollArea):
             title="音色 ID",
             content="设置 Minimax TTS 服务的音色 ID",
             parent=self.minimaxGroup,
+            placeholder="请输入音色 ID",
         )
 
         self.minimaxModelCard = ComboBoxSettingCard(
@@ -387,13 +389,13 @@ class SettingsInterface(ScrollArea):
         # 播放器设置组
         self.playerGroup = SettingCardGroup("音频设置", self.scrollWidget)
 
-        self.playerDeviceCard = StrSettingCard(
+        self.playerDeviceCard = ComboBoxSettingCard(
             configItem=cfg.playerDevice,
             icon=FIF.ALBUM,
             title="输出设备",
-            content="设置音频输出设备（留空为默认设备）",
+            content="设置音频输出设备",
             parent=self.playerGroup,
-            placeholder="留空使用默认设备",
+            texts=[device.name for device in audio_player.get_output_devices()],
         )
 
         # 初始化布局

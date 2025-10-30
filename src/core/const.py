@@ -26,13 +26,12 @@ MINIMAX_MODELS = [
 # GPT-SoVITS 语言选项
 GPT_SOVITS_LANGUAGES = [
     "auto",
-    "zh",
-    "en",
-    "ja",
-    "ko",
-    "yue",
-    "all_zh",
-    "all_ja",
+    "Chinese",
+    "English",
+    "Japanese",
+    "Korean",
+    "Cantonese",
+    "Multilingual Mixed",
 ]
 
 # GPT-SoVITS 文本切分方式

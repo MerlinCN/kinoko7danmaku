@@ -1,6 +1,7 @@
 """基于 qfluentwidgets 的配置管理"""
 
 from enum import StrEnum
+from typing import override
 
 from qfluentwidgets import (
     BoolValidator,
@@ -103,6 +104,45 @@ class IntValidator(ConfigValidator):
             return int(value)
         except (ValueError, TypeError):
             return 0
+
+
+class OutputDeviceValidator(OptionsValidator):
+    """输出设备验证器
+
+    动态获取输出设备列表，验证设备索引是否有效。
+    """
+
+    def __init__(self):
+        from .player import audio_player
+
+        self.options = [device.index for device in audio_player.get_output_devices()]
+
+    @override
+    def validate(self, value) -> bool:
+        """验证值是否为有效的设备索引
+
+        Args:
+            value: 设备索引
+
+        Returns:
+            bool: 索引是否有效
+        """
+        from .player import audio_player
+
+        self.options = [device.index for device in audio_player.get_output_devices()]
+        return value in self.options
+
+    @override
+    def correct(self, value) -> int:
+        """将值修正为有效的设备索引
+
+        Args:
+            value: 设备索引
+
+        Returns:
+            int: 有效的设备索引
+        """
+        return value if self.validate(value) else self.options[0]
 
 
 class Config(QConfig):
@@ -356,10 +396,18 @@ class Config(QConfig):
     )
 
     # 播放器配置
-    playerDevice = ConfigItem(
+    @staticmethod
+    def _get_default_device_index() -> int:
+        """获取默认设备索引"""
+        from .player import audio_player
+
+        return audio_player.default_output_index
+
+    playerDevice = OptionsConfigItem(
         group=ConfigGroup.PLAYER,
         name=ConfigKey.PLAYER_DEVICE,
-        default="",
+        default=0,  # 在实际使用时会通过 validator 修正为有效值
+        validator=OutputDeviceValidator(),
     )
 
 
