@@ -1,0 +1,19 @@
+/* 主窗口 - 浅色主题 */
+
+/* 全局背景 */
+QWidget {
+    background-color: white;
+}
+
+/* 滚动区域 */
+QScrollArea {
+    background-color: white;
+    border: none;
+}
+
+/* 标题标签 */
+QLabel#settingLabel {
+    font: 33px 'Microsoft YaHei Light', 'PingFang SC', 'Segoe UI';
+    background-color: transparent;
+    color: black;
+}

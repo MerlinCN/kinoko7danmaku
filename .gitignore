@@ -165,3 +165,6 @@ test.py
 *.toml
 !config.example.toml
 ref_audio/
+
+CLAUDE.md
+.claude

@@ -7,7 +7,7 @@ from pydantic_settings import (
     TomlConfigSettingsSource,
 )
 
-from schema.const import ModelType
+from schema.const import ServiceType
 
 
 class BiliServiceConfig(BaseSettings):
@@ -88,8 +88,8 @@ class MinimaxConfig(BaseSettings):
 class TTSServiceConfig(BaseSettings):
     """TTS服务配置"""
 
-    active: List[ModelType] = Field(
-        default=[ModelType.MINIMAX], title="激活的TTS服务类型"
+    active: List[ServiceType] = Field(
+        default=[ServiceType.MINIMAX], title="激活的TTS服务类型"
     )
 
     fish_speech: FishSpeechConfig = Field(

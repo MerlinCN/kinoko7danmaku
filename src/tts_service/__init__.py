@@ -1,5 +1,5 @@
 from config import setting
-from schema.const import ModelType
+from schema.const import ServiceType
 
 from .base import TTSService
 from .fish_speech import FishSpeechService
@@ -16,17 +16,17 @@ def get_tts_service() -> FishSpeechService | GPTSovitsService | MinimaxService:
     if _default_tts_service is not None:
         return _default_tts_service
     for model_type in setting.tts_service.active:
-        if model_type == ModelType.FISH_SPEECH:
+        if model_type == ServiceType.FISH_SPEECH:
             _default_tts_service = FishSpeechService(
                 setting.tts_service.fish_speech.api_url
             )
             break
-        elif model_type == ModelType.GPT_SOVITS:
+        elif model_type == ServiceType.GPT_SOVITS:
             _default_tts_service = GPTSovitsService(
                 setting.tts_service.gpt_sovits.api_url
             )
             break
-        elif model_type == ModelType.MINIMAX:
+        elif model_type == ServiceType.MINIMAX:
             _default_tts_service = MinimaxService(
                 setting.tts_service.minimax.api_url,
                 setting.tts_service.minimax.api_key,
