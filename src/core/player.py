@@ -6,7 +6,6 @@ import sounddevice as sd
 from loguru import logger
 from pydub import AudioSegment
 
-
 from models.device import OutputDevice
 
 

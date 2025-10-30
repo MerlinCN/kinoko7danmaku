@@ -28,7 +28,6 @@ class MinimaxService(TTSService):
         if self._client is None or self._client.is_closed:
             self._client = httpx.AsyncClient(
                 timeout=60.0,
-                limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
             )
         return self._client
 

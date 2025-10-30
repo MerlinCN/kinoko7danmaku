@@ -2,15 +2,17 @@
 
 from PySide6.QtWidgets import QWidget
 from qfluentwidgets import (
+    ComboBoxSettingCard,
     ExpandLayout,
-    FluentIcon as FIF,
     ScrollArea,
     SettingCardGroup,
     SwitchSettingCard,
-    ComboBoxSettingCard,
     TitleLabel,
     qconfig,
     setTheme,
+)
+from qfluentwidgets import (
+    FluentIcon as FIF,
 )
 
 from core.const import (
@@ -19,8 +21,9 @@ from core.const import (
     MINIMAX_MODELS,
     SUPPORTED_SERVICES,
 )
-from core.qconfig import cfg
 from core.player import audio_player
+from core.qconfig import cfg
+
 from ..components import FloatRangeSettingCard, IntSettingCard, StrSettingCard
 
 
@@ -406,6 +409,10 @@ class SettingsInterface(ScrollArea):
         """连接信号槽"""
         # 连接主题切换信号
         qconfig.themeChanged.connect(setTheme)
+        cfg.playerDevice.valueChanged.connect(self._on_output_device_changed)
+
+    def _on_output_device_changed(self) -> None:
+        audio_player.set_output_device(cfg.playerDevice.value)
 
     def _init_layout(self) -> None:
         """初始化布局"""
