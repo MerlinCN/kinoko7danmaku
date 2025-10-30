@@ -1,5 +1,5 @@
-from config import setting
-from schema.const import ServiceType
+from core import setting
+from models.service import ServiceType
 
 from .base import TTSService
 from .fish_speech import FishSpeechService

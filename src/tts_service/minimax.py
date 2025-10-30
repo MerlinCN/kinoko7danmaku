@@ -2,8 +2,8 @@ import httpx
 from loguru import logger
 from tenacity import retry, retry_if_exception_type, stop_after_attempt
 
-from config import setting
-from schema.minimax import (
+from core import setting
+from models.minimax import (
     MinimaxTTSRequest,
     MinimaxTTSResponse,
     VoiceSetting,

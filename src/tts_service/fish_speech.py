@@ -1,7 +1,7 @@
 import httpx
 from loguru import logger
 
-from config import setting
+from core import setting
 
 from .base import TTSService
 

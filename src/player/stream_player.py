@@ -6,7 +6,7 @@ import sounddevice as sd
 from loguru import logger
 from pydub import AudioSegment
 
-from config import setting
+from core import setting
 
 
 class StreamPlayer:

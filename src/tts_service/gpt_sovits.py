@@ -6,7 +6,7 @@ import httpx
 from loguru import logger
 from tenacity import retry, stop_after_attempt
 
-from config import setting
+from core import setting
 
 from .base import TTSService
 

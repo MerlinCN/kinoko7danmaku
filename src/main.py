@@ -1,10 +1,9 @@
 """GUI 启动脚本"""
 
 import sys
-
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
-# 导入主窗口
+
 from gui import MainWindow
 
 def main() -> None:

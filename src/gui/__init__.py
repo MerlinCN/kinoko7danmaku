@@ -1,5 +1,5 @@
 """GUI 模块"""
 
-from .window import MainWindow
+from .view import MainWindow
 
 __all__ = ["MainWindow"]

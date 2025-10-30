@@ -7,7 +7,7 @@ from pydantic_settings import (
     TomlConfigSettingsSource,
 )
 
-from schema.const import ServiceType
+from models.service import ServiceType
 
 
 class BiliServiceConfig(BaseSettings):

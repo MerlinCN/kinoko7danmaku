@@ -7,9 +7,9 @@ from pathlib import Path
 from bilibili_api import Credential, live
 from loguru import logger
 
-from config import setting
+from core import setting
 from player import get_stream_player
-from schema.bilibili import (
+from models.bilibili import (
     DanmuMessage,
     EventType,
     GiftMessage,
