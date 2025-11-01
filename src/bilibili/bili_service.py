@@ -1,11 +1,10 @@
 import asyncio
 import json
-import platform
-import subprocess
 from pathlib import Path
 
 from bilibili_api import Credential, live
 from loguru import logger
+import stream_gears
 
 from core import setting
 from core.player import audio_player
@@ -142,23 +141,54 @@ class BiliService:
         self.run_task = asyncio.create_task(self.room_obj.connect())
 
 
-def login_biliup():
-    biliup_path = Path("bin") / "biliup.exe"
-    if platform.system() == "Darwin" and platform.machine() == "arm64":
-        biliup_path = Path("bin") / "biliup-aarch64-macos"
+def login_biliup() -> None:
+    """
+    使用 stream_gears 进行 B 站登录。
 
+    如果 cookies.json 已存在，则验证并自动刷新 token（如需要）。
+    否则，通过二维码方式进行登录并保存 cookies。
+    """
     cookies_path = Path("cookies.json")
-    if cookies_path.exists():
-        # todo: 做登录校验
-        subprocess.run([biliup_path, "renew"])
-        return
 
-    subprocess.run(
-        [
-            biliup_path,
-            "login",
-        ]
-    )
+    if cookies_path.exists():
+        logger.info("检测到 cookies.json，验证并刷新 token...")
+        try:
+            # login_by_cookies 会自动验证 token 并在需要时刷新
+            stream_gears.login_by_cookies(str(cookies_path), proxy=None)
+            logger.info("Token 验证成功")
+            return
+        except RuntimeError as e:
+            logger.warning(f"Token 验证失败: {e}，将重新登录")
+            cookies_path.unlink()
+
+    logger.info("开始二维码登录流程...")
+
+    # 获取二维码
+    qrcode_response = stream_gears.get_qrcode(proxy=None)
+    qrcode_data = json.loads(qrcode_response)
+
+    if qrcode_data.get("code") != 0:
+        error_msg = f"获取二维码失败: {qrcode_data}"
+        logger.error(error_msg)
+        raise RuntimeError(error_msg)
+
+    # 显示二维码 URL
+    qr_url = qrcode_data["data"]["url"]
+    logger.info("请用 B 站 App 扫描二维码进行登录:")
+    logger.info(f"二维码链接: {qr_url}")
+
+    # 轮询等待用户确认登录
+    logger.info("等待用户扫码确认...")
+    login_response = stream_gears.login_by_qrcode(qrcode_response, proxy=None)
+    login_info = json.loads(login_response)
+
+    # 保存登录信息到 cookies.json
+    with open(cookies_path, "w", encoding="utf-8") as f:
+        json.dump(login_info, f, indent=2, ensure_ascii=False)
+
+    mid = login_info["token_info"]["mid"]
+    logger.info(f"登录成功! 用户 UID: {mid}")
+    logger.info(f"登录信息已保存到 {cookies_path}")
 
 
 bili_service = BiliService()
