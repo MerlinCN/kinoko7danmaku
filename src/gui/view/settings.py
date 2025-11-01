@@ -1,6 +1,9 @@
 """设置界面"""
 
+import asyncio
+
 from PySide6.QtWidgets import QWidget
+from qasync import asyncSlot
 from qfluentwidgets import (
     ComboBoxSettingCard,
     ExpandLayout,
@@ -23,7 +26,7 @@ from core.const import (
     SUPPORTED_SERVICES,
 )
 from core.player import audio_player
-from core.qconfig import cfg
+from core.qconfig import cfg, get_voices
 
 from ..components import FloatRangeSettingCard, IntSettingCard, StrSettingCard
 
@@ -175,7 +178,7 @@ class SettingsInterface(ScrollArea):
             placeholder="请输入 API Key",
         )
 
-        voices = self._on_minimax_api_key_changed()
+        voices = self._load_voices_sync()
         self.minimaxVoiceIdCard = ComboBoxSettingCard(
             configItem=cfg.minimaxVoiceId,
             icon=FIF.MICROPHONE,
@@ -404,16 +407,70 @@ class SettingsInterface(ScrollArea):
         # 连接主题切换信号
         qconfig.themeChanged.connect(setTheme)
         cfg.playerDevice.valueChanged.connect(self._on_output_device_changed)
-        cfg.minimaxApiKey.valueChanged.connect(self._on_minimax_api_key_changed)
+        cfg.minimaxApiKey.valueChanged.connect(self._on_minimax_api_key_changed_async)
 
-    def _on_minimax_api_key_changed(self) -> None:
-        voices = cfg.minimaxVoiceId.validator.get_voices(cfg.minimaxApiKey.value)
+    def _load_voices_sync(self) -> list[str]:
+        """同步加载音色列表（用于初始化）
+
+        Returns:
+            音色列表
+        """
+        if not cfg.minimaxApiKey.value:
+            return [MINIMAX_ERROR_VOICE_ID]
+
+        voices = get_voices(cfg.minimaxApiKey.value)
+        cfg.minimaxVoiceId.validator.options = voices
         value = MINIMAX_ERROR_VOICE_ID
         if voices and cfg.minimaxVoiceId.value not in voices:
             # 配置更新
             value = voices[0]
         cfg.minimaxVoiceId.value = value
         return voices
+
+    @asyncSlot()
+    async def _on_minimax_api_key_changed_async(self) -> None:
+        """API Key 改变时更新音色列表（异步，不阻塞界面）"""
+        if not cfg.minimaxApiKey.value:
+            voices = [MINIMAX_ERROR_VOICE_ID]
+            cfg.minimaxVoiceId.validator.options = voices
+            cfg.minimaxVoiceId.value = MINIMAX_ERROR_VOICE_ID
+            self._update_voice_options(voices, MINIMAX_ERROR_VOICE_ID)
+            return
+
+        # 在线程池中执行网络请求（不阻塞事件循环）
+        voices = await asyncio.to_thread(get_voices, cfg.minimaxApiKey.value)
+        if not voices:
+            voices = [MINIMAX_ERROR_VOICE_ID]
+
+        cfg.minimaxVoiceId.validator.options = voices
+
+        # 如果当前值不在新列表中，使用第一个选项
+        value = voices[0] if voices else MINIMAX_ERROR_VOICE_ID
+        if cfg.minimaxVoiceId.value in voices:
+            value = cfg.minimaxVoiceId.value
+
+        cfg.minimaxVoiceId.value = value
+        self._update_voice_options(voices, value)
+
+    def _update_voice_options(self, voices: list[str], selected_value: str) -> None:
+        """更新音色选项下拉列表
+
+        Args:
+            voices: 新的音色列表
+            selected_value: 要选中的值
+        """
+        # 清空现有选项
+        self.minimaxVoiceIdCard.comboBox.clear()
+
+        # 更新选项到文本的映射
+        self.minimaxVoiceIdCard.optionToText = {v: v for v in voices}
+
+        # 重新添加选项
+        for voice in voices:
+            self.minimaxVoiceIdCard.comboBox.addItem(voice, userData=voice)
+
+        # 设置选中项
+        self.minimaxVoiceIdCard.setValue(selected_value)
 
     def _on_output_device_changed(self) -> None:
         audio_player.set_output_device(cfg.playerDevice.value)

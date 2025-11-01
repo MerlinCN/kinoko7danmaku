@@ -3,7 +3,6 @@ from loguru import logger
 from tenacity import retry, retry_if_exception_type, stop_after_attempt
 
 from core import setting
-from core.qconfig import cfg
 from models.minimax import (
     MinimaxTTSRequest,
     MinimaxTTSResponse,
@@ -105,17 +104,3 @@ class MinimaxService(TTSService):
         )
 
         return audio_bytes
-
-
-async def get_voices(api_url: str, api_key: str) -> dict:
-    """获取Minimax支持的音色列表"""
-    api_url = cfg.minimaxApiUrl.value.strip("/") + "/voices"
-    api_key = cfg.minimaxApiKey.value
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-    }
-    async with httpx.AsyncClient() as client:
-        response = await client.get(api_url, headers=headers)
-        response.raise_for_status()
-        return response.json()

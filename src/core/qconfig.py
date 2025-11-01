@@ -146,6 +146,32 @@ class OutputDeviceValidator(OptionsValidator):
         return value if self.validate(value) else self.options[0]
 
 
+def get_voices(api_key: str) -> list[str]:
+    """获取Minimax支持的音色列表"""
+    api_url = "https://api.minimax.io/v1/get_voice"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    params = {
+        "voice_type": "all",
+    }
+    try:
+        response = httpx.post(api_url, headers=headers, json=params)
+        response.raise_for_status()
+        result = response.json()
+    except httpx.HTTPStatusError:
+        return [MINIMAX_ERROR_VOICE_ID]
+    ret = []
+    if not result or "voice_cloning" not in result:
+        return [MINIMAX_ERROR_VOICE_ID]
+    for voice in result["voice_cloning"]:
+        ret.append(voice["voice_id"])
+    if not ret:
+        return [MINIMAX_ERROR_VOICE_ID]
+    return ret
+
+
 class MinimaxVoiceValidator(OptionsValidator):
     def __init__(self):
         self.options = [MINIMAX_ERROR_VOICE_ID]
@@ -154,27 +180,7 @@ class MinimaxVoiceValidator(OptionsValidator):
         """获取Minimax支持的音色列表"""
         if not api_key:
             return []
-        api_url = "https://api.minimax.io/v1/get_voice"
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        }
-        params = {
-            "voice_type": "all",
-        }
-        try:
-            response = httpx.post(api_url, headers=headers, json=params)
-            response.raise_for_status()
-            result = response.json()
-        except httpx.HTTPStatusError:
-            return [MINIMAX_ERROR_VOICE_ID]
-        ret = []
-        if not result or "voice_cloning" not in result:
-            return [MINIMAX_ERROR_VOICE_ID]
-        for voice in result["voice_cloning"]:
-            ret.append(voice["voice_id"])
-        if not ret:
-            return [MINIMAX_ERROR_VOICE_ID]
+        ret = get_voices(api_key)
         self.options = ret
         return ret
 
