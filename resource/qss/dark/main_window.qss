@@ -11,9 +11,10 @@ QScrollArea {
     background-color: rgb(39, 39, 39);
 }
 
-/* 标题标签 */
-QLabel#settingLabel {
-    font: 33px 'Microsoft YaHei Light', 'PingFang SC', 'Segoe UI';
+AvatarWidget{
     background-color: transparent;
-    color: white;
+}
+
+CaptionLabel{
+    background-color: transparent;
 }

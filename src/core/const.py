@@ -43,3 +43,5 @@ GPT_SOVITS_TEXT_SPLIT_METHODS = [
     "按英文句号.切",
     "按标点符号切",
 ]
+
+MINIMAX_ERROR_VOICE_ID = "未获取到音色列表，请检查 API 地址和 API 密钥"

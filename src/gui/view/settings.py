@@ -18,6 +18,7 @@ from qfluentwidgets import (
 from core.const import (
     GPT_SOVITS_LANGUAGES,
     GPT_SOVITS_TEXT_SPLIT_METHODS,
+    MINIMAX_ERROR_VOICE_ID,
     MINIMAX_MODELS,
     SUPPORTED_SERVICES,
 )
@@ -165,14 +166,6 @@ class SettingsInterface(ScrollArea):
         # Minimax 服务设置组
         self.minimaxGroup = SettingCardGroup("Minimax 设置", self.scrollWidget)
 
-        self.minimaxApiUrlCard = StrSettingCard(
-            configItem=cfg.minimaxApiUrl,
-            icon=FIF.LINK,
-            title="API 地址",
-            content="设置 Minimax TTS 服务的 API 地址",
-            parent=self.minimaxGroup,
-        )
-
         self.minimaxApiKeyCard = StrSettingCard(
             configItem=cfg.minimaxApiKey,
             icon=FIF.EDIT,
@@ -182,13 +175,14 @@ class SettingsInterface(ScrollArea):
             placeholder="请输入 API Key",
         )
 
-        self.minimaxVoiceIdCard = StrSettingCard(
+        voices = self._on_minimax_api_key_changed()
+        self.minimaxVoiceIdCard = ComboBoxSettingCard(
             configItem=cfg.minimaxVoiceId,
             icon=FIF.MICROPHONE,
             title="音色 ID",
             content="设置 Minimax TTS 服务的音色 ID",
+            texts=voices,
             parent=self.minimaxGroup,
-            placeholder="请输入音色 ID",
         )
 
         self.minimaxModelCard = ComboBoxSettingCard(
@@ -410,6 +404,16 @@ class SettingsInterface(ScrollArea):
         # 连接主题切换信号
         qconfig.themeChanged.connect(setTheme)
         cfg.playerDevice.valueChanged.connect(self._on_output_device_changed)
+        cfg.minimaxApiKey.valueChanged.connect(self._on_minimax_api_key_changed)
+
+    def _on_minimax_api_key_changed(self) -> None:
+        voices = cfg.minimaxVoiceId.validator.get_voices(cfg.minimaxApiKey.value)
+        value = MINIMAX_ERROR_VOICE_ID
+        if voices and cfg.minimaxVoiceId.value not in voices:
+            # 配置更新
+            value = voices[0]
+        cfg.minimaxVoiceId.value = value
+        return voices
 
     def _on_output_device_changed(self) -> None:
         audio_player.set_output_device(cfg.playerDevice.value)
@@ -438,7 +442,6 @@ class SettingsInterface(ScrollArea):
         self.ttsGroup.addSettingCard(self.activeTTSCard)
 
         # 添加 Minimax 服务设置卡片
-        self.minimaxGroup.addSettingCard(self.minimaxApiUrlCard)
         self.minimaxGroup.addSettingCard(self.minimaxApiKeyCard)
         self.minimaxGroup.addSettingCard(self.minimaxVoiceIdCard)
         self.minimaxGroup.addSettingCard(self.minimaxModelCard)

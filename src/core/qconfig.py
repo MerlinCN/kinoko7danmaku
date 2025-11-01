@@ -3,6 +3,7 @@
 from enum import StrEnum
 from typing import override
 
+import httpx
 from qfluentwidgets import (
     BoolValidator,
     ConfigItem,
@@ -14,16 +15,19 @@ from qfluentwidgets import (
     RangeValidator,
     qconfig,
 )
+
 from models.service import ServiceType
 
 from .const import (
     GPT_SOVITS_LANGUAGES,
     GPT_SOVITS_TEXT_SPLIT_METHODS,
+    MINIMAX_ERROR_VOICE_ID,
     MINIMAX_MODELS,
     SUPPORTED_SERVICES,
 )
-
 from .player import audio_player
+
+
 class ConfigGroup(StrEnum):
     """配置分组名称"""
 
@@ -113,7 +117,6 @@ class OutputDeviceValidator(OptionsValidator):
     """
 
     def __init__(self):
-
         self.options = [device.index for device in audio_player.get_output_devices()]
 
     @override
@@ -141,6 +144,39 @@ class OutputDeviceValidator(OptionsValidator):
             int: 有效的设备索引
         """
         return value if self.validate(value) else self.options[0]
+
+
+class MinimaxVoiceValidator(OptionsValidator):
+    def __init__(self):
+        self.options = [MINIMAX_ERROR_VOICE_ID]
+
+    def get_voices(self, api_key: str) -> list[str]:
+        """获取Minimax支持的音色列表"""
+        if not api_key:
+            return []
+        api_url = "https://api.minimax.io/v1/get_voice"
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+        params = {
+            "voice_type": "all",
+        }
+        try:
+            response = httpx.post(api_url, headers=headers, json=params)
+            response.raise_for_status()
+            result = response.json()
+        except httpx.HTTPStatusError:
+            return [MINIMAX_ERROR_VOICE_ID]
+        ret = []
+        if not result or "voice_cloning" not in result:
+            return [MINIMAX_ERROR_VOICE_ID]
+        for voice in result["voice_cloning"]:
+            ret.append(voice["voice_id"])
+        if not ret:
+            return [MINIMAX_ERROR_VOICE_ID]
+        self.options = ret
+        return ret
 
 
 class Config(QConfig):
@@ -232,11 +268,6 @@ class Config(QConfig):
     )
 
     # Minimax TTS 服务配置
-    minimaxApiUrl = ConfigItem(
-        group=ConfigGroup.MINIMAX_SERVICE,
-        name=ConfigKey.MINIMAX_API_URL,
-        default="https://api.minimaxi.chat/v1/t2a_v2",
-    )
 
     minimaxApiKey = ConfigItem(
         group=ConfigGroup.MINIMAX_SERVICE,
@@ -251,10 +282,11 @@ class Config(QConfig):
         validator=OptionsValidator(MINIMAX_MODELS),
     )
 
-    minimaxVoiceId = ConfigItem(
+    minimaxVoiceId = OptionsConfigItem(
         group=ConfigGroup.MINIMAX_SERVICE,
         name=ConfigKey.MINIMAX_VOICE_ID,
-        default="",
+        default=MINIMAX_ERROR_VOICE_ID,
+        validator=MinimaxVoiceValidator(),
     )
 
     minimaxSpeed = RangeConfigItem(

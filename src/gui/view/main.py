@@ -1,20 +1,25 @@
 """主窗口"""
 
-import json
 from pathlib import Path
 
-from PySide6.QtWidgets import QApplication, QWidget, QVBoxLayout, QStackedWidget
+from loguru import logger
+from PySide6.QtWidgets import QApplication, QStackedWidget, QVBoxLayout, QWidget
+from qasync import asyncSlot
 from qfluentwidgets import (
     FluentIcon as FIF,
+)
+from qfluentwidgets import (
     FluentWindow,
     NavigationItemPosition,
+    TitleLabel,
     isDarkTheme,
     qconfig,
 )
-from loguru import logger
 
+from bilibili import bili_service
+
+from ..components import HomePanel, LoginPanel
 from .settings import SettingsInterface
-from ..components import LoginPanel, HomePanel
 
 
 class MainInterface(QWidget):
@@ -31,8 +36,10 @@ class MainInterface(QWidget):
     def _setup_ui(self) -> None:
         """设置界面"""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-
+        layout.setContentsMargins(36, 10, 36, 0)
+        self.title_label = TitleLabel("登录", self)
+        self.title_label.move(36, 30)
+        layout.addWidget(self.title_label)
         # 创建 stacked widget 来切换登录/主界面
         self.stacked_widget = QStackedWidget()
 
@@ -42,7 +49,7 @@ class MainInterface(QWidget):
 
         # 创建主页面板
         self.home_panel = HomePanel()
-        self.home_panel.logout_btn.clicked.connect(self._on_logout)
+        self.home_panel.user_info_card.logout_btn.clicked.connect(self._on_logout)
 
         # 将面板添加到 stacked widget
         self.stacked_widget.addWidget(self.login_panel)
@@ -52,33 +59,24 @@ class MainInterface(QWidget):
 
     def _check_login_status(self) -> None:
         """检查登录状态"""
-        cookies_path = Path("cookies.json")
-        if cookies_path.exists():
-            try:
-                with open(cookies_path, "r", encoding="utf-8") as f:
-                    json.load(f)
-                # 如果 cookies.json 存在，尝试进入已登录状态
-                self.stacked_widget.setCurrentWidget(self.home_panel)
-            except Exception as e:
-                logger.error(f"检查登录状态失败: {e}")
-                self.stacked_widget.setCurrentWidget(self.login_panel)
+        if bili_service.is_logged_in():
+            self.stacked_widget.setCurrentWidget(self.home_panel)
+            self.title_label.setText("主页")
         else:
             self.stacked_widget.setCurrentWidget(self.login_panel)
+            self.title_label.setText("登录")
 
     def _on_login_success(self) -> None:
         """登录成功的回调"""
         logger.info("登录成功，切换到主页面")
-        self.stacked_widget.setCurrentWidget(self.home_panel)
+        self._check_login_status()
+        # 刷新用户信息
+        self.home_panel.user_info_card._load_user_info()
 
-    def _on_logout(self) -> None:
+    @asyncSlot()
+    async def _on_logout(self) -> None:
         """退出登录的回调"""
-        cookies_path = Path("cookies.json")
-        if cookies_path.exists():
-            cookies_path.unlink()
-            logger.info("已删除 cookies，返回登录界面")
-
-        # 清空弹幕列表
-        self.home_panel.danmaku_control_card.clear_danmaku()
+        await bili_service.logout()
 
         # 切换回登录界面
         self.login_panel._load_qr_code()

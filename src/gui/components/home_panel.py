@@ -1,14 +1,12 @@
 """主页面板 - 已登录界面"""
 
 from PySide6.QtWidgets import (
-    QWidget,
     QVBoxLayout,
-    QHBoxLayout,
-    QPushButton,
+    QWidget,
 )
 
-from .user_info_card import UserInfoCard
 from .danmaku_control_card import DanmakuControlCard
+from .user_info_card import UserInfoCard
 
 
 class HomePanel(QWidget):
@@ -35,26 +33,8 @@ class HomePanel(QWidget):
         self.danmaku_control_card = DanmakuControlCard()
         self.main_layout.addWidget(self.danmaku_control_card)
 
-        # 底部按钮区
-        button_layout = QHBoxLayout()
-        button_layout.setSpacing(12)
-        button_layout.addStretch()
-
-        self.logout_btn = QPushButton("退出登录")
-        self.logout_btn.setFixedWidth(100)
-        button_layout.addWidget(self.logout_btn)
-
-        self.main_layout.addLayout(button_layout)
         self.main_layout.addStretch()
 
     def get_user_info_card(self) -> UserInfoCard:
         """获取用户信息卡片"""
         return self.user_info_card
-
-    def get_danmaku_control_card(self) -> DanmakuControlCard:
-        """获取弹幕控制卡片"""
-        return self.danmaku_control_card
-
-    def on_logout_clicked(self, callback) -> None:
-        """设置退出登录按钮的回调"""
-        self.logout_btn.clicked.connect(callback)
