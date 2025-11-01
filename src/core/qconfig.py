@@ -23,7 +23,7 @@ from .const import (
     SUPPORTED_SERVICES,
 )
 
-
+from .player import audio_player
 class ConfigGroup(StrEnum):
     """配置分组名称"""
 
@@ -113,7 +113,6 @@ class OutputDeviceValidator(OptionsValidator):
     """
 
     def __init__(self):
-        from .player import audio_player
 
         self.options = [device.index for device in audio_player.get_output_devices()]
 
@@ -127,7 +126,6 @@ class OutputDeviceValidator(OptionsValidator):
         Returns:
             bool: 索引是否有效
         """
-        from .player import audio_player
 
         self.options = [device.index for device in audio_player.get_output_devices()]
         return value in self.options
@@ -396,17 +394,10 @@ class Config(QConfig):
     )
 
     # 播放器配置
-    @staticmethod
-    def _get_default_device_index() -> int:
-        """获取默认设备索引"""
-        from .player import audio_player
-
-        return audio_player.default_output_index
-
     playerDevice = OptionsConfigItem(
         group=ConfigGroup.PLAYER,
         name=ConfigKey.PLAYER_DEVICE,
-        default=0,  # 在实际使用时会通过 validator 修正为有效值
+        default=audio_player.default_output_index,  # 在实际使用时会通过 validator 修正为有效值
         validator=OutputDeviceValidator(),
     )
 

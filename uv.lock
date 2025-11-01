@@ -415,7 +415,10 @@ dependencies = [
     { name = "pydub" },
     { name = "pyside6" },
     { name = "pyside6-fluent-widgets", extra = ["full"] },
+    { name = "qasync" },
+    { name = "qrcode" },
     { name = "sounddevice" },
+    { name = "stream-gears" },
     { name = "tenacity" },
 ]
 
@@ -431,7 +434,10 @@ requires-dist = [
     { name = "pydub", specifier = ">=0.25.1" },
     { name = "pyside6", specifier = ">=6.10.0" },
     { name = "pyside6-fluent-widgets", extras = ["full"], specifier = ">=1.9.1" },
+    { name = "qasync", specifier = ">=0.28.0" },
+    { name = "qrcode", specifier = ">=8.2" },
     { name = "sounddevice", specifier = ">=0.5.2" },
+    { name = "stream-gears", specifier = ">=0.2.4" },
     { name = "tenacity", specifier = ">=9.1.2" },
 ]
 
@@ -3737,6 +3743,15 @@ wheels = [
 ]
 
 [[package]]
+name = "qasync"
+version = "0.28.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ec/b2/5be08597dbbf331edb69478eae2f8dd511834cebf56a183b442e7437f8e0/qasync-0.28.0.tar.gz", hash = "sha256:6f7f1f18971f59cb259b107218269ba56e3ad475ec456e54714b426a6e30b71d", size = 14010, upload-time = "2025-08-28T01:31:36.785Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e5/84/0ce4cd946f6e958428c87d5accac35df70f81607e45ba4919947d0762d63/qasync-0.28.0-py3-none-any.whl", hash = "sha256:21faba8d047c717008378f5ac29ea58c32a8128528629e4afd57c59b768dba0f", size = 16188, upload-time = "2025-08-28T01:31:35.591Z" },
+]
+
+[[package]]
 name = "qrcode"
 version = "8.2"
 source = { registry = "https://pypi.org/simple" }
@@ -3871,6 +3886,24 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/6d/e6/21ccce3262dd4889aa3332e5a119a3491a95e8f60939870a3a035aabac0d/soupsieve-2.8.tar.gz", hash = "sha256:e2dd4a40a628cb5f28f6d4b0db8800b8f581b65bb380b97de22ba5ca8d72572f", size = 103472, upload-time = "2025-08-27T15:39:51.78Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/14/a0/bb38d3b76b8cae341dad93a2dd83ab7462e6dbcdd84d43f54ee60a8dc167/soupsieve-2.8-py3-none-any.whl", hash = "sha256:0cc76456a30e20f5d7f2e14a98a4ae2ee4e5abdc7c5ea0aafe795f344bc7984c", size = 36679, upload-time = "2025-08-27T15:39:50.179Z" },
+]
+
+[[package]]
+name = "stream-gears"
+version = "0.2.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/86/4d/d61403833c7e03c230a99060370f871e4d05811fe963d68b18792dd239f4/stream_gears-0.2.4.tar.gz", hash = "sha256:75cc0063e240e3c3371259fbf711fb477600484d7259f607be2f016c8e836f93", size = 70452, upload-time = "2025-07-15T14:46:59.189Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b9/26/21befb54e0105299ea3dfdd3533a0ac25150025d5586bb78e8aaf67935ba/stream_gears-0.2.4-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:ff8f3adfd12d0857e06b6bb7a17c74e839cbae26136a435de399fd4c21ff0aa9", size = 2541439, upload-time = "2025-07-15T14:46:56.179Z" },
+    { url = "https://files.pythonhosted.org/packages/e5/7e/66f4b4e8e667f47e93c09ecbfb57656b145230f11378bef2fd091ea3664a/stream_gears-0.2.4-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:71795295dfb791b4ae3b125fdfc53de30f37feb718a710970009a20be5c66fd2", size = 2416516, upload-time = "2025-07-15T14:46:54.723Z" },
+    { url = "https://files.pythonhosted.org/packages/8f/95/2638809ec23e0c942750fbe2c06edeea773019d7f3bb6bfaabe6ca94d2eb/stream_gears-0.2.4-cp38-abi3-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:7aaf8493f5ab05e54008be27947ec6f78c3f95600d00bf8cb17f0d41ece76c23", size = 2561130, upload-time = "2025-07-15T14:46:52.065Z" },
+    { url = "https://files.pythonhosted.org/packages/cf/bc/2758a86a11cbf788faabdd68fd5b475bf6e9fbf2db3b3c99ed7984808596/stream_gears-0.2.4-cp38-abi3-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:53bd3d67e163a780d839570a16d6c1630f9feb8669fd8db9a6c24c3662685b3d", size = 2444980, upload-time = "2025-07-15T14:46:46.253Z" },
+    { url = "https://files.pythonhosted.org/packages/3d/13/22911108b5cd6bddb25ea6d395f8b1d0786b37a9e888f34f13803595bda2/stream_gears-0.2.4-cp38-abi3-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:b851b0c7eaa347ba50ad9bca6528fb31bfe6be0dc300638510a8ed47c90c0d90", size = 2795618, upload-time = "2025-07-15T14:46:47.958Z" },
+    { url = "https://files.pythonhosted.org/packages/2d/1b/e29140611b1bc8e38b50a5a71bb24d4e3fdbd1318ddea4a7eae20ee1855e/stream_gears-0.2.4-cp38-abi3-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:0d9a4da1e5c77c722a4ce05eb3063543d4f1228429c9c19d80793d628142d4d4", size = 2725453, upload-time = "2025-07-15T14:46:49.977Z" },
+    { url = "https://files.pythonhosted.org/packages/c5/44/41f58cbf185f69490c0d70278df2d0acdeee7a908449870d991622527c0e/stream_gears-0.2.4-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:815d556e9c4f65a51ac75abd002ba4eb640b56107ce8ab781cbc1d6a9ac077ad", size = 2656871, upload-time = "2025-07-15T14:46:53.485Z" },
+    { url = "https://files.pythonhosted.org/packages/61/ff/a01287b25d659a089ac22105dbdbc03ec66c1a82ca885ea972a6adbfeacc/stream_gears-0.2.4-cp38-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:a743d75a645e65b961087c85224d20b8cb177059c7d19a6437d133d23b424e4a", size = 2522795, upload-time = "2025-07-15T14:46:44.665Z" },
+    { url = "https://files.pythonhosted.org/packages/ed/f2/368c3fbd0b349f5e2e2d6845c3678ab6a279364acd0248469b12b818166d/stream_gears-0.2.4-cp38-abi3-win32.whl", hash = "sha256:350df87b42534f9b93e7833520966292833a0a437e9a87773bd64e6185acec82", size = 2283061, upload-time = "2025-07-15T14:47:01.437Z" },
+    { url = "https://files.pythonhosted.org/packages/a7/13/1634e2a37b029e822e5d6b4669083d6a3da5cef80aa86ffd7f2b291de2dd/stream_gears-0.2.4-cp38-abi3-win_amd64.whl", hash = "sha256:166fb4ed2d75cab00926a8abf50c1c262b6a353b7fd70fcc94f1c2ae5b255515", size = 2615617, upload-time = "2025-07-15T14:47:00.175Z" },
 ]
 
 [[package]]
