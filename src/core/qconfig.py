@@ -157,7 +157,7 @@ def get_voices(api_key: str) -> list[str]:
         "voice_type": "all",
     }
     try:
-        response = httpx.post(api_url, headers=headers, json=params)
+        response = httpx.post(api_url, headers=headers, json=params, verify=False)
         response.raise_for_status()
         result = response.json()
     except httpx.HTTPStatusError:

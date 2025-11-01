@@ -9,6 +9,7 @@ from qfluentwidgets import (
     ExpandLayout,
     ScrollArea,
     SettingCardGroup,
+    StateToolTip,
     SwitchSettingCard,
     TitleLabel,
     qconfig,
@@ -39,6 +40,7 @@ class SettingsInterface(ScrollArea):
         self.scrollWidget = QWidget()
         self.expandLayout = ExpandLayout(self.scrollWidget)
 
+        self.toast = None
         # 标题
         self.settingLabel = TitleLabel("设置", self)
 
@@ -176,15 +178,19 @@ class SettingsInterface(ScrollArea):
             content="设置 Minimax TTS 服务的 API 密钥",
             parent=self.minimaxGroup,
             placeholder="请输入 API Key",
+            refreshable=True,
         )
 
-        voices = self._load_voices_sync()
+        self.minimaxApiKeyCard.refreshRequested.connect(
+            self._on_minimax_api_key_changed_async
+        )
+
         self.minimaxVoiceIdCard = ComboBoxSettingCard(
             configItem=cfg.minimaxVoiceId,
             icon=FIF.MICROPHONE,
             title="音色 ID",
             content="设置 Minimax TTS 服务的音色 ID",
-            texts=voices,
+            texts=[MINIMAX_ERROR_VOICE_ID],
             parent=self.minimaxGroup,
         )
 
@@ -409,27 +415,11 @@ class SettingsInterface(ScrollArea):
         cfg.playerDevice.valueChanged.connect(self._on_output_device_changed)
         cfg.minimaxApiKey.valueChanged.connect(self._on_minimax_api_key_changed_async)
 
-    def _load_voices_sync(self) -> list[str]:
-        """同步加载音色列表（用于初始化）
-
-        Returns:
-            音色列表
-        """
-        if not cfg.minimaxApiKey.value:
-            return [MINIMAX_ERROR_VOICE_ID]
-
-        voices = get_voices(cfg.minimaxApiKey.value)
-        cfg.minimaxVoiceId.validator.options = voices
-        value = MINIMAX_ERROR_VOICE_ID
-        if voices and cfg.minimaxVoiceId.value not in voices:
-            # 配置更新
-            value = voices[0]
-        cfg.minimaxVoiceId.value = value
-        return voices
-
     @asyncSlot()
     async def _on_minimax_api_key_changed_async(self) -> None:
         """API Key 改变时更新音色列表（异步，不阻塞界面）"""
+        toast = StateToolTip("请稍候", "正在获取音色列表...", self)
+        toast.show()
         if not cfg.minimaxApiKey.value:
             voices = [MINIMAX_ERROR_VOICE_ID]
             cfg.minimaxVoiceId.validator.options = voices
@@ -451,6 +441,10 @@ class SettingsInterface(ScrollArea):
 
         cfg.minimaxVoiceId.value = value
         self._update_voice_options(voices, value)
+        toast.setTitle("完成")
+        toast.setContent("音色列表获取完成")
+        toast.setState(True)
+        toast.close()
 
     def _update_voice_options(self, voices: list[str], selected_value: str) -> None:
         """更新音色选项下拉列表

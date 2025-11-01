@@ -47,7 +47,6 @@ class DanmakuControlCard(CardWidget):
 
         # 状态指示器
         self.status_label = BodyLabel("状态: 已断开 ⭕")
-        self.status_label.setStyleSheet("color: #999999;")
         title_layout.addWidget(self.status_label)
 
         self.main_layout.addLayout(title_layout)

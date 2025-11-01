@@ -4,7 +4,17 @@ from typing import Union
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIcon
-from qfluentwidgets import ConfigItem, FluentIconBase, LineEdit, SettingCard, qconfig
+from qfluentwidgets import (
+    ConfigItem,
+    FluentIconBase,
+    LineEdit,
+    SettingCard,
+    ToolButton,
+    qconfig,
+)
+from qfluentwidgets import (
+    FluentIcon as FIF,
+)
 
 
 class StrSettingCard(SettingCard):
@@ -14,6 +24,7 @@ class StrSettingCard(SettingCard):
     """
 
     valueChanged = Signal(str)
+    refreshRequested = Signal()  # 刷新按钮点击信号
 
     def __init__(
         self,
@@ -23,6 +34,7 @@ class StrSettingCard(SettingCard):
         content: str | None = None,
         parent=None,
         placeholder: str = "",
+        refreshable: bool = False,
     ) -> None:
         """初始化字符串输入设置卡片
 
@@ -33,6 +45,7 @@ class StrSettingCard(SettingCard):
             content: 描述内容
             parent: 父组件
             placeholder: 占位符文本
+            refreshable: 是否可刷新
         """
         super().__init__(icon, title, content, parent)
         self.configItem = configItem
@@ -51,6 +64,11 @@ class StrSettingCard(SettingCard):
         # 添加到布局
         self.hBoxLayout.addStretch(1)
         self.hBoxLayout.addWidget(self.lineEdit, 0, Qt.AlignmentFlag.AlignRight)
+        if refreshable:
+            self.refresh_btn = ToolButton(FIF.SYNC, self)
+            self.hBoxLayout.addSpacing(8)  # 输入框和按钮之间的间隔
+            self.hBoxLayout.addWidget(self.refresh_btn, 0, Qt.AlignmentFlag.AlignRight)
+            self.refresh_btn.clicked.connect(self.refreshRequested.emit)
         self.hBoxLayout.addSpacing(16)
 
         # 连接信号
