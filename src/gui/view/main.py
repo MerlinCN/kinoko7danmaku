@@ -14,41 +14,24 @@ from qfluentwidgets import (
 from loguru import logger
 
 from .settings import SettingsInterface
-from .login_panel import LoginPanel
-from .home_panel import HomePanel
+from ..components import LoginPanel, HomePanel
 
 
-class MainWindow(FluentWindow):
-    """主窗口类
+class MainInterface(QWidget):
+    """主界面
 
-    使用 Fluent Design 风格的主窗口。
-    未登录时显示登录界面，登录成功后显示主界面。
+    包含登录面板和主页面板的切换。
     """
 
-    def __init__(self) -> None:
-        super().__init__()
-        self.init_ui()
-        self._setup_panels()
+    def __init__(self, parent: QWidget | None = None) -> None:
+        super().__init__(parent=parent)
+        self._setup_ui()
         self._check_login_status()
-        self._set_qss()
-        self._connect_signals()
 
-    def init_ui(self) -> None:
-        """初始化 UI"""
-        self.setWindowTitle("Kinoko7 弹幕姬")
-        self.resize(1200, 800)
-
-        # 设置窗口居中
-        desktop = QApplication.primaryScreen().availableGeometry()
-        w, h = desktop.width(), desktop.height()
-        self.move(w // 2 - self.width() // 2, h // 2 - self.height() // 2)
-
-    def _setup_panels(self) -> None:
-        """设置两个主面板"""
-        # 创建中央 widget 用来承载 stacked widget
-        central_widget = QWidget()
-        central_layout = QVBoxLayout(central_widget)
-        central_layout.setContentsMargins(0, 0, 0, 0)
+    def _setup_ui(self) -> None:
+        """设置界面"""
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
 
         # 创建 stacked widget 来切换登录/主界面
         self.stacked_widget = QStackedWidget()
@@ -61,23 +44,11 @@ class MainWindow(FluentWindow):
         self.home_panel = HomePanel()
         self.home_panel.logout_btn.clicked.connect(self._on_logout)
 
-        # 创建设置界面
-        self.settings_interface = SettingsInterface(self)
-        self.settings_interface.setObjectName("settingsInterface")
-
         # 将面板添加到 stacked widget
         self.stacked_widget.addWidget(self.login_panel)
         self.stacked_widget.addWidget(self.home_panel)
 
-        central_layout.addWidget(self.stacked_widget)
-
-        # 设置为中央 widget
-        self.addCentralWidget(central_widget)
-
-        # 添加设置界面到导航栏
-        self.addSubInterface(
-            self.settings_interface, FIF.SETTING, "设置", NavigationItemPosition.BOTTOM
-        )
+        layout.addWidget(self.stacked_widget)
 
     def _check_login_status(self) -> None:
         """检查登录状态"""
@@ -112,6 +83,51 @@ class MainWindow(FluentWindow):
         # 切换回登录界面
         self.login_panel._load_qr_code()
         self.stacked_widget.setCurrentWidget(self.login_panel)
+
+
+class MainWindow(FluentWindow):
+    """主窗口类
+
+    使用 Fluent Design 风格的主窗口。
+    包含主界面和设置界面。
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._init_ui()
+        self._setup_interfaces()
+        self._set_qss()
+        self._connect_signals()
+
+    def _init_ui(self) -> None:
+        """初始化 UI"""
+        self.setWindowTitle("弹幕姬")
+        self.resize(1200, 800)
+
+        # 设置窗口居中
+        desktop = QApplication.primaryScreen().availableGeometry()
+        w, h = desktop.width(), desktop.height()
+        self.move(w // 2 - self.width() // 2, h // 2 - self.height() // 2)
+
+    def _setup_interfaces(self) -> None:
+        """设置界面"""
+        # 创建主界面
+        self.main_interface = MainInterface(self)
+        self.main_interface.setObjectName("mainInterface")
+
+        # 创建设置界面
+        self.settings_interface = SettingsInterface(self)
+        self.settings_interface.setObjectName("settingsInterface")
+
+        # 添加主界面到导航栏
+        self.addSubInterface(
+            self.main_interface, FIF.HOME, "主页", NavigationItemPosition.TOP
+        )
+
+        # 添加设置界面到导航栏
+        self.addSubInterface(
+            self.settings_interface, FIF.SETTING, "设置", NavigationItemPosition.BOTTOM
+        )
 
     def _set_qss(self) -> None:
         """设置样式表

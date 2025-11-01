@@ -1,17 +1,15 @@
 """弹幕控制卡片组件"""
 
-from PySide6.QtCore import Qt, Signal, QTimer
+from PySide6.QtCore import Signal, QTimer
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
     QPushButton,
-    QLabel,
     QListWidget,
     QListWidgetItem,
 )
 from qfluentwidgets import CardWidget, BodyLabel, CaptionLabel
-from loguru import logger
 
 
 class DanmakuControlCard(CardWidget):
