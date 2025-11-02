@@ -19,14 +19,14 @@ block_cipher = None
 root_dir = Path.cwd()
 
 # 从 pyproject.toml 读取版本号并生成 version.txt
-print("正在生成 version.txt...")
+print("Generating version.txt...")
 with open(root_dir / "pyproject.toml", "rb") as f:
     pyproject_data = tomllib.load(f)
     version = pyproject_data.get("project", {}).get("version", "unknown")
 
 version_file = root_dir / "resource" / "version.txt"
 version_file.write_text(version, encoding="utf-8")
-print(f"版本号 {version} 已写入 {version_file}")
+print(f"Version {version} written to {version_file}")
 
 # 自动收集第三方库的所有子模块
 bilibili_api_hiddenimports = collect_submodules('bilibili_api')
