@@ -162,6 +162,7 @@ cython_debug/
 *.json
 *.zip
 *.png
+!img/*.png
 test.py
 *.toml
 !config.example.toml
