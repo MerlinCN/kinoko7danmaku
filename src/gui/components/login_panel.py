@@ -16,7 +16,7 @@ from PySide6.QtCore import QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 from qasync import asyncSlot
-from qfluentwidgets import BodyLabel, CaptionLabel, ImageLabel, PushButton
+from qfluentwidgets import BodyLabel, ImageLabel, PushButton
 
 from bilibili import bili_service
 from core.const import COOKIES_PATH
@@ -67,7 +67,7 @@ class LoginPanel(QWidget):
         self.main_layout.addLayout(button_layout)
 
         # 状态标签
-        self.status_label = CaptionLabel("登录状态: 未登录 ❌")
+        self.status_label = BodyLabel("登录状态: 未登录 ❌")
         self.status_label.setAlignment(Qt.AlignCenter)
         self.main_layout.addWidget(self.status_label)
 

@@ -1,6 +1,6 @@
+import asyncio
 import io
 import wave
-from pathlib import Path
 
 import pyaudio
 import sounddevice as sd
@@ -13,6 +13,9 @@ class StreamPlayer:
     def __init__(self):
         self.p = pyaudio.PyAudio()
         self.device_index = sd.default.device[1]
+        self.audio_queue: asyncio.Queue[bytes] | None = None
+        self.worker_task: asyncio.Task | None = None
+        self.is_running = False
 
     @property
     def default_output_index(self) -> int:
@@ -105,6 +108,66 @@ class StreamPlayer:
             if stream:
                 stream.close()
 
+    async def _play_worker(self):
+        """后台任务：从队列中取出音频并播放"""
+        if self.audio_queue is None:
+            logger.error("音频队列未初始化")
+            return
+
+        while self.is_running:
+            try:
+                # 从队列中获取音频数据
+                audio_bytes = await self.audio_queue.get()
+                # 在线程中播放音频（避免阻塞）
+                await asyncio.to_thread(self.play_bytes, audio_bytes)
+                self.audio_queue.task_done()
+            except asyncio.CancelledError:
+                logger.info("音频播放队列任务已取消")
+                break
+            except Exception as e:
+                logger.exception(f"播放音频时出错: {e}")
+
+    def start_worker(self):
+        """启动音频播放队列处理任务"""
+        if not self.is_running:
+            # 在事件循环运行时创建队列，避免在 __init__ 中创建导致 RuntimeError
+            self.audio_queue = asyncio.Queue()
+            self.is_running = True
+            self.worker_task = asyncio.create_task(self._play_worker())
+            logger.info("音频播放队列已启动")
+
+    async def stop_worker(self):
+        """停止音频播放队列处理任务"""
+        if self.is_running:
+            self.is_running = False
+            if self.worker_task:
+                self.worker_task.cancel()
+                try:
+                    await self.worker_task
+                except asyncio.CancelledError:
+                    pass
+            # 清空队列
+            if self.audio_queue is not None:
+                while not self.audio_queue.empty():
+                    try:
+                        self.audio_queue.get_nowait()
+                        self.audio_queue.task_done()
+                    except asyncio.QueueEmpty:
+                        break
+                self.audio_queue = None
+            logger.info("音频播放队列已停止")
+
+    async def play_bytes_async(self, audio_bytes: bytes):
+        """异步方式播放音频（添加到队列）
+
+        Args:
+            audio_bytes: WAV 格式的音频字节流
+        """
+        if self.audio_queue is None:
+            logger.error("音频队列未初始化，请先调用 start_worker()")
+            return
+        await self.audio_queue.put(audio_bytes)
+
     def close(self):
         self.p.terminate()
 
@@ -115,29 +178,3 @@ class StreamPlayer:
 
 # 全局 StreamPlayer 单例实例
 audio_player = StreamPlayer()
-
-# 存储临时文件列表用于清理 (使用 pathlib.Path)
-temp_files: list[Path] = []
-
-
-def cleanup_temp_file(file_path: Path):
-    """清理临时文件"""
-    try:
-        if file_path and file_path.exists():
-            file_path.unlink()
-            if file_path in temp_files:
-                temp_files.remove(file_path)
-    except Exception as e:
-        logger.warning(f"清理临时文件失败: {e}")
-
-
-def cleanup_all_temp_files():
-    """清理所有临时文件"""
-    for file_path in temp_files.copy():
-        cleanup_temp_file(file_path)
-
-
-def close_audio_player():
-    """关闭 StreamPlayer 并清理资源"""
-    audio_player.close()
-    cleanup_all_temp_files()

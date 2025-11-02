@@ -168,5 +168,8 @@ test.py
 !config.example.toml
 ref_audio/
 
+# 打包时自动生成的版本文件
+resource/version.txt
+
 CLAUDE.md
 .claude

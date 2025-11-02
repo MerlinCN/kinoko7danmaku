@@ -1,12 +1,9 @@
 """音频测试界面"""
 
-import asyncio
-
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 from qasync import asyncSlot
 from qfluentwidgets import (
     CardWidget,
-    SubtitleLabel,
     TextEdit,
     TitleLabel,
     ToolButton,
@@ -44,10 +41,6 @@ class AudioTestInterface(QWidget):
         self.title_label = TitleLabel("音频测试")
         main_layout.addWidget(self.title_label)
 
-        # 副标题
-        self.subtitle_label = SubtitleLabel("测试语音合成效果")
-        main_layout.addWidget(self.subtitle_label)
-
         # 卡片
         self.test_card = CardWidget(self)
         card_layout = QVBoxLayout(self.test_card)
@@ -78,4 +71,4 @@ class AudioTestInterface(QWidget):
             return
         tts_service = get_tts_service()
         audio = await tts_service.text_to_speech(text)
-        await asyncio.to_thread(audio_player.play_bytes, audio)
+        await audio_player.play_bytes_async(audio)

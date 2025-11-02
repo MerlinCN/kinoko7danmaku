@@ -15,3 +15,7 @@ QLabel {
     background-color: transparent;
     color: white;
 }
+
+CaptionLabel {
+    font-size: 16px;
+}

@@ -57,3 +57,7 @@ MINIMAX_VOICE_IDS = {
 
 
 COOKIES_PATH = Path("data") / "cookies.json"
+
+GITHUB_URL = "https://github.com/MerlinCN/kinoko7danmaku"
+
+AUTHOR_BILIBILI_URL = "https://space.bilibili.com/103049147"

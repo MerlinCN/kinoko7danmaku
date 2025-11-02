@@ -53,7 +53,7 @@ class BiliService(QObject):
 
             tts_service = get_tts_service()
             audio = await tts_service.text_to_speech(display_text)
-            audio_player.play_bytes(audio)
+            await audio_player.play_bytes_async(audio)
 
         @self.room_obj.on(EventType.SEND_GIFT)
         async def on_send_gift(event):
@@ -75,7 +75,7 @@ class BiliService(QObject):
 
             tts_service = get_tts_service()
             audio = await tts_service.text_to_speech(display_text)
-            audio_player.play_bytes(audio)
+            await audio_player.play_bytes_async(audio)
 
         @self.room_obj.on(EventType.GUARD_BUY)
         async def on_guard_buy(event):
@@ -93,7 +93,7 @@ class BiliService(QObject):
 
             tts_service = get_tts_service()
             audio = await tts_service.text_to_speech(display_text)
-            audio_player.play_bytes(audio)
+            await audio_player.play_bytes_async(audio)
 
         @self.room_obj.on(EventType.SUPER_CHAT_MESSAGE)
         async def on_super_chat_message(event):
@@ -111,7 +111,7 @@ class BiliService(QObject):
 
             tts_service = get_tts_service()
             audio = await tts_service.text_to_speech(display_text)
-            audio_player.play_bytes(audio)
+            await audio_player.play_bytes_async(audio)
 
     def load_credential(self):
         with open(COOKIES_PATH, "r", encoding="utf-8") as f:

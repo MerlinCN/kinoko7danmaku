@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
 from qasync import asyncSlot
 from qfluentwidgets import (
     AvatarWidget,
-    CaptionLabel,
+    BodyLabel,
     CardWidget,
     PushButton,
 )
@@ -47,15 +47,15 @@ class UserInfoCard(CardWidget):
         info_layout = QVBoxLayout()
 
         # 用户名
-        self.name_label = CaptionLabel("用户名: 加载中...")
+        self.name_label = BodyLabel("用户名: 加载中...")
         info_layout.addWidget(self.name_label)
 
         # 房间号
-        self.uid_label = CaptionLabel("UID: 加载中...")
+        self.uid_label = BodyLabel("UID: 加载中...")
         info_layout.addWidget(self.uid_label)
 
         # 粉丝数
-        self.follower_label = CaptionLabel("粉丝数: 加载中...")
+        self.follower_label = BodyLabel("粉丝数: 加载中...")
         info_layout.addWidget(self.follower_label)
 
         self.main_layout.addLayout(info_layout, 1)
