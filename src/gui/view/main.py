@@ -31,6 +31,7 @@ class MainInterface(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
         self._setup_ui()
+        self._connect_bili_signals()
         self._check_login_status()
 
     def _setup_ui(self) -> None:
@@ -56,6 +57,16 @@ class MainInterface(QWidget):
         self.stacked_widget.addWidget(self.home_panel)
 
         layout.addWidget(self.stacked_widget)
+
+    def _connect_bili_signals(self) -> None:
+        """连接 B 站服务的信号到消息显示卡片"""
+        message_card = self.home_panel.message_display_card
+
+        # 连接各种消息信号到消息显示卡片
+        bili_service.danmaku_received.connect(message_card.add_message)
+        bili_service.gift_received.connect(message_card.add_message)
+        bili_service.guard_received.connect(message_card.add_message)
+        bili_service.superchat_received.connect(message_card.add_message)
 
     def _check_login_status(self) -> None:
         """检查登录状态"""

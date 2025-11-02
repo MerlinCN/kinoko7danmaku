@@ -227,13 +227,6 @@ class Config(QConfig):
         validator=BoolValidator(),
     )
 
-    welcomeOn = ConfigItem(
-        group=ConfigGroup.BILI_SERVICE,
-        name=ConfigKey.WELCOME_ON,
-        default=True,
-        validator=BoolValidator(),
-    )
-
     debug = ConfigItem(
         group=ConfigGroup.BILI_SERVICE,
         name=ConfigKey.DEBUG,

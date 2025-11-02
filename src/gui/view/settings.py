@@ -104,14 +104,6 @@ class SettingsInterface(ScrollArea):
             parent=self.biliGroup,
         )
 
-        self.welcomeCard = SwitchSettingCard(
-            icon=FIF.ACCEPT,
-            title="启动欢迎语",
-            content="启动成功后是否播报欢迎语",
-            configItem=cfg.welcomeOn,
-            parent=self.biliGroup,
-        )
-
         self.debugCard = SwitchSettingCard(
             icon=FIF.CODE,
             title="调试模式",
@@ -482,7 +474,6 @@ class SettingsInterface(ScrollArea):
         self.biliGroup.addSettingCard(self.normalDanmakuCard)
         self.biliGroup.addSettingCard(self.guardCard)
         self.biliGroup.addSettingCard(self.superChatCard)
-        self.biliGroup.addSettingCard(self.welcomeCard)
         self.biliGroup.addSettingCard(self.debugCard)
         self.biliGroup.addSettingCard(self.giftOnTextCard)
         self.biliGroup.addSettingCard(self.danmakuOnTextCard)

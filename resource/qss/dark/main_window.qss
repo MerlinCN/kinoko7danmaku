@@ -15,10 +15,6 @@ AvatarWidget{
     background-color: transparent;
 }
 
-CaptionLabel{
-    background-color: transparent;
-}
-
-BodyLabel{
+QLabel{
     background-color: transparent;
 }

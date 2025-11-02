@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
 )
 
 from .danmaku_control_card import DanmakuControlCard
+from .message_display_card import MessageDisplayCard
 from .user_info_card import UserInfoCard
 
 
@@ -33,8 +34,16 @@ class HomePanel(QWidget):
         self.danmaku_control_card = DanmakuControlCard()
         self.main_layout.addWidget(self.danmaku_control_card)
 
+        # 消息显示卡片
+        self.message_display_card = MessageDisplayCard()
+        self.main_layout.addWidget(self.message_display_card)
+
         self.main_layout.addStretch()
 
     def get_user_info_card(self) -> UserInfoCard:
         """获取用户信息卡片"""
         return self.user_info_card
+
+    def get_message_display_card(self) -> MessageDisplayCard:
+        """获取消息显示卡片"""
+        return self.message_display_card

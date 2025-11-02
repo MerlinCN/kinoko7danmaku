@@ -4,6 +4,7 @@ from pathlib import Path
 
 from bilibili_api import Credential, live, user
 from loguru import logger
+from PySide6.QtCore import QObject, Signal
 
 from core.player import audio_player
 from core.qconfig import cfg
@@ -17,8 +18,20 @@ from models.bilibili import (
 from tts_service import get_tts_service
 
 
-class BiliService:
+class BiliService(QObject):
+    """B站直播服务
+
+    处理B站直播连接和事件监听。
+    """
+
+    # 定义信号
+    danmaku_received = Signal(str)  # 弹幕消息信号
+    gift_received = Signal(str)  # 礼物消息信号
+    guard_received = Signal(str)  # 舰长消息信号
+    superchat_received = Signal(str)  # SC 消息信号
+
     def __init__(self):
+        super().__init__()
         self.credential: Credential | None = None
         self.room_obj: live.LiveDanmaku | None = None
         self.run_task = None
@@ -31,12 +44,15 @@ class BiliService:
                 return
             danmu_message = DanmuMessage.parse(event)
             logger.info(danmu_message)
-            tts_service = get_tts_service()
-            audio = await tts_service.text_to_speech(
-                cfg.danmakuOnText.value.format(
-                    user_name=danmu_message.user_name, message=danmu_message.message
-                )
+
+            # 发射信号到 GUI
+            display_text = cfg.danmakuOnText.value.format(
+                user_name=danmu_message.user_name, message=danmu_message.message
             )
+            self.danmaku_received.emit(display_text)
+
+            tts_service = get_tts_service()
+            audio = await tts_service.text_to_speech(display_text)
             audio_player.play_bytes(audio)
 
         @self.room_obj.on(EventType.SEND_GIFT)
@@ -47,46 +63,55 @@ class BiliService:
                 < cfg.giftThreshold.value
             ):
                 return
-            tts_service = get_tts_service()
-            audio = await tts_service.text_to_speech(
-                cfg.giftOnText.value.format(
-                    user_name=gift_message.user_name,
-                    gift_name=gift_message.gift_name,
-                    gift_num=gift_message.gift_num,
-                )
-            )
-            audio_player.play_bytes(audio)
             logger.info(gift_message)
+
+            # 发射信号到 GUI
+            display_text = cfg.giftOnText.value.format(
+                user_name=gift_message.user_name,
+                gift_name=gift_message.gift_name,
+                gift_num=gift_message.gift_num,
+            )
+            self.gift_received.emit(display_text)
+
+            tts_service = get_tts_service()
+            audio = await tts_service.text_to_speech(display_text)
+            audio_player.play_bytes(audio)
 
         @self.room_obj.on(EventType.GUARD_BUY)
         async def on_guard_buy(event):
             if not cfg.guardOn.value:
                 return
             guard_buy_message = GuardBuy.parse(event)
-            tts_service = get_tts_service()
-            audio = await tts_service.text_to_speech(
-                cfg.guardOnText.value.format(
-                    user_name=guard_buy_message.user_name,
-                    guard_name=guard_buy_message.guard_level.name_cn,
-                )
-            )
-            audio_player.play_bytes(audio)
             logger.info(guard_buy_message)
+
+            # 发射信号到 GUI
+            display_text = cfg.guardOnText.value.format(
+                user_name=guard_buy_message.user_name,
+                guard_name=guard_buy_message.guard_level.name_cn,
+            )
+            self.guard_received.emit(display_text)
+
+            tts_service = get_tts_service()
+            audio = await tts_service.text_to_speech(display_text)
+            audio_player.play_bytes(audio)
 
         @self.room_obj.on(EventType.SUPER_CHAT_MESSAGE)
         async def on_super_chat_message(event):
             if not cfg.superChatOn.value:
                 return
             super_chat_message = SuperChatMessage.parse(event)
-            tts_service = get_tts_service()
-            audio = await tts_service.text_to_speech(
-                cfg.superChatOnText.value.format(
-                    user_name=super_chat_message.user_name,
-                    message=super_chat_message.message,
-                )
-            )
-            audio_player.play_bytes(audio)
             logger.info(super_chat_message)
+
+            # 发射信号到 GUI
+            display_text = cfg.superChatOnText.value.format(
+                user_name=super_chat_message.user_name,
+                message=super_chat_message.message,
+            )
+            self.superchat_received.emit(display_text)
+
+            tts_service = get_tts_service()
+            audio = await tts_service.text_to_speech(display_text)
+            audio_player.play_bytes(audio)
 
     def load_credential(self):
         cookies_path = Path("cookies.json")

@@ -9,9 +9,9 @@ from PySide6.QtWidgets import (
 from qasync import asyncSlot
 from qfluentwidgets import (
     BodyLabel,
-    CaptionLabel,
     CardWidget,
     PushButton,
+    SubtitleLabel,
 )
 
 from bilibili import bili_service
@@ -41,7 +41,7 @@ class DanmakuControlCard(CardWidget):
 
         # 标题
         title_layout = QHBoxLayout()
-        self.title_label = CaptionLabel("弹幕监听")
+        self.title_label = SubtitleLabel("弹幕监听")
         title_layout.addWidget(self.title_label)
         title_layout.addStretch()
 
