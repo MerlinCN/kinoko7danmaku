@@ -29,6 +29,7 @@ from qfluentwidgets import (
 )
 
 from bilibili import bili_service
+from core.player import audio_player
 
 from ..components import HomePanel, LoginPanel
 from .audio_test import AudioTestInterface
@@ -138,6 +139,13 @@ class MainWindow(FluentWindow):
         self._setup_system_tray()
         self._set_qss()
         self._connect_signals()
+        # 延迟启动音频播放队列（等待事件循环运行）
+        QTimer.singleShot(0, self._start_audio_worker)
+
+    def _start_audio_worker(self) -> None:
+        """启动音频播放队列"""
+        audio_player.start_worker()
+        logger.info("应用启动，音频播放队列已启动")
 
     def _init_ui(self) -> None:
         """初始化 UI"""
@@ -260,6 +268,10 @@ class MainWindow(FluentWindow):
         """
         # 隐藏系统托盘图标
         self.system_tray_icon.hide()
+
+        # 停止音频播放队列
+        logger.info("应用退出，正在停止音频播放队列")
+        await audio_player.stop_worker()
 
         # run_forever() 返回后（QApplication.quit() 被调用后）
         # 在事件循环关闭前，手动清理 bilibili_api 的 session

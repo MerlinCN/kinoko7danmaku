@@ -1,3 +1,4 @@
+import asyncio
 import io
 import wave
 from pathlib import Path
@@ -13,6 +14,9 @@ class StreamPlayer:
     def __init__(self):
         self.p = pyaudio.PyAudio()
         self.device_index = sd.default.device[1]
+        self.audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
+        self.worker_task: asyncio.Task | None = None
+        self.is_running = False
 
     @property
     def default_output_index(self) -> int:
@@ -104,6 +108,55 @@ class StreamPlayer:
         finally:
             if stream:
                 stream.close()
+
+    async def _play_worker(self):
+        """后台任务：从队列中取出音频并播放"""
+        while self.is_running:
+            try:
+                # 从队列中获取音频数据
+                audio_bytes = await self.audio_queue.get()
+                # 在线程中播放音频（避免阻塞）
+                await asyncio.to_thread(self.play_bytes, audio_bytes)
+                self.audio_queue.task_done()
+            except asyncio.CancelledError:
+                logger.info("音频播放队列任务已取消")
+                break
+            except Exception as e:
+                logger.exception(f"播放音频时出错: {e}")
+
+    def start_worker(self):
+        """启动音频播放队列处理任务"""
+        if not self.is_running:
+            self.is_running = True
+            self.worker_task = asyncio.create_task(self._play_worker())
+            logger.info("音频播放队列已启动")
+
+    async def stop_worker(self):
+        """停止音频播放队列处理任务"""
+        if self.is_running:
+            self.is_running = False
+            if self.worker_task:
+                self.worker_task.cancel()
+                try:
+                    await self.worker_task
+                except asyncio.CancelledError:
+                    pass
+            # 清空队列
+            while not self.audio_queue.empty():
+                try:
+                    self.audio_queue.get_nowait()
+                    self.audio_queue.task_done()
+                except asyncio.QueueEmpty:
+                    break
+            logger.info("音频播放队列已停止")
+
+    async def play_bytes_async(self, audio_bytes: bytes):
+        """异步方式播放音频（添加到队列）
+
+        Args:
+            audio_bytes: WAV 格式的音频字节流
+        """
+        await self.audio_queue.put(audio_bytes)
 
     def close(self):
         self.p.terminate()
