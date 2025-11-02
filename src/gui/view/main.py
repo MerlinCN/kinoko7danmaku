@@ -1,11 +1,12 @@
 """主窗口"""
 
+import asyncio
 import sys
 from pathlib import Path
 
 from bilibili_api.utils import network
 from loguru import logger
-from PySide6.QtCore import QEvent, QTimer, QUrl
+from PySide6.QtCore import QEvent, Qt, QTimer, QUrl
 from PySide6.QtGui import QCloseEvent, QDesktopServices, QIcon
 from PySide6.QtWidgets import (
     QApplication,
@@ -18,9 +19,13 @@ from qasync import asyncSlot
 from qfluentwidgets import (
     Action,
     FluentWindow,
+    IndeterminateProgressRing,
+    InfoBar,
+    InfoBarPosition,
     NavigationItemPosition,
     SystemTrayMenu,
     TitleLabel,
+    ToolButton,
     isDarkTheme,
     qconfig,
 )
@@ -31,6 +36,7 @@ from qfluentwidgets import (
 from bilibili import bili_service
 from core.const import AUTHOR_BILIBILI_URL, GITHUB_URL
 from core.player import audio_player
+from core.update_checker import UpdateChecker
 
 from ..components import HomePanel, LoginPanel
 from .audio_test import AudioTestInterface
@@ -142,6 +148,7 @@ class MainWindow(FluentWindow):
         self._connect_signals()
         # 延迟启动音频播放队列（等待事件循环运行）
         QTimer.singleShot(0, self._start_audio_worker)
+        QTimer.singleShot(0, self._on_update)
 
     def _start_audio_worker(self) -> None:
         """启动音频播放队列"""
@@ -158,6 +165,15 @@ class MainWindow(FluentWindow):
         desktop = QApplication.primaryScreen().availableGeometry()
         w, h = desktop.width(), desktop.height()
         self.move(w // 2 - self.width() // 2, h // 2 - self.height() // 2)
+
+        self.progress_ring = IndeterminateProgressRing(self)
+        self.progress_ring.setFixedSize(20, 20)
+        # 右上角
+        self.progress_ring.move(
+            self.width() - self.progress_ring.width() - 10,
+            self.height() - self.progress_ring.height() - 10,
+        )
+        self.progress_ring.stop()
 
     def _setup_interfaces(self) -> None:
         """设置界面"""
@@ -184,6 +200,16 @@ class MainWindow(FluentWindow):
         )
 
         self.navigationInterface.addItem(
+            routeKey="update",
+            icon=FIF.UPDATE,
+            text="更新",
+            onClick=self._on_update,
+            selectable=False,
+            tooltip="更新",
+            position=NavigationItemPosition.BOTTOM,
+        )
+
+        self.navigationInterface.addItem(
             routeKey="author_bilibili",
             icon=FIF.VIDEO,
             text="B站",
@@ -206,6 +232,40 @@ class MainWindow(FluentWindow):
         self.addSubInterface(
             self.settings_interface, FIF.SETTING, "设置", NavigationItemPosition.BOTTOM
         )
+
+    @asyncSlot()
+    async def _on_update(self) -> None:
+        """更新"""
+        self.progress_ring.start()
+        version_info = await asyncio.to_thread(UpdateChecker.check_update)
+        self.progress_ring.stop()
+        if version_info:
+            w = InfoBar.new(
+                icon=FIF.GITHUB,
+                title="版本检测",
+                content=f"当前版本: v{UpdateChecker.get_current_version()}，最新版本: {version_info.version}，是否下载？",
+                orient=Qt.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.BOTTOM,
+                duration=5000,
+                parent=self,
+            )
+            download_button = ToolButton(FIF.DOWNLOAD)
+            download_button.clicked.connect(
+                lambda: QDesktopServices.openUrl(QUrl(version_info.download_url))
+            )
+            w.addWidget(download_button)
+        else:
+            w = InfoBar.new(
+                icon=FIF.GITHUB,
+                title="版本检测",
+                content="没有发现新版本",
+                orient=Qt.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.BOTTOM,
+                duration=2000,
+                parent=self,
+            )
 
     def _set_qss(self) -> None:
         """设置样式表

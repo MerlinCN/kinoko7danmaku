@@ -46,7 +46,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: 弹幕姬
+          name: danmaku
           path: dist/弹幕姬.exe
           retention-days: 30
 
@@ -59,14 +59,14 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: 弹幕姬
+          name: danmaku
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref }}
           name: Release ${{ github.ref_name }}
-          files: 弹幕姬.exe
+          files: danmaku.exe
           draft: false
           prerelease: false
           generate_release_notes: true
