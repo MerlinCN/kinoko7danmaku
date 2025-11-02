@@ -2,8 +2,9 @@ import httpx
 from loguru import logger
 from tenacity import retry, retry_if_exception_type, stop_after_attempt
 
-from config import setting
-from schema.minimax import (
+from core.qconfig import cfg
+from models.minimax import (
+    AudioSetting,
     MinimaxTTSRequest,
     MinimaxTTSResponse,
     VoiceSetting,
@@ -15,12 +16,9 @@ from .base import TTSService
 class MinimaxService(TTSService):
     """Minimax TTS适配器"""
 
-    def __init__(self, api_url: str, api_key: str, voice_id: str, model: str) -> None:
+    def __init__(self) -> None:
         """初始化Minimax适配器"""
-        self.api_url = api_url
-        self.api_key = api_key
-        self.voice_id = voice_id
-        self.model = model
+        self.api_url = "https://api.minimax.io/v1/t2a_v2"
         self._client: httpx.AsyncClient | None = None
 
     def _get_client(self) -> httpx.AsyncClient:
@@ -28,7 +26,6 @@ class MinimaxService(TTSService):
         if self._client is None or self._client.is_closed:
             self._client = httpx.AsyncClient(
                 timeout=60.0,
-                limits=httpx.Limits(max_keepalive_connections=5, max_connections=10),
             )
         return self._client
 
@@ -46,18 +43,24 @@ class MinimaxService(TTSService):
     async def text_to_speech(
         self,
         text: str,
-        speed: float = setting.tts_service.minimax.speed,
-        vol: float = setting.tts_service.minimax.vol,
-        pitch: int = setting.tts_service.minimax.pitch,
+        api_key: str | None = None,
+        voice_id: str | None = None,
+        model: str | None = None,
+        speed: float | None = None,
+        vol: float | None = None,
+        pitch: int | None = None,
     ) -> bytes:
         """
         使用Minimax API将文本转换为语音
 
         Args:
             text: 要转换的文本
-            speed: 语速
-            vol: 音量
-            pitch: 音调
+            api_key: API密钥，为 None 时从配置读取
+            voice_id: 音色ID，为 None 时从配置读取
+            model: 模型名称，为 None 时从配置读取
+            speed: 语速，为 None 时从配置读取
+            vol: 音量，为 None 时从配置读取
+            pitch: 音调，为 None 时从配置读取
 
         Returns:
             bytes: 音频数据
@@ -65,27 +68,48 @@ class MinimaxService(TTSService):
         Raises:
             httpx.HTTPStatusError: HTTP请求失败
         """
+        # 从配置中读取默认值（确保每次调用都使用最新配置）
+        if api_key is None:
+            api_key = cfg.minimaxApiKey.value
+        if voice_id is None:
+            voice_id = cfg.minimaxVoiceId.value
+        if model is None:
+            model = cfg.minimaxModel.value
+        if speed is None:
+            speed = cfg.minimaxSpeed.value
+        if vol is None:
+            vol = cfg.minimaxVol.value
+        if pitch is None:
+            pitch = cfg.minimaxPitch.value
+
         alias_texts = []
-        for k, v in setting.bili_service.alias.items():
-            alias_texts.append(f"{k}/{v}")
+        if cfg.aliasDict.value:
+            for k, v in cfg.aliasDict.value.items():
+                alias_texts.append(f"{k}/{v}")
 
         request = MinimaxTTSRequest(
-            model=self.model,
+            model=model,
             text=text,
             voice_setting=VoiceSetting(
-                voice_id=self.voice_id,
+                voice_id=voice_id,
                 speed=speed,
                 vol=vol,
                 pitch=pitch,
             ),
             pronunciation_dict={"tone": alias_texts},
+            audio_setting=AudioSetting(
+                format="wav",  # 使用 WAV 格式，避免需要 ffmpeg 解码
+                sample_rate=32000,
+                bitrate=128000,
+                channel=1,
+            ),
         )
         headers = {
-            "Authorization": f"Bearer {self.api_key}",
+            "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }
 
-        logger.info(f"Minimax TTS 请求开始: {text[:50]}...")
+        logger.debug(f"Minimax TTS 请求开始: {text[:50]}...")
 
         client = self._get_client()
         logger.debug(f"发送 POST 请求到: {self.api_url}")

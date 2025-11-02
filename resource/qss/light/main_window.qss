@@ -1,0 +1,17 @@
+/* 主窗口 - 浅色主题 */
+
+/* 全局背景 */
+QWidget {
+    background-color: white;
+}
+
+/* 滚动区域 */
+QScrollArea {
+    background-color: white;
+    border: none;
+}
+
+QLabel {
+    background-color: transparent;
+    color: white;
+}

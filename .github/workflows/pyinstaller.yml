@@ -41,27 +41,13 @@ jobs:
           uv add pyinstaller
 
       - name: Build with PyInstaller
-        run: uv run pyinstaller --onefile --icon=resource/icon.ico --add-data "bin;bin" src/main.py
-
-      - name: Copy additional files
-        run: |
-          if (Test-Path "bin") {
-            xcopy /s /i bin dist\bin
-          }
-
-      - name: Create Zip Archive
-        run: |
-          pushd dist
-          echo start${{ steps.get_version.outputs.version }}.exe > start.bat
-          echo pause >> start.bat
-          7z a ../kinoko7danmaku${{ steps.get_version.outputs.version }}.zip *
-          popd
+        run: uv run pyinstaller kinoko7danmaku.spec
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: kinoko7danmaku-${{ steps.get_version.outputs.version }}
-          path: kinoko7danmaku${{ steps.get_version.outputs.version }}.zip
+          name: 弹幕姬
+          path: dist/弹幕姬.exe
           retention-days: 30
 
   release:
@@ -70,23 +56,17 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Extract version from tag
-        id: get_version
-        run: |
-          version=${GITHUB_REF#refs/tags/v}
-          echo "version=$version" >> $GITHUB_OUTPUT
-
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: kinoko7danmaku-${{ steps.get_version.outputs.version }}
+          name: 弹幕姬
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref }}
           name: Release ${{ github.ref_name }}
-          files: kinoko7danmaku${{ steps.get_version.outputs.version }}.zip
+          files: 弹幕姬.exe
           draft: false
           prerelease: false
           generate_release_notes: true

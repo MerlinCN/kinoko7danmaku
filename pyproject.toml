@@ -1,16 +1,27 @@
 [project]
 name = "kinoko7danmaku"
-version = "0.1.0"
+version = "3.0.0"
 requires-python = ">=3.12"
 dependencies = [
     "aiohttp>=3.12.14",
     "bilibili-api-python>=17.3.0",
+    "faker>=37.12.0",
     "httpx[socks]>=0.28.1",
     "loguru>=0.7.3",
     "pyaudio>=0.2.14",
     "pydantic>=2.11.7",
     "pydantic-settings>=2.11.0",
-    "pydub>=0.25.1",
+    "pyside6>=6.10.0",
+    "pyside6-fluent-widgets[full]>=1.9.1",
+    "qasync>=0.28.0",
+    "qrcode>=8.2",
     "sounddevice>=0.5.2",
+    "stream-gears>=0.2.4",
     "tenacity>=9.1.2",
+]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.3.0",
+    "pyinstaller>=6.16.0",
 ]
