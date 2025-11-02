@@ -6,7 +6,6 @@ import json
 import time
 import urllib.parse
 from io import BytesIO
-from pathlib import Path
 
 import httpx
 import qrcode as qr
@@ -17,9 +16,10 @@ from PySide6.QtCore import QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 from qasync import asyncSlot
-from qfluentwidgets import BodyLabel, CaptionLabel, ImageLabel, PushButton, TitleLabel
+from qfluentwidgets import BodyLabel, CaptionLabel, ImageLabel, PushButton
 
 from bilibili import bili_service
+from core.const import COOKIES_PATH
 
 
 class LoginPanel(QWidget):
@@ -77,17 +77,17 @@ class LoginPanel(QWidget):
     @asyncSlot()
     async def _load_qr_code(self) -> None:
         """加载二维码"""
-        cookies_path = Path("cookies.json")
-        if cookies_path.exists():
+        if COOKIES_PATH.exists():
             # 检查 cookies 是否有效
             try:
-                stream_gears.login_by_cookies(str(cookies_path), proxy=None)
+                stream_gears.login_by_cookies(str(COOKIES_PATH), proxy=None)
                 logger.info("检测到有效的登录信息")
                 self._on_login_success()
                 return
             except RuntimeError as e:
                 logger.warning(f"登录信息过期: {e}")
-                cookies_path.unlink()
+                if COOKIES_PATH.exists():
+                    COOKIES_PATH.unlink()
 
         # 获取新的二维码
         logger.info("获取二维码...")
@@ -198,8 +198,10 @@ class LoginPanel(QWidget):
                 self._login_timer.stop()
 
             # 保存登录信息
-            cookies_path = Path("cookies.json")
-            with open(cookies_path, "w", encoding="utf-8") as f:
+            if COOKIES_PATH.exists():
+                COOKIES_PATH.unlink()
+            COOKIES_PATH.parent.mkdir(parents=True, exist_ok=True)
+            with open(COOKIES_PATH, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=4, ensure_ascii=False)
 
             self._on_login_success()

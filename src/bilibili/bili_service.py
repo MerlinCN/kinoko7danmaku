@@ -1,11 +1,11 @@
 import asyncio
 import json
-from pathlib import Path
 
 from bilibili_api import Credential, live, user
 from loguru import logger
 from PySide6.QtCore import QObject, Signal
 
+from core.const import COOKIES_PATH
 from core.player import audio_player
 from core.qconfig import cfg
 from models.bilibili import (
@@ -114,8 +114,7 @@ class BiliService(QObject):
             audio_player.play_bytes(audio)
 
     def load_credential(self):
-        cookies_path = Path("cookies.json")
-        with open(cookies_path, "r", encoding="utf-8") as f:
+        with open(COOKIES_PATH, "r", encoding="utf-8") as f:
             cookies = json.load(f)
 
         for cookie in cookies["cookie_info"]["cookies"]:
@@ -125,9 +124,9 @@ class BiliService(QObject):
                 sessdata = cookie["value"]
             if cookie["name"] == "DedeUserID":
                 dedeuserid = cookie["value"]
-        assert bili_jct and sessdata and dedeuserid, (
-            "cookies.json 中没有 bili_jct, SESSDATA, DedeUserID"
-        )
+        assert (
+            bili_jct and sessdata and dedeuserid
+        ), "cookies.json 中没有 bili_jct, SESSDATA, DedeUserID"
         self.credential = Credential(
             bili_jct=bili_jct, sessdata=sessdata, dedeuserid=dedeuserid
         )
@@ -170,9 +169,8 @@ class BiliService(QObject):
         self.room_obj = None
         self.run_task = None
         self.check_room_status_task = None
-        cookies_path = Path("cookies.json")
-        if cookies_path.exists():
-            cookies_path.unlink()
+        if COOKIES_PATH.exists():
+            COOKIES_PATH.unlink()
 
     async def reload(self):
         if self.run_task:

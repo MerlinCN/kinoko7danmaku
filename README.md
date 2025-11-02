@@ -9,25 +9,14 @@
 
 ## 简介
 
-B站直播间弹幕姬，支持多种 TTS 服务，实时将弹幕、礼物、舰长等信息转为语音播报。
+基于 PySide6 + qfluentwidgets 的 B 站直播弹幕姬，支持多种 TTS 服务，实时将弹幕、礼物、舰长等信息转为语音播报。
+
 
 ## 环境要求
 
-- Python 3.12+
+- Python 3.11+
 - [uv](https://docs.astral.sh/uv/) (推荐的Python包管理器)
 
-## 依赖项目
-
-### B站登录认证 - biliup-rs
-
-本项目的B站登录功能依赖于 [biliup-rs](https://github.com/ForgQi/biliup-rs) 项目。
-
-- **Windows**: 使用 `bin/biliup.exe`
-- **macOS (ARM64)**: 使用 `bin/biliup-aarch64-macos`
-
-首次使用时，程序会自动调用 biliup 进行B站账号登录，登录信息会保存在 `cookies.json` 文件中。后续启动会自动续期登录状态。
-
-感谢 [ForgQi/biliup-rs](https://github.com/ForgQi/biliup-rs) 项目提供的登录支持！
 
 ## 快速开始
 
@@ -54,191 +43,122 @@ pip install uv
 ### 3. 安装依赖
 
 ```bash
-uv sync
+uv sync # 仅安装
+uv sync --all-extras # 开发
 ```
 
-### 4. 配置项目
-
-复制配置示例文件并修改：
-
-```bash
-cp config.example.toml config.toml
-```
-
-编辑 `config.toml`，配置你的 TTS 服务和直播间信息。
-
-### 5. 运行程序
+### 4. 运行程序
 
 ```bash
 # 使用 uv
-uv run python src/main.py
+uv run src/main.py
 
 # 或直接使用 python
 python src/main.py
 ```
 
+启动会打开 GUI 界面：
+1. **扫码登录** - 使用 B 站 APP 扫描二维码登录
+2. **配置设置** - 在设置页面配置 TTS 服务、直播间房间号等
+3. **开始监听** - 点击"开始监听"按钮即可开始弹幕播报
+
 ## 配置说明
 
-项目使用 `config.toml` 文件进行配置。配置文件采用 TOML 格式，支持类型安全的配置管理。
+启动后点击左下角"设置"即可进入：
 
-### 直播间配置 `[bili_service]`
+- **B 站服务** - 配置直播间房间号、礼物阈值、弹幕开关等
+- **TTS 服务** - 选择并配置 TTS 服务（MiniMax、Fish Speech、GPT-SoVITS）
+- **音频播放** - 选择音频输出设备
+- **别名字典** - 管理特殊词汇的发音替换规则
+- **文本模板** - 自定义各类消息的播报文本
 
-```toml
-[bili_service]
-room_id = 213                    # 直播间房间号（支持短号/长号）
-gift_threshold = 5               # 礼物触发阈值（元）
-normal_danmaku_on = true         # 普通弹幕触发开关
-guard_on = true                  # 舰长触发开关
-super_chat_on = true             # 醒目留言触发开关
-welcome_on = true                # 启动语音播报开关
-debug = false                    # 调试模式
+所有设置会自动保存到 `data/config.json` 文件中。
 
-# 文本模板（支持变量替换）
-gift_on_text = '"{user_name}" 赠送了{gift_num}个{gift_name}'
-danmaku_on_text = '"{user_name}"说:"{message}"'
-guard_on_text = '感谢 "{user_name}" 赠送的{guard_name}，祝你熬夜不秃头，瞎吃不长胖！'
-super_chat_on_text = '"{user_name}" 发送了一条醒目留言，他说"{message}"'
-```
 
-### 别名配置 `[bili_service.alias]`
-
-用于替换特定词语以改善发音效果：
-
-```toml
-[bili_service.alias]
-Merlin = "么林"
-Claude = "克劳德"
-```
-
-### TTS 服务配置
-
-项目支持多种 TTS 服务，可在 `[tts_service]` 中指定激活的服务：
-
-```toml
-[tts_service]
-active = ["minimax"]  # 可选: fish_speech, gpt_sovits, minimax
-```
-
-#### MiniMax TTS（推荐）
-
-高质量云端 TTS 服务，支持多语言、多音色、情感表达：
-
-```toml
-[tts_service.minimax]
-api_url = "https://api.minimaxi.chat/v1/t2a_v2"
-api_key = "your_api_key_here"       # 在 minimax.ai 获取
-model = "speech-2.5-hd-preview"     # 模型版本
-voice_id = "audiobook_male_1"       # 音色ID（300+可选）
-speed = 1.0                         # 语速 (0.5-2.0)
-vol = 1.0                           # 音量 (0.0-2.0)
-pitch = 0                           # 音调 (-12-12)
-```
-
-**获取 API Key:**
-1. 访问 [MiniMax 开放平台](https://www.minimaxi.com/platform_overview)
-2. 注册并创建应用
-3. 获取 API Key 和 Group ID
-
-#### Fish Speech
-
-本地部署的高质量开源 TTS：
-
-```toml
-[tts_service.fish_speech]
-api_url = "http://localhost:28080/v1/tts"
-```
-
-**部署方法：** 参考 [Fish-Speech 官方文档](https://speech.fish.audio/)
-
-#### GPT-SoVITS
-
-支持声音克隆的本地 TTS：
-
-```toml
-[tts_service.gpt_sovits]
-api_url = "http://localhost:19872"
-sovits_model = "SoVITS_weights_v4/model.pth"
-gpt_model = "GPT_weights_v4/model.ckpt"
-text_lang = "Multilingual Mixed"
-ref_audio_path = "ref_audio/ref.wav"
-ref_text = "参考文本"
-ref_text_lang = "Chinese"
-# ... 更多参数见 config.example.toml
-```
-
-**部署方法：** 参考 [GPT-SoVITS 项目](https://github.com/RVC-Boss/GPT-SoVITS)
-
-## 功能特性
-
-- ✨ 支持多种 TTS 服务（MiniMax、Fish Speech、GPT-SoVITS）
-- 🎯 灵活的触发条件配置
-- 📝 自定义文本模板和别名
-- 🔊 音频设备选择
-- 🚀 基于 Pydantic 的类型安全配置
-- 🔄 自动重连和错误重试
-- 📊 详细的日志记录
 
 ## 项目结构
 
 ```
 kinoko7danmaku/
 ├── src/
-│   ├── bilibili/          # B站直播间连接
-│   ├── config/            # 配置管理
-│   ├── player/            # 音频播放器
-│   ├── schema/            # 数据模型
+│   ├── bilibili/          # B站直播间连接服务
+│   │   ├── bili_service.py    # 直播间事件监听
+│   │   └── __init__.py
+│   ├── core/              # 核心功能模块
+│   │   ├── const.py           # 常量定义
+│   │   ├── player.py          # 音频播放器
+│   │   ├── qconfig.py         # Qt 配置管理
+│   │   └── __init__.py
+│   ├── gui/               # GUI 界面
+│   │   ├── components/        # 可复用组件
+│   │   │   ├── alias_dict_card.py      # 别名字典卡片
+│   │   │   ├── danmaku_control_card.py # 弹幕控制卡片
+│   │   │   ├── message_display_card.py # 消息显示卡片
+│   │   │   ├── user_info_card.py       # 用户信息卡片
+│   │   │   └── ...
+│   │   ├── view/              # 视图页面
+│   │   │   ├── main.py            # 主窗口
+│   │   │   ├── settings.py        # 设置界面
+│   │   │   ├── audio_test.py      # 音频测试界面
+│   │   │   └── __init__.py
+│   │   └── __init__.py
+│   ├── models/            # 数据模型
+│   │   ├── bilibili.py        # B站消息模型
+│   │   ├── minimax.py         # MiniMax API 模型
+│   │   ├── device.py          # 音频设备模型
+│   │   ├── service.py         # 服务类型枚举
+│   │   └── __init__.py
 │   ├── tts_service/       # TTS 服务适配器
-│   └── main.py            # 主程序入口
-├── bin/                   # biliup 可执行文件
-├── config.toml            # 配置文件（需自行创建）
-├── config.example.toml    # 配置示例
-└── pyproject.toml         # 项目依赖
+│   │   ├── base.py            # TTS 服务基类
+│   │   ├── minimax.py         # MiniMax 适配器
+│   │   ├── fish_speech.py     # Fish Speech 适配器
+│   │   ├── gpt_sovits.py      # GPT-SoVITS 适配器
+│   │   └── __init__.py
+│   └── main.py            # 程序入口
+|
+├── resource/              # 资源文件
+│   ├── qss/                   # 样式表
+│   └── icon.ico               # 应用图标
+├── config.toml            # 配置文件（运行时自动生成）
+└── pyproject.toml         # 项目依赖定义
 ```
 
 ## 开发指南
 
 ### 添加新的 TTS 服务
 
-1. 在 `src/tts_service/` 创建新的适配器类
-2. 继承 `TTSService` 基类
-3. 实现 `text_to_speech` 方法
-4. 在 `src/schema/const.py` 添加服务类型枚举
-5. 在 `src/config/setting.py` 添加配置类
-6. 在 `src/tts_service/__init__.py` 注册服务
+1. 在 `src/tts_service/` 创建新的适配器类，继承 `TTSService`
+2. 实现 `text_to_speech` 异步方法（返回 WAV 格式音频数据）
+3. 在 `src/models/service.py` 的 `ServiceType` 枚举中添加服务类型
+4. 在 `src/core/qconfig.py` 添加配置类（继承 `ConfigItem`）
+5. 在 `src/tts_service/__init__.py` 的 `get_tts_service()` 中注册服务
+6. 在 `src/gui/view/settings.py` 添加对应的设置卡片
+
+**注意事项：**
+- 参数默认值使用 `None`，在函数体内从配置读取
+- 确保返回的音频格式为 WAV（PCM 16-bit）
+
+### 添加新的 GUI 组件
+
+1. 在 `src/gui/components/` 创建新组件
+2. 继承 qfluentwidgets 的相应基类（如 `CardWidget`、`SettingCard`）
+3. 实现 UI 布局和信号槽连接
+4. 在 `__init__.py` 中导出组件
 
 ### 代码规范
 
-- 使用 `ruff` 进行代码检查和格式化
-- 使用类型注解
-- 添加 docstring 文档
+- **类型注解**：所有函数必须添加类型注解
+- **文档字符串**：使用中文编写 docstring
+- **导入顺序**：标准库 → 第三方库 → 本地模块
+- **代码检查**：使用 `ruff` 进行格式化和检查
 
 ```bash
-# 运行代码检查
+# 检查单个文件
+uv run ruff check --fix src/path/to/file.py
+
+# 检查整个项目（谨慎使用，建议先询问）
 uv run ruff check --fix src/
 ```
-
-## 常见问题
-
-### 1. 找不到输出设备
-
-检查系统音频设备，可在 `config.toml` 中配置：
-
-```toml
-[setting]
-player_device = "your_device_name"
-```
-
-### 2. TTS 请求超时
-
-- 检查网络连接
-- 确认 API 服务可访问
-- 增加超时时间配置
-
-### 3. 音频播放卡顿
-
-- 检查系统音频驱动
-- 尝试更换输出设备
-- 降低 TTS 并发数
 
 ## 支持与贡献
 

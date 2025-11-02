@@ -1,5 +1,7 @@
 """全局常量定义"""
 
+from pathlib import Path
+
 from models.service import ServiceDetail, ServiceType
 
 # 支持的 TTS 服务配置
@@ -52,3 +54,6 @@ MINIMAX_VOICE_IDS = {
     "moss_audio_6d40e743-357b-11f0-b24c-2e48b7cbf811": "Merlin",
     "moss_audio_638d754a-357e-11f0-9505-4e9b7ef777f4": "芋艿",
 }
+
+
+COOKIES_PATH = Path("data") / "cookies.json"
