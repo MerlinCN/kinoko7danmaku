@@ -45,3 +45,10 @@ GPT_SOVITS_TEXT_SPLIT_METHODS = [
 ]
 
 MINIMAX_ERROR_VOICE_ID = "未获取到音色列表，请检查API 密钥，然后刷新"
+
+MINIMAX_VOICE_IDS = {
+    "kinoko7_v1": "kinoko7_v1",
+    "moss_audio_05599258-a2c0-11f0-abb1-3ebcbb261618": "Isabel",
+    "moss_audio_6d40e743-357b-11f0-b24c-2e48b7cbf811": "Merlin",
+    "moss_audio_638d754a-357e-11f0-9505-4e9b7ef777f4": "芋艿",
+}

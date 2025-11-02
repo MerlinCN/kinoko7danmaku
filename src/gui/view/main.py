@@ -19,6 +19,7 @@ from qfluentwidgets import (
 from bilibili import bili_service
 
 from ..components import HomePanel, LoginPanel
+from .audio_test import AudioTestInterface
 from .settings import SettingsInterface
 
 
@@ -37,9 +38,8 @@ class MainInterface(QWidget):
     def _setup_ui(self) -> None:
         """设置界面"""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(36, 10, 36, 0)
+        layout.setContentsMargins(36, 36, 36, 36)
         self.title_label = TitleLabel("登录", self)
-        self.title_label.move(36, 30)
         layout.addWidget(self.title_label)
         # 创建 stacked widget 来切换登录/主界面
         self.stacked_widget = QStackedWidget()
@@ -124,6 +124,10 @@ class MainWindow(FluentWindow):
         self.main_interface = MainInterface(self)
         self.main_interface.setObjectName("mainInterface")
 
+        # 创建音频测试界面
+        self.audio_test_interface = AudioTestInterface(self)
+        self.audio_test_interface.setObjectName("audioTestInterface")
+
         # 创建设置界面
         self.settings_interface = SettingsInterface(self)
         self.settings_interface.setObjectName("settingsInterface")
@@ -131,6 +135,11 @@ class MainWindow(FluentWindow):
         # 添加主界面到导航栏
         self.addSubInterface(
             self.main_interface, FIF.HOME, "主页", NavigationItemPosition.TOP
+        )
+
+        # 添加音频测试界面到导航栏
+        self.addSubInterface(
+            self.audio_test_interface, FIF.MUSIC, "音频测试", NavigationItemPosition.TOP
         )
 
         # 添加设置界面到导航栏

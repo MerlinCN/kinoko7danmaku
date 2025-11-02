@@ -1,3 +1,4 @@
+from .alias_dict_card import AliasDictCard
 from .danmaku_control_card import DanmakuControlCard
 from .float_range_setting_card import FloatRangeSettingCard
 from .home_panel import HomePanel
@@ -8,6 +9,7 @@ from .str_setting_card import StrSettingCard
 from .user_info_card import UserInfoCard
 
 __all__ = [
+    "AliasDictCard",
     "DanmakuControlCard",
     "FloatRangeSettingCard",
     "HomePanel",

@@ -1,7 +1,7 @@
 import httpx
 from loguru import logger
 
-from core import setting
+from core.qconfig import cfg
 
 from .base import TTSService
 
@@ -9,9 +9,9 @@ from .base import TTSService
 class FishSpeechService(TTSService):
     """Fish Speech TTS适配器"""
 
-    def __init__(self, api_url: str) -> None:
+    def __init__(self) -> None:
         """初始化Fish Speech适配器"""
-        self.api_url = api_url
+        self.api_url = cfg.fishSpeechApiUrl.value
 
     async def text_to_speech(
         self,
@@ -49,8 +49,9 @@ class FishSpeechService(TTSService):
         """
         # 应用别名替换
         format_text = text
-        for k, v in setting.bili_service.alias.items():
-            format_text = format_text.replace(k, v)
+        if cfg.aliasDict.value:
+            for k, v in cfg.aliasDict.value.items():
+                format_text = format_text.replace(k, v)
 
         # 准备请求数据
         data = {

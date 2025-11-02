@@ -23,6 +23,7 @@ from .const import (
     GPT_SOVITS_TEXT_SPLIT_METHODS,
     MINIMAX_ERROR_VOICE_ID,
     MINIMAX_MODELS,
+    MINIMAX_VOICE_IDS,
     SUPPORTED_SERVICES,
 )
 from .player import audio_player
@@ -90,6 +91,26 @@ class ConfigKey(StrEnum):
 
     # 播放器
     PLAYER_DEVICE = "PlayerDevice"
+
+    # 别名字典
+    ALIAS_DICT = "AliasDict"
+
+
+class DictValidator(ConfigValidator):
+    """字典验证器
+
+    验证配置值是否为字典类型。
+    """
+
+    def validate(self, value) -> bool:
+        """验证值是否为字典"""
+        return isinstance(value, dict)
+
+    def correct(self, value):
+        """将值修正为字典"""
+        if isinstance(value, dict):
+            return value
+        return {}
 
 
 class IntValidator(ConfigValidator):
@@ -172,19 +193,6 @@ def get_voices(api_key: str) -> list[str]:
     return ret
 
 
-class MinimaxVoiceValidator(OptionsValidator):
-    def __init__(self):
-        self.options = [MINIMAX_ERROR_VOICE_ID]
-
-    def get_voices(self, api_key: str) -> list[str]:
-        """获取Minimax支持的音色列表"""
-        if not api_key:
-            return []
-        ret = get_voices(api_key)
-        self.options = ret
-        return ret
-
-
 class Config(QConfig):
     """应用配置类
 
@@ -258,6 +266,13 @@ class Config(QConfig):
         default='"{user_name}" 发送了一条醒目留言,他说"{message}"',
     )
 
+    aliasDict = ConfigItem(
+        group=ConfigGroup.BILI_SERVICE,
+        name=ConfigKey.ALIAS_DICT,
+        default={"Merlin": "么林"},
+        validator=DictValidator(),
+    )
+
     # TTS 服务通用配置
     activeTTS = OptionsConfigItem(
         group=ConfigGroup.TTS_SERVICE,
@@ -284,8 +299,8 @@ class Config(QConfig):
     minimaxVoiceId = OptionsConfigItem(
         group=ConfigGroup.MINIMAX_SERVICE,
         name=ConfigKey.MINIMAX_VOICE_ID,
-        default=MINIMAX_ERROR_VOICE_ID,
-        validator=MinimaxVoiceValidator(),
+        default=list(MINIMAX_VOICE_IDS.keys())[0],
+        validator=OptionsValidator(list(MINIMAX_VOICE_IDS.keys())),
     )
 
     minimaxSpeed = RangeConfigItem(

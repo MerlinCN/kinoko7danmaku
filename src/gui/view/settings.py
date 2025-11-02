@@ -24,12 +24,14 @@ from core.const import (
     GPT_SOVITS_TEXT_SPLIT_METHODS,
     MINIMAX_ERROR_VOICE_ID,
     MINIMAX_MODELS,
+    MINIMAX_VOICE_IDS,
     SUPPORTED_SERVICES,
 )
 from core.player import audio_player
 from core.qconfig import cfg, get_voices
 
 from ..components import FloatRangeSettingCard, IntSettingCard, StrSettingCard
+from ..components.alias_dict_card import AliasDictCard
 
 
 class SettingsInterface(ScrollArea):
@@ -40,7 +42,6 @@ class SettingsInterface(ScrollArea):
         self.scrollWidget = QWidget()
         self.expandLayout = ExpandLayout(self.scrollWidget)
 
-        self.toast = None
         # 标题
         self.settingLabel = TitleLabel("设置", self)
 
@@ -147,7 +148,7 @@ class SettingsInterface(ScrollArea):
             parent=self.biliGroup,
             placeholder='"{user_name}" 发送了一条醒目留言,他说"{message}"',
         )
-
+        self.aliasDictCard = AliasDictCard(self.biliGroup)
         # TTS 服务通用设置组
         self.ttsGroup = SettingCardGroup("文字转语音（TTS）设置", self.scrollWidget)
 
@@ -170,11 +171,6 @@ class SettingsInterface(ScrollArea):
             content="设置 Minimax TTS 服务的 API 密钥",
             parent=self.minimaxGroup,
             placeholder="请输入 API Key",
-            refreshable=True,
-        )
-
-        self.minimaxApiKeyCard.refreshRequested.connect(
-            self._on_minimax_api_key_changed_async
         )
 
         self.minimaxVoiceIdCard = ComboBoxSettingCard(
@@ -182,7 +178,7 @@ class SettingsInterface(ScrollArea):
             icon=FIF.MICROPHONE,
             title="音色 ID",
             content="设置 Minimax TTS 服务的音色 ID",
-            texts=[MINIMAX_ERROR_VOICE_ID],
+            texts=list(MINIMAX_VOICE_IDS.values()),
             parent=self.minimaxGroup,
         )
 
@@ -405,7 +401,6 @@ class SettingsInterface(ScrollArea):
         # 连接主题切换信号
         qconfig.themeChanged.connect(setTheme)
         cfg.playerDevice.valueChanged.connect(self._on_output_device_changed)
-        cfg.minimaxApiKey.valueChanged.connect(self._on_minimax_api_key_changed_async)
 
     @asyncSlot()
     async def _on_minimax_api_key_changed_async(self) -> None:
@@ -479,7 +474,7 @@ class SettingsInterface(ScrollArea):
         self.biliGroup.addSettingCard(self.danmakuOnTextCard)
         self.biliGroup.addSettingCard(self.guardOnTextCard)
         self.biliGroup.addSettingCard(self.superChatOnTextCard)
-
+        self.biliGroup.addSettingCard(self.aliasDictCard)
         # 添加 TTS 服务通用设置卡片
         self.ttsGroup.addSettingCard(self.activeTTSCard)
 

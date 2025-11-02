@@ -6,7 +6,7 @@ import httpx
 from loguru import logger
 from tenacity import retry, stop_after_attempt
 
-from core import setting
+from core.qconfig import cfg
 
 from .base import TTSService
 
@@ -125,8 +125,8 @@ class GradioClient:
 class GPTSovitsService(TTSService):
     """GPTSovits TTS适配器"""
 
-    def __init__(self, api_url: str):
-        self.client = GradioClient(api_url)
+    def __init__(self) -> None:
+        self.client = GradioClient(cfg.gptSovitsApiUrl.value)
 
     async def close(self):
         await self.client.close()
@@ -135,13 +135,13 @@ class GPTSovitsService(TTSService):
         await self.client.ensure()
         result = await self.client.predict(
             "/change_sovits_weights",
-            setting.tts_service.gpt_sovits.sovits_model,
-            setting.tts_service.gpt_sovits.text_lang,
-            setting.tts_service.gpt_sovits.text_lang,
+            cfg.gptSovitsSovitsModel.value,
+            cfg.gptSovitsTextLang.value,
+            cfg.gptSovitsTextLang.value,
         )
         logger.info(f"Changed SoVITS weights: {result}")
         result = await self.client.predict(
-            "/change_gpt_weights", setting.tts_service.gpt_sovits.gpt_model
+            "/change_gpt_weights", cfg.gptSovitsGptModel.value
         )
         logger.info(f"Changed GPT weights: {result}")
 
@@ -149,42 +149,70 @@ class GPTSovitsService(TTSService):
     async def text_to_speech(
         self,
         text: str,
-        text_lang: str = setting.tts_service.gpt_sovits.text_lang,
-        ref_audio_path: str = setting.tts_service.gpt_sovits.ref_audio_path,
-        ref_text: str = setting.tts_service.gpt_sovits.ref_text,
-        ref_text_lang: str = setting.tts_service.gpt_sovits.ref_text_lang,
-        top_k: int = setting.tts_service.gpt_sovits.top_k,
-        top_p: float = setting.tts_service.gpt_sovits.top_p,
-        temperature: float = setting.tts_service.gpt_sovits.temperature,
-        text_split_method: str = setting.tts_service.gpt_sovits.text_split_method,
-        speed_factor: float = setting.tts_service.gpt_sovits.speed_factor,
-        ref_text_free: bool = setting.tts_service.gpt_sovits.ref_text_free,
-        sample_steps: int = setting.tts_service.gpt_sovits.sample_steps,
-        super_sampling: bool = setting.tts_service.gpt_sovits.super_sampling,
-        pause_seconds: float = setting.tts_service.gpt_sovits.pause_seconds,
+        text_lang: str | None = None,
+        ref_audio_path: str | None = None,
+        ref_text: str | None = None,
+        ref_text_lang: str | None = None,
+        top_k: int | None = None,
+        top_p: float | None = None,
+        temperature: float | None = None,
+        text_split_method: str | None = None,
+        speed_factor: float | None = None,
+        ref_text_free: bool | None = None,
+        sample_steps: int | None = None,
+        super_sampling: bool | None = None,
+        pause_seconds: float | None = None,
     ) -> bytes:
         """
         使用GPTSovits API将文本转换为语音
 
         Args:
             text: 要转换的文本
-            text_lang: 文本语言
-            ref_audio_path: 参考音频路径
-            ref_text: 参考文本
-            ref_text_lang: 参考文本语言
-            top_k: Top K采样参数
-            top_p: Top P采样参数
-            temperature: 采样温度
-            text_split_method: 文本切分方式
-            speed_factor: 语速调整
-            ref_text_free: 无参考文本模式
-            sample_steps: 采样步数
-            super_sampling: 超采样
-            pause_seconds: 句间停顿秒数
+            text_lang: 文本语言，为 None 时从配置读取
+            ref_audio_path: 参考音频路径，为 None 时从配置读取
+            ref_text: 参考文本，为 None 时从配置读取
+            ref_text_lang: 参考文本语言，为 None 时从配置读取
+            top_k: Top K采样参数，为 None 时从配置读取
+            top_p: Top P采样参数，为 None 时从配置读取
+            temperature: 采样温度，为 None 时从配置读取
+            text_split_method: 文本切分方式，为 None 时从配置读取
+            speed_factor: 语速调整，为 None 时从配置读取
+            ref_text_free: 无参考文本模式，为 None 时从配置读取
+            sample_steps: 采样步数，为 None 时从配置读取
+            super_sampling: 超采样，为 None 时从配置读取
+            pause_seconds: 句间停顿秒数，为 None 时从配置读取
 
         Returns:
             bytes: 音频数据（WAV格式）
         """
+        # 从配置中读取默认值（确保每次调用都使用最新配置）
+        if text_lang is None:
+            text_lang = cfg.gptSovitsTextLang.value
+        if ref_audio_path is None:
+            ref_audio_path = cfg.gptSovitsRefAudioPath.value
+        if ref_text is None:
+            ref_text = cfg.gptSovitsRefText.value
+        if ref_text_lang is None:
+            ref_text_lang = cfg.gptSovitsRefTextLang.value
+        if top_k is None:
+            top_k = cfg.gptSovitsTopK.value
+        if top_p is None:
+            top_p = cfg.gptSovitsTopP.value
+        if temperature is None:
+            temperature = cfg.gptSovitsTemperature.value
+        if text_split_method is None:
+            text_split_method = cfg.gptSovitsTextSplitMethod.value
+        if speed_factor is None:
+            speed_factor = cfg.gptSovitsSpeedFactor.value
+        if ref_text_free is None:
+            ref_text_free = cfg.gptSovitsRefTextFree.value
+        if sample_steps is None:
+            sample_steps = cfg.gptSovitsSampleSteps.value
+        if super_sampling is None:
+            super_sampling = cfg.gptSovitsSuperSampling.value
+        if pause_seconds is None:
+            pause_seconds = cfg.gptSovitsPauseSeconds.value
+
         ref_audio_dict = {
             "path": ref_audio_path,
             "orig_name": ref_audio_path.split("/")[-1],
