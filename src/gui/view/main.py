@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from loguru import logger
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QStackedWidget, QVBoxLayout, QWidget
 from qasync import asyncSlot
 from qfluentwidgets import (
@@ -111,6 +112,7 @@ class MainWindow(FluentWindow):
     def _init_ui(self) -> None:
         """初始化 UI"""
         self.setWindowTitle("弹幕姬")
+        self.setWindowIcon(QIcon(str(Path.cwd() / "resource" / "icon.ico")))
         self.resize(1200, 800)
 
         # 设置窗口居中
