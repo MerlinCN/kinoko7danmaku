@@ -7,7 +7,7 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
 # 清理之前的构建产物
-Write-Host "[1/4] 清理旧的构建文件..." -ForegroundColor Yellow
+Write-Host "[1/3] 清理旧的构建文件..." -ForegroundColor Yellow
 if (Test-Path "build") {
     Remove-Item -Recurse -Force "build"
     Write-Host "  ✓ 已删除 build 目录" -ForegroundColor Green
@@ -19,7 +19,7 @@ if (Test-Path "dist") {
 Write-Host ""
 
 # 运行 PyInstaller
-Write-Host "[2/4] 运行 PyInstaller..." -ForegroundColor Yellow
+Write-Host "[2/3] 运行 PyInstaller（单文件模式）..." -ForegroundColor Yellow
 uv run pyinstaller kinoko7danmaku.spec
 
 if ($LASTEXITCODE -ne 0) {
@@ -29,23 +29,16 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host ""
-Write-Host "[3/4] 复制资源文件和配置..." -ForegroundColor Yellow
-
-# 复制 resource 目录到根目录
-if (Test-Path "resource") {
-    Copy-Item "resource" "dist/弹幕姬/" -Recurse -Force
-    Write-Host "  ✓ 已复制 resource 目录" -ForegroundColor Green
-}
-
-
-Write-Host ""
-Write-Host "[4/4] 打包完成！" -ForegroundColor Green
+Write-Host "[3/3] 打包完成！" -ForegroundColor Green
 Write-Host ""
 Write-Host "可执行文件位置：" -ForegroundColor Cyan
-Write-Host "  dist/弹幕姬/弹幕姬.exe" -ForegroundColor White
+Write-Host "  dist/弹幕姬.exe" -ForegroundColor White
 Write-Host ""
 Write-Host "使用方法：" -ForegroundColor Cyan
-Write-Host "  1. 进入 dist/弹幕姬/ 目录" -ForegroundColor White
-Write-Host "  2. 双击 弹幕姬.exe 运行" -ForegroundColor White
+Write-Host "  直接双击 弹幕姬.exe 运行" -ForegroundColor White
+Write-Host ""
+Write-Host "注意：" -ForegroundColor Yellow
+Write-Host "  - 单文件模式首次启动较慢（需要解压）" -ForegroundColor White
+Write-Host "  - 所有资源已打包进 exe 文件" -ForegroundColor White
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan

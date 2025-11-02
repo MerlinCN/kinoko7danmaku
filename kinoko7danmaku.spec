@@ -28,9 +28,12 @@ stream_gears_hiddenimports = collect_submodules('stream_gears')
 stream_gears_datas = collect_data_files('stream_gears')
 
 # 收集所有资源文件
-datas = []
+datas = [
+    # 添加 resource 目录（单文件模式会打包到临时目录）
+    (str(root_dir / "resource"), "resource"),
+]
 
-# 添加第三方库的数据文件（这些放在 _internal）
+# 添加第三方库的数据文件
 datas += bilibili_api_datas
 datas += qfluentwidgets_datas
 datas += stream_gears_datas
@@ -81,13 +84,17 @@ pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 exe = EXE(
     pyz,
     a.scripts,
+    a.binaries,  # 单文件模式：包含所有二进制文件
+    a.zipfiles,  # 单文件模式：包含所有 zip 文件
+    a.datas,     # 单文件模式：包含所有数据文件
     [],
-    exclude_binaries=True,
     name="弹幕姬",  # 可执行文件名
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
+    upx_exclude=[],
+    runtime_tmpdir=None,
     console=False,  # 不显示控制台窗口（GUI 应用）
     disable_windowed_traceback=False,
     argv_emulation=False,
@@ -97,13 +104,4 @@ exe = EXE(
     icon=str(root_dir / "resource" / "icon.ico"),  # 应用图标
 )
 
-coll = COLLECT(
-    exe,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    name="弹幕姬",  # 输出文件夹名
-)
+# 单文件模式不需要 COLLECT

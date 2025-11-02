@@ -1,5 +1,6 @@
 """主窗口"""
 
+import sys
 from pathlib import Path
 
 from bilibili_api.utils import network
@@ -32,6 +33,24 @@ from bilibili import bili_service
 from ..components import HomePanel, LoginPanel
 from .audio_test import AudioTestInterface
 from .settings import SettingsInterface
+
+
+def get_resource_path(relative_path: str) -> Path:
+    """获取资源文件的绝对路径（支持 PyInstaller 打包）
+
+    Args:
+        relative_path: 相对于 resource 目录的路径
+
+    Returns:
+        资源文件的绝对路径
+    """
+    if getattr(sys, "frozen", False):
+        # PyInstaller 打包后，资源在 _MEIPASS 临时目录
+        base_path = Path(sys._MEIPASS)  # type: ignore
+    else:
+        # 开发环境，资源在项目根目录
+        base_path = Path.cwd()
+    return base_path / "resource" / relative_path
 
 
 class MainInterface(QWidget):
@@ -123,7 +142,7 @@ class MainWindow(FluentWindow):
     def _init_ui(self) -> None:
         """初始化 UI"""
         self.setWindowTitle("弹幕姬")
-        self.setWindowIcon(QIcon(str(Path.cwd() / "resource" / "icon.ico")))
+        self.setWindowIcon(QIcon(str(get_resource_path("icon.ico"))))
         self.resize(1200, 800)
 
         # 设置窗口居中
@@ -167,7 +186,7 @@ class MainWindow(FluentWindow):
         """
         # 根据当前主题加载对应的 qss 文件
         theme = "dark" if isDarkTheme() else "light"
-        qss_path = Path.cwd() / "resource" / "qss" / theme / "main_window.qss"
+        qss_path = get_resource_path(f"qss/{theme}/main_window.qss")
 
         if qss_path.exists():
             with open(qss_path, encoding="utf-8") as f:
