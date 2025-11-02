@@ -11,7 +11,6 @@ dependencies = [
     "pyaudio>=0.2.14",
     "pydantic>=2.11.7",
     "pydantic-settings>=2.11.0",
-    "pydub>=0.25.1",
     "pyside6>=6.10.0",
     "pyside6-fluent-widgets[full]>=1.9.1",
     "qasync>=0.28.0",
@@ -24,4 +23,5 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pre-commit>=4.3.0",
+    "pyinstaller>=6.16.0",
 ]

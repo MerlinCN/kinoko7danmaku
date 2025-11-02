@@ -4,7 +4,7 @@ from pathlib import Path
 
 from bilibili_api.utils import network
 from loguru import logger
-from PySide6.QtCore import QEvent
+from PySide6.QtCore import QEvent, QTimer
 from PySide6.QtGui import QCloseEvent, QIcon
 from PySide6.QtWidgets import (
     QApplication,
@@ -226,10 +226,8 @@ class MainWindow(FluentWindow):
         """
         if event.type() == QEvent.Type.WindowStateChange:
             if self.isMinimized():
-                # 最小化时隐藏窗口
-                self.hide()
-                event.ignore()
-                return
+                # 使用 QTimer 延迟隐藏窗口，确保窗口状态完全更新
+                QTimer.singleShot(0, self.hide)
         super().changeEvent(event)
 
     @asyncSlot()

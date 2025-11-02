@@ -1,10 +1,10 @@
 import io
+import wave
 from pathlib import Path
 
 import pyaudio
 import sounddevice as sd
 from loguru import logger
-from pydub import AudioSegment
 
 from models.device import OutputDevice
 
@@ -71,22 +71,35 @@ class StreamPlayer:
             return False
 
     def play_bytes(self, audio_bytes: bytes):
-        audio = AudioSegment.from_file(io.BytesIO(audio_bytes))
-        raw = audio.raw_data
-        sw, ch, rate = audio.sample_width, audio.channels, audio.frame_rate
+        """播放音频字节流（WAV 格式）
 
+        Args:
+            audio_bytes: WAV 格式的音频字节流
+        """
+        # 使用 wave 模块解析 WAV 文件
+        with wave.open(io.BytesIO(audio_bytes), "rb") as wf:
+            # 获取音频参数
+            channels = wf.getnchannels()
+            sample_width = wf.getsampwidth()
+            frame_rate = wf.getframerate()
+
+            # 读取所有音频数据
+            raw_data = wf.readframes(wf.getnframes())
+
+        # 使用 pyaudio 播放音频
         stream = None
         try:
             stream = self.p.open(
-                format=self.p.get_format_from_width(sw),
-                channels=ch,
-                rate=rate,
+                format=self.p.get_format_from_width(sample_width),
+                channels=channels,
+                rate=frame_rate,
                 output=True,
                 output_device_index=self.device_index,
             )
+            # 分块写入音频数据
             chunk = 4096
-            for i in range(0, len(raw), chunk):
-                stream.write(raw[i : i + chunk])
+            for i in range(0, len(raw_data), chunk):
+                stream.write(raw_data[i : i + chunk])
             stream.stop_stream()
         finally:
             if stream:

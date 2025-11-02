@@ -4,6 +4,7 @@ from tenacity import retry, retry_if_exception_type, stop_after_attempt
 
 from core.qconfig import cfg
 from models.minimax import (
+    AudioSetting,
     MinimaxTTSRequest,
     MinimaxTTSResponse,
     VoiceSetting,
@@ -96,6 +97,12 @@ class MinimaxService(TTSService):
                 pitch=pitch,
             ),
             pronunciation_dict={"tone": alias_texts},
+            audio_setting=AudioSetting(
+                format="wav",  # 使用 WAV 格式，避免需要 ffmpeg 解码
+                sample_rate=32000,
+                bitrate=128000,
+                channel=1,
+            ),
         )
         headers = {
             "Authorization": f"Bearer {api_key}",
