@@ -13,7 +13,7 @@ class StreamPlayer:
     def __init__(self):
         self.p = pyaudio.PyAudio()
         self.device_index = sd.default.device[1]
-        self.audio_queue: asyncio.Queue[bytes] = asyncio.Queue()
+        self.audio_queue: asyncio.Queue[bytes] | None = None
         self.worker_task: asyncio.Task | None = None
         self.is_running = False
 
@@ -110,6 +110,10 @@ class StreamPlayer:
 
     async def _play_worker(self):
         """后台任务：从队列中取出音频并播放"""
+        if self.audio_queue is None:
+            logger.error("音频队列未初始化")
+            return
+
         while self.is_running:
             try:
                 # 从队列中获取音频数据
@@ -126,6 +130,8 @@ class StreamPlayer:
     def start_worker(self):
         """启动音频播放队列处理任务"""
         if not self.is_running:
+            # 在事件循环运行时创建队列，避免在 __init__ 中创建导致 RuntimeError
+            self.audio_queue = asyncio.Queue()
             self.is_running = True
             self.worker_task = asyncio.create_task(self._play_worker())
             logger.info("音频播放队列已启动")
@@ -141,12 +147,14 @@ class StreamPlayer:
                 except asyncio.CancelledError:
                     pass
             # 清空队列
-            while not self.audio_queue.empty():
-                try:
-                    self.audio_queue.get_nowait()
-                    self.audio_queue.task_done()
-                except asyncio.QueueEmpty:
-                    break
+            if self.audio_queue is not None:
+                while not self.audio_queue.empty():
+                    try:
+                        self.audio_queue.get_nowait()
+                        self.audio_queue.task_done()
+                    except asyncio.QueueEmpty:
+                        break
+                self.audio_queue = None
             logger.info("音频播放队列已停止")
 
     async def play_bytes_async(self, audio_bytes: bytes):
@@ -155,6 +163,9 @@ class StreamPlayer:
         Args:
             audio_bytes: WAV 格式的音频字节流
         """
+        if self.audio_queue is None:
+            logger.error("音频队列未初始化，请先调用 start_worker()")
+            return
         await self.audio_queue.put(audio_bytes)
 
     def close(self):
