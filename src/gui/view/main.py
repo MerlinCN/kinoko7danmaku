@@ -2,19 +2,29 @@
 
 from pathlib import Path
 
+from bilibili_api.utils import network
 from loguru import logger
-from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QApplication, QStackedWidget, QVBoxLayout, QWidget
+from PySide6.QtCore import QEvent
+from PySide6.QtGui import QCloseEvent, QIcon
+from PySide6.QtWidgets import (
+    QApplication,
+    QStackedWidget,
+    QSystemTrayIcon,
+    QVBoxLayout,
+    QWidget,
+)
 from qasync import asyncSlot
 from qfluentwidgets import (
-    FluentIcon as FIF,
-)
-from qfluentwidgets import (
+    Action,
     FluentWindow,
     NavigationItemPosition,
+    SystemTrayMenu,
     TitleLabel,
     isDarkTheme,
     qconfig,
+)
+from qfluentwidgets import (
+    FluentIcon as FIF,
 )
 
 from bilibili import bili_service
@@ -106,6 +116,7 @@ class MainWindow(FluentWindow):
         super().__init__()
         self._init_ui()
         self._setup_interfaces()
+        self._setup_system_tray()
         self._set_qss()
         self._connect_signals()
 
@@ -165,6 +176,85 @@ class MainWindow(FluentWindow):
     def _on_theme_changed(self) -> None:
         """主题改变时的回调"""
         self._set_qss()
+
+    def _setup_system_tray(self) -> None:
+        """设置系统托盘图标"""
+        # 创建系统托盘图标
+        self.system_tray_icon = QSystemTrayIcon(self)
+        self.system_tray_icon.setIcon(self.windowIcon())
+        self.system_tray_icon.setToolTip("弹幕姬")
+
+        # 创建托盘菜单
+        self.tray_menu = SystemTrayMenu(parent=self)
+        self.show_action = Action(FIF.VIEW, "显示主窗口", triggered=self._show_window)
+        self.quit_action = Action(FIF.CLOSE, "退出", triggered=self.close)
+
+        self.tray_menu.addAction(self.show_action)
+        self.tray_menu.addSeparator()
+        self.tray_menu.addAction(self.quit_action)
+
+        self.system_tray_icon.setContextMenu(self.tray_menu)
+
+        # 双击托盘图标显示窗口
+        self.system_tray_icon.activated.connect(self._on_tray_icon_activated)
+
+        # 显示系统托盘图标
+        self.system_tray_icon.show()
+
+    def _on_tray_icon_activated(self, reason: QSystemTrayIcon.ActivationReason) -> None:
+        """托盘图标点击事件处理
+
+        Args:
+            reason: 激活原因（单击、双击等）
+        """
+        if reason == QSystemTrayIcon.ActivationReason.DoubleClick:
+            self._show_window()
+
+    def _show_window(self) -> None:
+        """显示主窗口"""
+        self.show()
+        self.raise_()
+        self.activateWindow()
+
+    def changeEvent(self, event: QEvent) -> None:
+        """窗口状态改变事件
+
+        当窗口最小化时，隐藏到系统托盘。
+
+        Args:
+            event: 事件对象
+        """
+        if event.type() == QEvent.Type.WindowStateChange:
+            if self.isMinimized():
+                # 最小化时隐藏窗口
+                self.hide()
+                event.ignore()
+                return
+        super().changeEvent(event)
+
+    @asyncSlot()
+    async def closeEvent(self, event: QCloseEvent) -> None:
+        """关闭事件处理
+
+        关闭窗口时退出应用。
+
+        Args:
+            event: 关闭事件对象
+        """
+        # 隐藏系统托盘图标
+        self.system_tray_icon.hide()
+
+        # run_forever() 返回后（QApplication.quit() 被调用后）
+        # 在事件循环关闭前，手动清理 bilibili_api 的 session
+        async def cleanup_bilibili_sessions():
+            for _, pool in network.session_pool.items():
+                for _, client in pool.items():
+                    await client.close()
+
+        await cleanup_bilibili_sessions()
+        # 关闭应用
+        QApplication.quit()
+        event.accept()
 
     def _connect_signals(self) -> None:
         """连接信号"""
