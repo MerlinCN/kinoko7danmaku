@@ -99,7 +99,7 @@ exe = EXE(
     a.zipfiles,  # 单文件模式：包含所有 zip 文件
     a.datas,     # 单文件模式：包含所有数据文件
     [],
-    name="弹幕姬",  # 可执行文件名
+    name="Kinoko7Danmaku",  # 可执行文件名
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

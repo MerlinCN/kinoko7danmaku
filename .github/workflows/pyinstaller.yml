@@ -46,8 +46,8 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: danmaku
-          path: dist/弹幕姬.exe
+          name: Kinoko7Danmaku
+          path: dist/Kinoko7Danmaku.exe
           retention-days: 30
 
   release:
@@ -59,14 +59,14 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: danmaku
+          name: Kinoko7Danmaku
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref }}
           name: Release ${{ github.ref_name }}
-          files: danmaku.exe
+          files: Kinoko7Danmaku.exe
           draft: false
           prerelease: false
           generate_release_notes: true
