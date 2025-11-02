@@ -5,8 +5,8 @@ from pathlib import Path
 
 from bilibili_api.utils import network
 from loguru import logger
-from PySide6.QtCore import QEvent, QTimer
-from PySide6.QtGui import QCloseEvent, QIcon
+from PySide6.QtCore import QEvent, QTimer, QUrl
+from PySide6.QtGui import QCloseEvent, QDesktopServices, QIcon
 from PySide6.QtWidgets import (
     QApplication,
     QStackedWidget,
@@ -29,6 +29,7 @@ from qfluentwidgets import (
 )
 
 from bilibili import bili_service
+from core.const import AUTHOR_BILIBILI_URL, GITHUB_URL
 from core.player import audio_player
 
 from ..components import HomePanel, LoginPanel
@@ -182,6 +183,25 @@ class MainWindow(FluentWindow):
             self.audio_test_interface, FIF.MUSIC, "音频测试", NavigationItemPosition.TOP
         )
 
+        self.navigationInterface.addItem(
+            routeKey="author_bilibili",
+            icon=FIF.VIDEO,
+            text="B站",
+            onClick=lambda: QDesktopServices.openUrl(QUrl(AUTHOR_BILIBILI_URL)),
+            selectable=False,
+            tooltip="B站",
+            position=NavigationItemPosition.BOTTOM,
+        )
+
+        self.navigationInterface.addItem(
+            routeKey="github",
+            icon=FIF.GITHUB,
+            text="GitHub",
+            onClick=lambda: QDesktopServices.openUrl(QUrl(GITHUB_URL)),
+            selectable=False,
+            tooltip="GitHub",
+            position=NavigationItemPosition.BOTTOM,
+        )
         # 添加设置界面到导航栏
         self.addSubInterface(
             self.settings_interface, FIF.SETTING, "设置", NavigationItemPosition.BOTTOM

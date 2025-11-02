@@ -1,7 +1,6 @@
 import asyncio
 import io
 import wave
-from pathlib import Path
 
 import pyaudio
 import sounddevice as sd
@@ -168,29 +167,3 @@ class StreamPlayer:
 
 # 全局 StreamPlayer 单例实例
 audio_player = StreamPlayer()
-
-# 存储临时文件列表用于清理 (使用 pathlib.Path)
-temp_files: list[Path] = []
-
-
-def cleanup_temp_file(file_path: Path):
-    """清理临时文件"""
-    try:
-        if file_path and file_path.exists():
-            file_path.unlink()
-            if file_path in temp_files:
-                temp_files.remove(file_path)
-    except Exception as e:
-        logger.warning(f"清理临时文件失败: {e}")
-
-
-def cleanup_all_temp_files():
-    """清理所有临时文件"""
-    for file_path in temp_files.copy():
-        cleanup_temp_file(file_path)
-
-
-def close_audio_player():
-    """关闭 StreamPlayer 并清理资源"""
-    audio_player.close()
-    cleanup_all_temp_files()
