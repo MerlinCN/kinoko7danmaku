@@ -203,7 +203,7 @@ class MainWindow(FluentWindow):
             routeKey="update",
             icon=FIF.UPDATE,
             text="更新",
-            onClick=self._on_update,
+            onClick=lambda: self._on_update(is_force=True),
             selectable=False,
             tooltip="更新",
             position=NavigationItemPosition.BOTTOM,
@@ -234,10 +234,10 @@ class MainWindow(FluentWindow):
         )
 
     @asyncSlot()
-    async def _on_update(self) -> None:
+    async def _on_update(self, is_force: bool = False) -> None:
         """更新"""
         self.progress_ring.start()
-        version_info = await asyncio.to_thread(UpdateChecker.check_update)
+        version_info = await asyncio.to_thread(UpdateChecker.check_update, is_force)
         self.progress_ring.stop()
         if version_info:
             w = InfoBar.new(

@@ -95,6 +95,9 @@ class ConfigKey(StrEnum):
     # 别名字典
     ALIAS_DICT = "AliasDict"
 
+    # 音色字典
+    VOICE_DICT = "VoiceDict"
+
 
 class DictValidator(ConfigValidator):
     """字典验证器
@@ -270,6 +273,13 @@ class Config(QConfig):
         group=ConfigGroup.BILI_SERVICE,
         name=ConfigKey.ALIAS_DICT,
         default={"Merlin": "么林"},
+        validator=DictValidator(),
+    )
+
+    voiceDict = ConfigItem(
+        group=ConfigGroup.BILI_SERVICE,
+        name=ConfigKey.VOICE_DICT,
+        default=MINIMAX_VOICE_IDS,
         validator=DictValidator(),
     )
 
