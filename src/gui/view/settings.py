@@ -24,7 +24,6 @@ from core.const import (
     GPT_SOVITS_TEXT_SPLIT_METHODS,
     MINIMAX_ERROR_VOICE_ID,
     MINIMAX_MODELS,
-    MINIMAX_VOICE_IDS,
     SUPPORTED_SERVICES,
 )
 from core.player import audio_player
@@ -32,6 +31,7 @@ from core.qconfig import cfg, get_voices
 
 from ..components import FloatRangeSettingCard, IntSettingCard, StrSettingCard
 from ..components.alias_dict_card import AliasDictCard
+from ..components.dict_edit_card import DictEditCard
 
 
 class SettingsInterface(ScrollArea):
@@ -149,6 +149,7 @@ class SettingsInterface(ScrollArea):
             placeholder='"{user_name}" 发送了一条醒目留言,他说"{message}"',
         )
         self.aliasDictCard = AliasDictCard(self.biliGroup)
+
         # TTS 服务通用设置组
         self.ttsGroup = SettingCardGroup("文字转语音（TTS）设置", self.scrollWidget)
 
@@ -173,12 +174,24 @@ class SettingsInterface(ScrollArea):
             placeholder="请输入 API Key",
         )
 
+        self.voiceDictCard = DictEditCard(
+            config_item=cfg.voiceDict,
+            icon=FIF.MICROPHONE,
+            title="音色字典",
+            content="设置音色 ID 与显示名称的映射关系",
+            key_label="音色ID",
+            value_label="显示名称",
+            key_placeholder="输入音色ID",
+            value_placeholder="输入显示名称",
+            parent=self.minimaxGroup,
+        )
+
         self.minimaxVoiceIdCard = ComboBoxSettingCard(
             configItem=cfg.minimaxVoiceId,
             icon=FIF.MICROPHONE,
             title="音色 ID",
             content="设置 Minimax TTS 服务的音色 ID",
-            texts=list(MINIMAX_VOICE_IDS.values()),
+            texts=list(cfg.voiceDict.value.values()),
             parent=self.minimaxGroup,
         )
 
@@ -401,6 +414,8 @@ class SettingsInterface(ScrollArea):
         # 连接主题切换信号
         qconfig.themeChanged.connect(setTheme)
         cfg.playerDevice.valueChanged.connect(self._on_output_device_changed)
+        # 连接 voiceDict 变更信号
+        cfg.voiceDict.valueChanged.connect(self._on_voice_dict_changed)
 
     @asyncSlot()
     async def _on_minimax_api_key_changed_async(self) -> None:
@@ -433,28 +448,39 @@ class SettingsInterface(ScrollArea):
         toast.setState(True)
         toast.close()
 
-    def _update_voice_options(self, voices: list[str], selected_value: str) -> None:
-        """更新音色选项下拉列表
-
-        Args:
-            voices: 新的音色列表
-            selected_value: 要选中的值
-        """
-        # 清空现有选项
-        self.minimaxVoiceIdCard.comboBox.clear()
-
-        # 更新选项到文本的映射
-        self.minimaxVoiceIdCard.optionToText = {v: v for v in voices}
-
-        # 重新添加选项
-        for voice in voices:
-            self.minimaxVoiceIdCard.comboBox.addItem(voice, userData=voice)
-
-        # 设置选中项
-        self.minimaxVoiceIdCard.setValue(selected_value)
-
     def _on_output_device_changed(self) -> None:
         audio_player.set_output_device(cfg.playerDevice.value)
+
+    def _on_voice_dict_changed(self) -> None:
+        """voiceDict 改变时更新音色选择卡片的选项
+
+        从 voiceDict 获取最新的音色列表并更新下拉框。
+        """
+        voice_dict = cfg.voiceDict.value
+        if not voice_dict:
+            return
+
+        # 获取音色 ID 列表（键）和显示名称列表（值）
+        voice_ids = list(voice_dict.keys())
+
+        # 更新验证器的选项
+        cfg.minimaxVoiceId.validator.options = voice_ids
+        # 如果当前值不在新列表中，使用第一个选项
+        current_value = cfg.minimaxVoiceId.value
+        if current_value not in voice_ids:
+            cfg.minimaxVoiceId.value = voice_ids[0]
+
+        self.minimaxVoiceIdCard.comboBox.clear()
+
+        # 更新选项到文本的映射（音色 ID -> 显示名称）
+        self.minimaxVoiceIdCard.optionToText = voice_dict
+
+        # 重新添加选项（显示名称，但 userData 存储音色 ID）
+        for voice_id, name in voice_dict.items():
+            self.minimaxVoiceIdCard.comboBox.addItem(name, userData=voice_id)
+
+        # 设置选中项
+        self.minimaxVoiceIdCard.setValue(cfg.minimaxVoiceId.value)
 
     def _init_layout(self) -> None:
         """初始化布局"""
@@ -475,11 +501,13 @@ class SettingsInterface(ScrollArea):
         self.biliGroup.addSettingCard(self.guardOnTextCard)
         self.biliGroup.addSettingCard(self.superChatOnTextCard)
         self.biliGroup.addSettingCard(self.aliasDictCard)
+
         # 添加 TTS 服务通用设置卡片
         self.ttsGroup.addSettingCard(self.activeTTSCard)
 
         # 添加 Minimax 服务设置卡片
         self.minimaxGroup.addSettingCard(self.minimaxApiKeyCard)
+        self.minimaxGroup.addSettingCard(self.voiceDictCard)
         self.minimaxGroup.addSettingCard(self.minimaxVoiceIdCard)
         self.minimaxGroup.addSettingCard(self.minimaxModelCard)
         self.minimaxGroup.addSettingCard(self.minimaxSpeedCard)
