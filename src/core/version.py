@@ -29,11 +29,11 @@ def get_version() -> str:
             return version
         else:
             logger.warning(f"打包环境中找不到 version.txt: {version_file}")
-            return "v0.1.0"
+            return "0.1.0"
 
     except Exception as e:
         logger.exception(f"读取版本号失败: {e}")
-        return "v0.1.0"
+        return "0.1.0"
 
 
 def is_packaged() -> bool:
