@@ -46,6 +46,7 @@ class ConfigKey(StrEnum):
     # B站直播服务
     ROOM_ID = "RoomId"
     GIFT_THRESHOLD = "GiftThreshold"
+    FREE_GIFT_ON = "FreeGiftOn"
     NORMAL_DANMAKU_ON = "NormalDanmakuOn"
     GUARD_ON = "GuardOn"
     SUPER_CHAT_ON = "SuperChatOn"
@@ -215,6 +216,13 @@ class Config(QConfig):
         name=ConfigKey.GIFT_THRESHOLD,
         default=5,
         validator=IntValidator(),
+    )
+
+    freeGiftOn = OptionsConfigItem(
+        group=ConfigGroup.BILI_SERVICE,
+        name=ConfigKey.FREE_GIFT_ON,
+        default=False,
+        validator=BoolValidator(),
     )
 
     normalDanmakuOn = ConfigItem(

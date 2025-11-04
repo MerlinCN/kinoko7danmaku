@@ -2,6 +2,7 @@
 
 import asyncio
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget
 from qasync import asyncSlot
 from qfluentwidgets import (
@@ -77,6 +78,14 @@ class SettingsInterface(ScrollArea):
             icon=FIF.HEART,
             title="礼物阈值（元）",
             content="只播报价值大于等于此阈值的礼物",
+            parent=self.biliGroup,
+        )
+
+        self.freeGiftOnCard = SwitchSettingCard(
+            icon=FIF.HEART,
+            title="免费礼物",
+            content="是否播报免费礼物",
+            configItem=cfg.freeGiftOn,
             parent=self.biliGroup,
         )
 
@@ -492,6 +501,7 @@ class SettingsInterface(ScrollArea):
         # 添加 B站服务设置卡片
         self.biliGroup.addSettingCard(self.roomIdCard)
         self.biliGroup.addSettingCard(self.giftThresholdCard)
+        self.biliGroup.addSettingCard(self.freeGiftOnCard)
         self.biliGroup.addSettingCard(self.normalDanmakuCard)
         self.biliGroup.addSettingCard(self.guardCard)
         self.biliGroup.addSettingCard(self.superChatCard)
@@ -550,11 +560,7 @@ class SettingsInterface(ScrollArea):
         self.expandLayout.addWidget(self.gptSovitsGroup)
 
         # 设置滚动区域
-        self.setHorizontalScrollBarPolicy(
-            __import__(
-                "PySide6.QtCore", fromlist=["Qt"]
-            ).Qt.ScrollBarPolicy.ScrollBarAlwaysOff
-        )
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setViewportMargins(0, 80, 0, 20)
         self.setWidget(self.scrollWidget)
         self.setWidgetResizable(True)
