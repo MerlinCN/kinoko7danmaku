@@ -24,4 +24,6 @@ dependencies = [
 dev = [
     "pre-commit>=4.3.0",
     "pyinstaller>=6.16.0",
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
 ]

@@ -212,6 +212,7 @@ class GiftMessage(BaseModel):
     gift_num: int = Field(default=0, description="礼物数量")
     gift_price: int = Field(default=0, description="礼物价格 CNY*1000")
     timestamp: int = Field(default=0, description="发送时的 UNIX 毫秒时间戳")
+    coin_type: str = Field(default="", description="付费类型")
 
     @classmethod
     def parse(cls, event_data: Dict[str, Any]) -> "GiftMessage":
@@ -224,6 +225,7 @@ class GiftMessage(BaseModel):
         instance.gift_num = data["num"]
         instance.gift_price = data["price"]
         instance.timestamp = int(time.time())
+        instance.coin_type = data["coin_type"]
         return instance
 
     def __str__(self):
