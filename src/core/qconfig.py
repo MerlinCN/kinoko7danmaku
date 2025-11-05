@@ -56,6 +56,10 @@ class ConfigKey(StrEnum):
     DANMAKU_ON_TEXT = "DanmakuOnText"
     GUARD_ON_TEXT = "GuardOnText"
     SUPER_CHAT_ON_TEXT = "SuperChatOnText"
+    GIFT_MERGE_ON = "GiftMergeOn"
+    GIFT_MERGE_WINDOW = "GiftMergeWindow"
+    GIFT_MERGE_WINDOW_INITIAL = "GiftMergeWindowInitial"
+    GIFT_MERGE_WINDOW_INCREMENT = "GiftMergeWindowIncrement"
 
     # TTS 服务通用
     ACTIVE_TTS = "ActiveTTS"
@@ -289,6 +293,34 @@ class Config(QConfig):
         name=ConfigKey.VOICE_DICT,
         default=MINIMAX_VOICE_IDS,
         validator=DictValidator(),
+    )
+
+    giftMergeOn = ConfigItem(
+        group=ConfigGroup.BILI_SERVICE,
+        name=ConfigKey.GIFT_MERGE_ON,
+        default=False,
+        validator=BoolValidator(),
+    )
+
+    giftMergeWindowInitial = RangeConfigItem(
+        group=ConfigGroup.BILI_SERVICE,
+        name=ConfigKey.GIFT_MERGE_WINDOW_INITIAL,
+        default=1.5,
+        validator=RangeValidator(0.5, 5.0),
+    )
+
+    giftMergeWindowIncrement = RangeConfigItem(
+        group=ConfigGroup.BILI_SERVICE,
+        name=ConfigKey.GIFT_MERGE_WINDOW_INCREMENT,
+        default=0.5,
+        validator=RangeValidator(0.1, 2.0),
+    )
+
+    giftMergeWindow = RangeConfigItem(
+        group=ConfigGroup.BILI_SERVICE,
+        name=ConfigKey.GIFT_MERGE_WINDOW,
+        default=5.0,
+        validator=RangeValidator(1.0, 30.0),
     )
 
     # TTS 服务通用配置

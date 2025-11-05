@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QWidget
 from qasync import asyncSlot
 from qfluentwidgets import (
     ComboBoxSettingCard,
+    ExpandGroupSettingCard,
     ExpandLayout,
     ScrollArea,
     SettingCardGroup,
@@ -157,6 +158,63 @@ class SettingsInterface(ScrollArea):
             parent=self.biliGroup,
             placeholder='"{user_name}" 发送了一条醒目留言,他说"{message}"',
         )
+
+        # 礼物合并设置卡片（可展开）
+        self.giftMergeCard = ExpandGroupSettingCard(
+            icon=FIF.TRANSPARENT,
+            title="礼物合并设置",
+            content="配置礼物合并的相关参数",
+            parent=self.biliGroup,
+        )
+
+        # 礼物合并开关
+        self.giftMergeOnCard = SwitchSettingCard(
+            icon=FIF.SYNC,
+            title="启用礼物合并",
+            content="合并短时间内相同用户的相同礼物",
+            configItem=cfg.giftMergeOn,
+            parent=self.giftMergeCard,
+        )
+
+        # 初始窗口时间
+        self.giftMergeWindowInitialCard = FloatRangeSettingCard(
+            configItem=cfg.giftMergeWindowInitial,
+            icon=FIF.DATE_TIME,
+            title="初始窗口时间（秒）",
+            content=f"首次收到礼物时的等待时间（{cfg.giftMergeWindowInitial.range[0]}-{cfg.giftMergeWindowInitial.range[1]}秒）",
+            step=0.1,
+            decimals=1,
+            parent=self.giftMergeCard,
+        )
+
+        # 窗口时间递增
+        self.giftMergeWindowIncrementCard = FloatRangeSettingCard(
+            configItem=cfg.giftMergeWindowIncrement,
+            icon=FIF.UP,
+            title="窗口时间递增（秒）",
+            content=f"每次收到新礼物时窗口时间增加的值（{cfg.giftMergeWindowIncrement.range[0]}-{cfg.giftMergeWindowIncrement.range[1]}秒）",
+            step=0.1,
+            decimals=1,
+            parent=self.giftMergeCard,
+        )
+
+        # 最大窗口时间
+        self.giftMergeWindowCard = FloatRangeSettingCard(
+            configItem=cfg.giftMergeWindow,
+            icon=FIF.STOP_WATCH,
+            title="最大窗口时间（秒）",
+            content=f"窗口时间的上限，也是强制播报的最长等待时间（{cfg.giftMergeWindow.range[0]}-{cfg.giftMergeWindow.range[1]}秒）",
+            step=0.5,
+            decimals=1,
+            parent=self.giftMergeCard,
+        )
+
+        # 将子卡片添加到展开卡片中
+        self.giftMergeCard.addGroupWidget(self.giftMergeOnCard)
+        self.giftMergeCard.addGroupWidget(self.giftMergeWindowInitialCard)
+        self.giftMergeCard.addGroupWidget(self.giftMergeWindowIncrementCard)
+        self.giftMergeCard.addGroupWidget(self.giftMergeWindowCard)
+
         self.aliasDictCard = AliasDictCard(self.biliGroup)
 
         # TTS 服务通用设置组
@@ -510,6 +568,7 @@ class SettingsInterface(ScrollArea):
         self.biliGroup.addSettingCard(self.danmakuOnTextCard)
         self.biliGroup.addSettingCard(self.guardOnTextCard)
         self.biliGroup.addSettingCard(self.superChatOnTextCard)
+        self.biliGroup.addSettingCard(self.giftMergeCard)
         self.biliGroup.addSettingCard(self.aliasDictCard)
 
         # 添加 TTS 服务通用设置卡片

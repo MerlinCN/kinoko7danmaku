@@ -17,6 +17,8 @@ from models.bilibili import (
 )
 from tts_service import get_tts_service
 
+from .gift_merger import gift_merger
+
 
 class BiliService(QObject):
     """B站直播服务
@@ -36,6 +38,9 @@ class BiliService(QObject):
         self.room_obj: live.LiveDanmaku | None = None
         self.run_task = None
         self.status_check_timer: QTimer | None = None
+
+        # 连接礼物合并管理器的信号
+        gift_merger.merged_gift_received.connect(self.gift_received.emit)
 
     def _check_room_status(self):
         """检查直播间状态，如果关闭则重新连接"""
@@ -82,17 +87,8 @@ class BiliService(QObject):
                 return
             logger.info(gift_message)
 
-            # 发射信号到 GUI
-            display_text = cfg.giftOnText.value.format(
-                user_name=gift_message.user_name,
-                gift_name=gift_message.gift_name,
-                gift_num=gift_message.gift_num,
-            )
-            self.gift_received.emit(display_text)
-
-            tts_service = get_tts_service()
-            audio = await tts_service.text_to_speech(display_text)
-            await audio_player.play_bytes_async(audio)
+            # 使用礼物合并管理器处理礼物
+            await gift_merger.add_gift(gift_message)
 
         @self.room_obj.on(EventType.GUARD_BUY)
         async def on_guard_buy(event):
@@ -171,6 +167,8 @@ class BiliService(QObject):
             self.run_task = None
         if self.status_check_timer:
             self.status_check_timer.stop()
+        # 清空礼物合并管理器
+        await gift_merger.clear_all()
         logger.info("停止直播间监听")
 
     def is_logged_in(self) -> bool:

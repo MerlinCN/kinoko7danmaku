@@ -55,12 +55,18 @@ class FloatRangeSettingCard(RangeSettingCard):
         """重新配置滑块以支持浮点数"""
         min_val, max_val = self.configItem.range
 
+        # 阻止信号触发，避免在设置范围时触发 valueChanged
+        self.slider.blockSignals(True)
+
         # 将浮点数范围转换为整数范围
         self.slider.setRange(
             int(min_val * self._internal_step), int(max_val * self._internal_step)
         )
         self.slider.setSingleStep(1)  # 内部步长始终为 1
         self.slider.setValue(int(self.configItem.value * self._internal_step))
+
+        # 恢复信号
+        self.slider.blockSignals(False)
 
         # 更新显示标签
         self._update_label(self.configItem.value)
@@ -74,17 +80,20 @@ class FloatRangeSettingCard(RangeSettingCard):
         self.valueLabel.setText(f"{value:.{self.decimals}f}")
         self.valueLabel.adjustSize()
 
-    def _RangeSettingCard__onValueChanged(self, internal_value: int) -> None:
-        """滑块值变化槽函数（重写父类方法）
+    def setValue(self, value: float) -> None:
+        """设置滑块值（重写父类方法）
 
         Args:
-            internal_value: 内部整数值
+            value: 浮点数值
         """
-        # 转换为浮点数
-        float_value = internal_value / self._internal_step
-
-        # 四舍五入到指定精度
-        float_value = round(float_value, self.decimals)
+        # 如果传入的是整数（来自父类的信号），需要转换为浮点数
+        if isinstance(value, int):
+            # 这是从 slider 的 valueChanged 信号传来的内部整数值
+            float_value = value / self._internal_step
+            float_value = round(float_value, self.decimals)
+        else:
+            # 这是直接调用 setValue 传入的浮点数值
+            float_value = value
 
         # 更新配置
         qconfig.set(self.configItem, float_value)
@@ -92,21 +101,8 @@ class FloatRangeSettingCard(RangeSettingCard):
         # 更新显示
         self._update_label(float_value)
 
-        # 发送信号
-        self.valueChanged.emit(float_value)
-
-    def setValue(self, value: float) -> None:
-        """设置滑块值
-
-        Args:
-            value: 浮点数值
-        """
-        # 更新配置
-        qconfig.set(self.configItem, value)
-
-        # 更新滑块
-        internal_value = int(value * self._internal_step)
+        # 更新滑块（使用 blockSignals 避免触发信号循环）
+        self.slider.blockSignals(True)
+        internal_value = int(float_value * self._internal_step)
         self.slider.setValue(internal_value)
-
-        # 更新显示
-        self._update_label(value)
+        self.slider.blockSignals(False)
