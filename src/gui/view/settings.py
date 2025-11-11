@@ -252,7 +252,6 @@ class SettingsInterface(ScrollArea):
             value_placeholder="输入显示名称",
             parent=self.minimaxGroup,
         )
-
         self.minimaxVoiceIdCard = ComboBoxSettingCard(
             configItem=cfg.minimaxVoiceId,
             icon=FIF.MICROPHONE,
