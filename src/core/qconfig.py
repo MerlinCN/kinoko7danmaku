@@ -551,9 +551,3 @@ cfg = Config()
 
 # 加载配置文件
 qconfig.load("data/config.json", cfg)
-
-# 动态更新音色 ID validator，以支持用户自定义的音色
-# 必须在加载配置后立即更新，否则用户自定义的音色 ID 会被重置为默认值
-cfg.minimaxVoiceId.validator = OptionsValidator(list(cfg.voiceDict.value.keys()))
-if cfg.minimaxVoiceId.value not in cfg.minimaxVoiceId.validator.options:
-    cfg.minimaxVoiceId.value = cfg.minimaxVoiceId.validator.options[0]
