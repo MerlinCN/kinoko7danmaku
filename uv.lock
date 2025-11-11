@@ -531,7 +531,7 @@ wheels = [
 
 [[package]]
 name = "kinoko7danmaku"
-version = "3.3.0"
+version = "3.3.2"
 source = { virtual = "." }
 dependencies = [
     { name = "aiohttp" },

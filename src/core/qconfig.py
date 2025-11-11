@@ -175,7 +175,7 @@ class OutputDeviceValidator(OptionsValidator):
         return value if self.validate(value) else self.options[0]
 
 
-class VoiceIdValidator(ConfigValidator):
+class VoiceIdValidator(OptionsValidator):
     """音色 ID 验证器
 
     动态从 voiceDict 获取可用的音色 ID 列表进行验证。
@@ -190,6 +190,8 @@ class VoiceIdValidator(ConfigValidator):
             voice_dict_config_item: voiceDict 的 ConfigItem 实例
         """
         self.voice_dict_config_item = voice_dict_config_item
+        # 初始化父类，设置初始 options
+        super().__init__(list(voice_dict_config_item.value.keys()))
 
     @override
     def validate(self, value) -> bool:
@@ -551,3 +553,7 @@ cfg = Config()
 
 # 加载配置文件
 qconfig.load("data/config.json", cfg)
+
+cfg.minimaxVoiceId.validator = VoiceIdValidator(cfg.voiceDict)
+if cfg.minimaxVoiceId.value not in cfg.minimaxVoiceId.options:
+    cfg.minimaxVoiceId.value = cfg.minimaxVoiceId.options[0]
