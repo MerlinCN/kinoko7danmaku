@@ -175,6 +175,54 @@ class OutputDeviceValidator(OptionsValidator):
         return value if self.validate(value) else self.options[0]
 
 
+class VoiceIdValidator(ConfigValidator):
+    """音色 ID 验证器
+
+    动态从 voiceDict 获取可用的音色 ID 列表进行验证。
+    在加载配置时，如果用户在 voiceDict 中添加了自定义音色，
+    也能正确验证而不会被重置为默认值。
+    """
+
+    def __init__(self, voice_dict_config_item):
+        """初始化验证器
+
+        Args:
+            voice_dict_config_item: voiceDict 的 ConfigItem 实例
+        """
+        self.voice_dict_config_item = voice_dict_config_item
+
+    @override
+    def validate(self, value) -> bool:
+        """验证音色 ID 是否在可用列表中
+
+        Args:
+            value: 音色 ID
+
+        Returns:
+            bool: 是否有效
+        """
+        available_voice_ids = list(self.voice_dict_config_item.value.keys())
+        return value in available_voice_ids
+
+    @override
+    def correct(self, value):
+        """修正音色 ID 为有效值
+
+        Args:
+            value: 音色 ID
+
+        Returns:
+            str: 有效的音色 ID
+        """
+        available_voice_ids = list(self.voice_dict_config_item.value.keys())
+        if value in available_voice_ids:
+            return value
+        # 如果没有可用的音色 ID，使用默认的
+        if available_voice_ids:
+            return available_voice_ids[0]
+        return list(MINIMAX_VOICE_IDS.keys())[0]
+
+
 def get_voices(api_key: str) -> list[str]:
     """获取Minimax支持的音色列表"""
     api_url = "https://api.minimax.io/v1/get_voice"
@@ -349,8 +397,8 @@ class Config(QConfig):
     minimaxVoiceId = OptionsConfigItem(
         group=ConfigGroup.MINIMAX_SERVICE,
         name=ConfigKey.MINIMAX_VOICE_ID,
-        default=list(MINIMAX_VOICE_IDS.keys())[0],
-        validator=OptionsValidator(list(MINIMAX_VOICE_IDS.keys())),
+        default=list(voiceDict.value.keys())[0],
+        validator=VoiceIdValidator(voiceDict),
     )
 
     minimaxSpeed = RangeConfigItem(
@@ -503,3 +551,9 @@ cfg = Config()
 
 # 加载配置文件
 qconfig.load("data/config.json", cfg)
+
+# 动态更新音色 ID validator，以支持用户自定义的音色
+# 必须在加载配置后立即更新，否则用户自定义的音色 ID 会被重置为默认值
+cfg.minimaxVoiceId.validator = OptionsValidator(list(cfg.voiceDict.value.keys()))
+if cfg.minimaxVoiceId.value not in cfg.minimaxVoiceId.validator.options:
+    cfg.minimaxVoiceId.value = cfg.minimaxVoiceId.validator.options[0]
