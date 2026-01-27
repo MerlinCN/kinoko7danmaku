@@ -3,12 +3,12 @@
 import json
 import re
 import time
-from pathlib import Path
 from typing import NamedTuple
 
 import httpx
 from loguru import logger
 
+from core.const import DATA_DIR
 from core.version import __version__
 
 
@@ -26,7 +26,7 @@ class UpdateChecker:
 
     GITHUB_REPO = "MerlinCN/kinoko7danmaku"
     API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
-    CACHE_FILE = Path("data/update_cache.json")
+    CACHE_FILE = DATA_DIR / "update_cache.json"
     CHECK_INTERVAL = 3600 * 1  # 1 小时检查一次
 
     @staticmethod
