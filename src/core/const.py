@@ -17,6 +17,8 @@ SUPPORTED_SERVICES = {
 
 # MiniMax 支持的模型列表
 MINIMAX_MODELS = [
+    "speech-2.8-hd",
+    "speech-2.8-turbo",
     "speech-2.6-hd",
     "speech-2.6-turbo",
     "speech-02-hd",
