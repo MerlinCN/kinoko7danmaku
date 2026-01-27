@@ -1,5 +1,4 @@
 <div align="center">
-
 <img src="https://socialify.git.ci/MerlinCN/kinoko7danmaku/image?description=1&forks=1&issues=1&language=1&name=1&owner=1&stargazers=1&theme=Light" alt="kinoko7danmaku" width="640" height="320" />
 
 
@@ -171,6 +170,20 @@ uv run ruff check --fix src/
 觉得好用可以给这个项目点个 Star 或者去 [爱发电](https://afdian.net/a/MerlinCN) 投喂我。
 
 有意见或建议欢迎提交 Issues 和 Pull Requests。
+
+感谢以下用户对我的帮助：
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/zjp-shadow">
+        <img src="https://avatars.githubusercontent.com/zjp-shadow?v=4" width="80px;" alt="shadow"/><br />
+        <sub><b>shadow</b></sub>
+      </a>
+    </td>
+  </tr>
+</table>
+
 
 ## 许可证
 
