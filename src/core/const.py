@@ -1,8 +1,40 @@
 """全局常量定义"""
 
+import shutil
 from pathlib import Path
 
 from models.service import ServiceDetail, ServiceType
+
+
+def get_data_dir() -> Path:
+    """获取数据存储目录
+
+    优先使用用户目录下的 ~/.kinoko7danmaku/，
+    如果根目录存在旧的 data/ 文件夹，则自动迁移数据。
+
+    Returns:
+        数据目录路径
+    """
+    user_data_dir = Path.home() / ".kinoko7danmaku"
+    legacy_data_dir = Path("data")
+
+    # 如果旧目录存在且用户目录不存在，进行迁移
+    if legacy_data_dir.exists() and not user_data_dir.exists():
+        user_data_dir.mkdir(parents=True, exist_ok=True)
+        for item in legacy_data_dir.iterdir():
+            dest = user_data_dir / item.name
+            if item.is_file():
+                shutil.copy2(item, dest)
+            elif item.is_dir():
+                shutil.copytree(item, dest)
+
+    # 确保用户数据目录存在
+    user_data_dir.mkdir(parents=True, exist_ok=True)
+    return user_data_dir
+
+
+# 数据目录
+DATA_DIR = get_data_dir()
 
 # 支持的 TTS 服务配置
 SUPPORTED_SERVICES = {
@@ -58,7 +90,7 @@ MINIMAX_VOICE_IDS = {
 }
 
 
-COOKIES_PATH = Path("data") / "cookies.json"
+COOKIES_PATH = DATA_DIR / "cookies.json"
 
 GITHUB_URL = "https://github.com/MerlinCN/kinoko7danmaku"
 

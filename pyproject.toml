@@ -1,6 +1,6 @@
 [project]
 name = "kinoko7danmaku"
-version = "3.3.3"
+version = "3.3.4"
 requires-python = ">=3.12"
 dependencies = [
     "aiohttp>=3.12.14",

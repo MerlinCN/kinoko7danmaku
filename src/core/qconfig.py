@@ -19,6 +19,7 @@ from qfluentwidgets import (
 from models.service import ServiceType
 
 from .const import (
+    DATA_DIR,
     GPT_SOVITS_LANGUAGES,
     GPT_SOVITS_TEXT_SPLIT_METHODS,
     MINIMAX_ERROR_VOICE_ID,
@@ -552,7 +553,7 @@ class Config(QConfig):
 cfg = Config()
 
 # 加载配置文件
-qconfig.load("data/config.json", cfg)
+qconfig.load(str(DATA_DIR / "config.json"), cfg)
 
 cfg.minimaxVoiceId.validator = VoiceIdValidator(cfg.voiceDict)
 if cfg.minimaxVoiceId.value not in cfg.minimaxVoiceId.options:
