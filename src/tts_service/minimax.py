@@ -83,6 +83,7 @@ class MinimaxService(TTSService):
             pitch = cfg.minimaxPitch.value
         if not api_key:
             raise ValueError("API Key is required")
+        api_key = api_key.strip()  # 防呆设计，真的有人会加上空格或者回车
         alias_texts = []
         if cfg.aliasDict.value:
             for k, v in cfg.aliasDict.value.items():
