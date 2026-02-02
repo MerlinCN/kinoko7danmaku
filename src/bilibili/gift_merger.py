@@ -62,7 +62,22 @@ class GiftMerger(QObject):
 
         self.check_timer = QTimer(self)
         self.check_timer.timeout.connect(self._check_gift_groups)
-        self.check_timer.start(1000)
+        # 不在这里启动，等待 Qt 事件循环启动后再调用 start()
+
+    def start(self) -> None:
+        """启动定时器
+
+        必须在 Qt 事件循环启动后调用，否则定时器不会触发。
+        """
+        if not self.check_timer.isActive():
+            self.check_timer.start(1000)
+            logger.info("礼物检查定时器已启动")
+
+    def stop(self) -> None:
+        """停止定时器"""
+        if self.check_timer.isActive():
+            self.check_timer.stop()
+            logger.info("礼物检查定时器已停止")
 
     async def add_gift(self, gift_message: GiftMessage):
         """添加礼物到合并队列

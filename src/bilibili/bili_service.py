@@ -137,9 +137,9 @@ class BiliService(QObject):
                 sessdata = cookie["value"]
             if cookie["name"] == "DedeUserID":
                 dedeuserid = cookie["value"]
-        assert (
-            bili_jct and sessdata and dedeuserid
-        ), "cookies.json 中没有 bili_jct, SESSDATA, DedeUserID"
+        assert bili_jct and sessdata and dedeuserid, (
+            "cookies.json 中没有 bili_jct, SESSDATA, DedeUserID"
+        )
         self.credential = Credential(
             bili_jct=bili_jct, sessdata=sessdata, dedeuserid=dedeuserid
         )
@@ -161,13 +161,16 @@ class BiliService(QObject):
             self.status_check_timer.start()
             logger.info("状态检查定时器已启动")
 
+        # 启动礼物合并定时器（必须在 Qt 事件循环启动后）
+        gift_merger.start()
+
     async def stop(self):
         if self.run_task:
             self.run_task.cancel()
             self.run_task = None
         if self.status_check_timer:
             self.status_check_timer.stop()
-        # 清空礼物合并管理器
+        gift_merger.stop()
         await gift_merger.clear_all()
         logger.info("停止直播间监听")
 

@@ -81,7 +81,8 @@ class MinimaxService(TTSService):
             vol = cfg.minimaxVol.value
         if pitch is None:
             pitch = cfg.minimaxPitch.value
-
+        if not api_key:
+            raise ValueError("API Key is required")
         alias_texts = []
         if cfg.aliasDict.value:
             for k, v in cfg.aliasDict.value.items():
