@@ -2,20 +2,23 @@
 
 from loguru import logger
 from PySide6.QtCore import QPoint, Qt, QTimer, Signal
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 from qasync import asyncSlot
 from qfluentwidgets import (
     Action,
     BodyLabel,
     CaptionLabel,
     CardWidget,
-    ComboBox,
+    ComboBoxSettingCard,
     FlowLayout,
     InfoBar,
     InfoBarPosition,
+    OptionsConfigItem,
+    OptionsValidator,
+    RangeConfigItem,
+    RangeValidator,
     RoundMenu,
     ScrollArea,
-    Slider,
     StateToolTip,
     SubtitleLabel,
     TextEdit,
@@ -28,6 +31,7 @@ from qfluentwidgets import FluentIcon as FIF
 from core.const import MINIMAX_MODELS
 from core.player import audio_player
 from core.qconfig import cfg
+from gui.components import FloatRangeSettingCard
 from models.minimax import VoiceItem
 from tts_service.minimax import MinimaxService
 
@@ -150,6 +154,32 @@ class MinimaxVoiceListInterface(QWidget):
         self._temp_vol: float = 1.0
         self._temp_pitch: int = 0
 
+        # 临时配置项（仅用于 UI 组件，不保存到配置文件）
+        self._temp_model_config = OptionsConfigItem(
+            group="VoiceListTemp",
+            name="TempModel",
+            default=MINIMAX_MODELS[0],
+            validator=OptionsValidator(MINIMAX_MODELS),
+        )
+        self._temp_speed_config = RangeConfigItem(
+            group="VoiceListTemp",
+            name="TempSpeed",
+            default=1.0,
+            validator=RangeValidator(0.5, 2.0),
+        )
+        self._temp_vol_config = RangeConfigItem(
+            group="VoiceListTemp",
+            name="TempVol",
+            default=1.0,
+            validator=RangeValidator(0.0, 2.0),
+        )
+        self._temp_pitch_config = RangeConfigItem(
+            group="VoiceListTemp",
+            name="TempPitch",
+            default=0,
+            validator=RangeValidator(-12, 12),
+        )
+
         self._is_playing = False
         self._is_loaded = False  # 是否已加载过音色列表
 
@@ -229,37 +259,61 @@ class MinimaxVoiceListInterface(QWidget):
         self.param_card = CardWidget()
         param_card_layout = QVBoxLayout(self.param_card)
         param_card_layout.setContentsMargins(20, 20, 20, 20)
-        param_card_layout.setSpacing(16)
+        param_card_layout.setSpacing(8)  # 减少间距，因为卡片自带内边距
 
         param_title = SubtitleLabel("音色参数")
         param_card_layout.addWidget(param_title)
 
-        # 模型选择
-        model_layout = QHBoxLayout()
-        model_label = QLabel("模型")
-        model_label.setFixedWidth(80)
-        self.model_combo = ComboBox()
-        self.model_combo.addItems(MINIMAX_MODELS)
-        self.model_combo.setCurrentText(self._temp_model)
-        self.model_combo.currentTextChanged.connect(self._on_model_changed)
-        model_layout.addWidget(model_label)
-        model_layout.addWidget(self.model_combo)
-        param_card_layout.addLayout(model_layout)
-
-        # 语速滑块
-        self._create_slider_row(
-            param_card_layout, "语速", 0.5, 2.0, 1.0, self._on_speed_changed
+        # 模型选择卡片
+        self.model_card = ComboBoxSettingCard(
+            configItem=self._temp_model_config,
+            icon=FIF.ROBOT,
+            title="模型",
+            content="设置 TTS 模型",
+            texts=MINIMAX_MODELS,
+            parent=self.param_card,
         )
+        self.model_card.comboBox.currentTextChanged.connect(self._on_model_changed)
+        param_card_layout.addWidget(self.model_card)
 
-        # 音量滑块
-        self._create_slider_row(
-            param_card_layout, "音量", 0.0, 2.0, 1.0, self._on_vol_changed
+        # 语速滑块卡片
+        self.speed_card = FloatRangeSettingCard(
+            configItem=self._temp_speed_config,
+            icon=FIF.SPEED_OFF,
+            title="语速",
+            content="调整语音播放速度（0.5-2.0）",
+            step=0.1,
+            decimals=1,
+            parent=self.param_card,
         )
+        self.speed_card.valueChanged.connect(self._on_speed_changed)
+        param_card_layout.addWidget(self.speed_card)
 
-        # 音调滑块
-        self._create_slider_row(
-            param_card_layout, "音调", -12, 12, 0, self._on_pitch_changed, is_int=True
+        # 音量滑块卡片
+        self.vol_card = FloatRangeSettingCard(
+            configItem=self._temp_vol_config,
+            icon=FIF.VOLUME,
+            title="音量",
+            content="调整语音音量（0.0-2.0）",
+            step=0.1,
+            decimals=1,
+            parent=self.param_card,
         )
+        self.vol_card.valueChanged.connect(self._on_vol_changed)
+        param_card_layout.addWidget(self.vol_card)
+
+        # 音调滑块卡片
+        self.pitch_card = FloatRangeSettingCard(
+            configItem=self._temp_pitch_config,
+            icon=FIF.MUSIC,
+            title="音调",
+            content="调整语音音调（-12-12）",
+            step=1,
+            decimals=0,
+            parent=self.param_card,
+        )
+        self.pitch_card.valueChanged.connect(self._on_pitch_changed)
+        param_card_layout.addWidget(self.pitch_card)
 
         right_layout.addWidget(self.param_card)
         right_layout.addStretch()
@@ -278,75 +332,6 @@ class MinimaxVoiceListInterface(QWidget):
         # 首次显示时加载音色列表
         if not self._is_loaded:
             QTimer.singleShot(0, self._load_voice_list)
-
-    def _create_slider_row(
-        self,
-        parent_layout: QVBoxLayout,
-        label_text: str,
-        min_val: float,
-        max_val: float,
-        default_val: float,
-        callback,
-        is_int: bool = False,
-    ) -> None:
-        """创建滑块行
-
-        Args:
-            parent_layout: 父布局
-            label_text: 标签文本
-            min_val: 最小值
-            max_val: 最大值
-            default_val: 默认值
-            callback: 值变化回调
-            is_int: 是否为整数滑块
-        """
-        row_layout = QHBoxLayout()
-        label = QLabel(label_text)
-        label.setFixedWidth(80)
-
-        slider = Slider(Qt.Orientation.Horizontal)
-        if is_int:
-            slider.setRange(int(min_val), int(max_val))
-            slider.setValue(int(default_val))
-        else:
-            # 浮点数：转换为整数范围（精度 0.1）
-            slider.setRange(int(min_val * 10), int(max_val * 10))
-            slider.setValue(int(default_val * 10))
-
-        value_label = QLabel(str(default_val))
-        value_label.setFixedWidth(50)
-        value_label.setAlignment(
-            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-        )
-
-        # 连接信号
-        if is_int:
-            slider.valueChanged.connect(
-                lambda v: (value_label.setText(str(v)), callback(v))
-            )
-        else:
-            slider.valueChanged.connect(
-                lambda v: (
-                    value_label.setText(f"{v / 10:.1f}"),
-                    callback(v / 10),
-                )
-            )
-
-        row_layout.addWidget(label)
-        row_layout.addWidget(slider, 1)
-        row_layout.addWidget(value_label)
-        parent_layout.addLayout(row_layout)
-
-        # 保存引用（用于后续访问）
-        if label_text == "语速":
-            self.speed_slider = slider
-            self.speed_label = value_label
-        elif label_text == "音量":
-            self.vol_slider = slider
-            self.vol_label = value_label
-        elif label_text == "音调":
-            self.pitch_slider = slider
-            self.pitch_label = value_label
 
     @asyncSlot()
     async def _load_voice_list(self) -> None:
@@ -390,7 +375,7 @@ class MinimaxVoiceListInterface(QWidget):
             card.deleteLater()
         self._voice_cards.clear()
 
-        card_width = 500
+        card_width = 450
 
         # 创建新卡片
         for voice in self._voices:
@@ -466,13 +451,13 @@ class MinimaxVoiceListInterface(QWidget):
         """
         self._temp_vol = vol
 
-    def _on_pitch_changed(self, pitch: int) -> None:
+    def _on_pitch_changed(self, pitch: float) -> None:
         """音调变化事件
 
         Args:
-            pitch: 音调值
+            pitch: 音调值（浮点数，需转换为整数）
         """
-        self._temp_pitch = pitch
+        self._temp_pitch = int(pitch)  # FloatRangeSettingCard 总是返回 float
 
     @asyncSlot()
     async def _on_play_clicked(self) -> None:
