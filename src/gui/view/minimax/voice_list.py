@@ -1,11 +1,11 @@
 """MiniMax 音色列表界面"""
 
 from loguru import logger
-from PySide6.QtCore import QPoint, Qt, QTimer, Signal
+from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 from qasync import asyncSlot
 from qfluentwidgets import (
-    Action,
     BodyLabel,
     CaptionLabel,
     CardWidget,
@@ -17,14 +17,12 @@ from qfluentwidgets import (
     OptionsValidator,
     RangeConfigItem,
     RangeValidator,
-    RoundMenu,
     ScrollArea,
     StateToolTip,
     SubtitleLabel,
     TextEdit,
     TitleLabel,
     ToolButton,
-    TransparentToolButton,
 )
 from qfluentwidgets import FluentIcon as FIF
 
@@ -74,15 +72,11 @@ class VoiceCard(CardWidget):
         self.idLabel = CaptionLabel(self.voice_id, self)
         self.idLabel.setTextColor("#606060", "#d2d2d2")
 
-        # 使用按钮
-        self.useButton = ToolButton(FIF.PLAY, self)
-        self.useButton.setFixedSize(32, 32)
-        self.useButton.setToolTip("试听")
-
-        # 更多按钮
-        self.moreButton = TransparentToolButton(FIF.MORE, self)
-        self.moreButton.setFixedSize(32, 32)
-        self.moreButton.clicked.connect(self._on_more_clicked)
+        # 复制按钮
+        self.copyButton = ToolButton(FIF.COPY, self)
+        self.copyButton.setFixedSize(32, 32)
+        self.copyButton.setToolTip("复制音色 ID")
+        self.copyButton.clicked.connect(self._on_copy_clicked)
 
         # 布局
         self.setFixedHeight(73)
@@ -97,18 +91,23 @@ class VoiceCard(CardWidget):
 
         self.hBoxLayout.addLayout(self.vBoxLayout)
         self.hBoxLayout.addStretch(1)
-        self.hBoxLayout.addWidget(self.useButton, 0, Qt.AlignmentFlag.AlignRight)
-        self.hBoxLayout.addWidget(self.moreButton, 0, Qt.AlignmentFlag.AlignRight)
+        self.hBoxLayout.addWidget(self.copyButton, 0, Qt.AlignmentFlag.AlignRight)
 
-    def _on_more_clicked(self) -> None:
-        """更多按钮点击事件"""
-        menu = RoundMenu(parent=self)
-        menu.addAction(Action(FIF.COPY, "复制音色 ID", self))
-        menu.addAction(Action(FIF.INFO, "查看详情", self))
+    def _on_copy_clicked(self) -> None:
+        """复制按钮点击事件"""
+        clipboard = QGuiApplication.clipboard()
+        clipboard.setText(self.voice_id)
 
-        x = (self.moreButton.width() - menu.width()) // 2 + 10
-        pos = self.moreButton.mapToGlobal(QPoint(x, self.moreButton.height()))
-        menu.exec(pos)
+        # 显示成功提示
+        InfoBar.success(
+            title="复制成功",
+            content=f"已复制音色 ID: {self.voice_id}",
+            orient=Qt.Orientation.Horizontal,
+            isClosable=True,
+            position=InfoBarPosition.TOP,
+            duration=2000,
+            parent=self.window(),
+        )
 
     def mousePressEvent(self, event) -> None:
         """鼠标点击事件
@@ -207,7 +206,7 @@ class MinimaxVoiceListInterface(QWidget):
         left_layout.setSpacing(12)
 
         # 左侧标题
-        left_title = SubtitleLabel("可用音色")
+        left_title = SubtitleLabel("可用音色【点击选中】")
         left_layout.addWidget(left_title)
 
         # 滚动区域
@@ -382,9 +381,6 @@ class MinimaxVoiceListInterface(QWidget):
             card = VoiceCard(voice.voice_id, voice.voice_name, self.voice_container)
             card.setFixedWidth(card_width)
             card.voiceSelected.connect(self._on_voice_card_clicked)
-            card.useButton.clicked.connect(
-                lambda _, vid=voice.voice_id: self._on_voice_card_clicked(vid)
-            )
 
             self._voice_cards[voice.voice_id] = card
             self.voice_flow_layout.addWidget(card)
