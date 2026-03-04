@@ -73,3 +73,26 @@ class MinimaxTTSResponse(BaseModel):
     base_resp: Optional[Dict[str, Any]] = Field(
         default=None, description="基础响应信息"
     )
+
+
+class VoiceItem(BaseModel):
+    """MiniMax 音色项"""
+
+    voice_id: str = Field(..., description="音色ID")
+    voice_name: str = Field(default="", description="音色名称")
+    description: List[str] = Field(default_factory=list, description="描述")
+    created_time: str = Field(..., description="创建时间")
+
+
+class BaseResp(BaseModel):
+    """MiniMax API 基础响应"""
+
+    status_code: int = Field(..., description="状态码")
+    status_msg: str = Field(..., description="状态信息")
+
+
+class VoiceListResponse(BaseModel):
+    """MiniMax 获取音色列表响应"""
+
+    voice_cloning: List[VoiceItem] = Field(..., description="音色克隆列表")
+    base_resp: BaseResp = Field(..., description="基础响应")

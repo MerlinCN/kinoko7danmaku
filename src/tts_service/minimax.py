@@ -7,6 +7,7 @@ from models.minimax import (
     AudioSetting,
     MinimaxTTSRequest,
     MinimaxTTSResponse,
+    VoiceListResponse,
     VoiceSetting,
 )
 
@@ -131,3 +132,37 @@ class MinimaxService(TTSService):
         )
 
         return audio_bytes
+
+    async def get_voice_list(self, api_key: str | None = None) -> VoiceListResponse:
+        """获取音色列表
+
+        Args:
+            api_key: API密钥，为 None 时从配置读取
+
+        Returns:
+            VoiceListResponse: 音色列表响应
+
+        Raises:
+            ValueError: API Key 为空
+            httpx.HTTPStatusError: HTTP请求失败
+        """
+        if api_key is None:
+            api_key = cfg.minimaxApiKey.value
+        if not api_key:
+            raise ValueError("MiniMax API Key 未配置")
+
+        api_key = api_key.strip()
+        api_url = "https://api.minimax.io/v1/get_voice"
+
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+
+        request_body = {"voice_type": "voice_cloning"}
+
+        client = self._get_client()
+        response = await client.post(api_url, json=request_body, headers=headers)
+        response.raise_for_status()
+
+        return VoiceListResponse.model_validate(response.json())
