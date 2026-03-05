@@ -24,6 +24,7 @@ from qfluentwidgets import (
 from qfluentwidgets import FluentIcon as FIF
 
 from core.const import MINIMAX_MODELS
+from core.player import audio_player
 from core.qconfig import cfg
 from gui.components import SingleAudioUploadWidget
 from models.minimax import ClonePrompt, VoiceCloneRequest, VoiceItem
@@ -268,6 +269,41 @@ class MinimaxVoiceCloneInterface(QWidget):
         action_layout.addWidget(self.generate_button)
 
         scroll_layout.addLayout(action_layout)
+
+        # === 音频预览区域（初始隐藏）===
+        self.preview_audio_card = CardWidget()
+        preview_audio_layout = QVBoxLayout(self.preview_audio_card)
+        preview_audio_layout.setContentsMargins(20, 20, 20, 20)
+        preview_audio_layout.setSpacing(12)
+
+        preview_audio_title = SubtitleLabel("生成结果预览")
+        preview_audio_layout.addWidget(preview_audio_title)
+
+        # 成功提示文本
+        self.success_label = BodyLabel("")
+        self.success_label.setWordWrap(True)
+        preview_audio_layout.addWidget(self.success_label)
+
+        # 播放按钮容器
+        audio_control_layout = QHBoxLayout()
+        audio_control_layout.setSpacing(10)
+
+        self.play_preview_button = ToolButton(FIF.PLAY)
+        self.play_preview_button.setFixedSize(48, 48)
+        self.play_preview_button.setToolTip("播放预览音频")
+        self.play_preview_button.clicked.connect(self._on_play_preview_audio)
+        audio_control_layout.addWidget(self.play_preview_button)
+
+        self.preview_status_label = CaptionLabel("")
+        self.preview_status_label.setTextColor("#606060", "#d2d2d2")
+        audio_control_layout.addWidget(self.preview_status_label)
+
+        audio_control_layout.addStretch()
+        preview_audio_layout.addLayout(audio_control_layout)
+
+        scroll_layout.addWidget(self.preview_audio_card)
+        self.preview_audio_card.hide()  # 初始隐藏
+
         scroll_layout.addStretch()
 
         scroll_area.setWidget(scroll_widget)
@@ -275,6 +311,11 @@ class MinimaxVoiceCloneInterface(QWidget):
 
         # 在界面初始化时加载音色列表
         self._load_voice_count()
+
+        # 存储预览音频数据
+        self._preview_audio_url: str | None = None
+        self._preview_audio_bytes: bytes | None = None
+        self._is_playing_preview = False
 
     def _load_voice_count(self) -> None:
         """加载音色数量（同步方法，在初始化时调用）"""
@@ -475,7 +516,7 @@ class MinimaxVoiceCloneInterface(QWidget):
             )
 
             # 调用 API
-            _response = await self._tts_service.create_voice_clone(request=request)
+            response = await self._tts_service.create_voice_clone(request=request)
 
             state_tooltip.setState(True)
             state_tooltip.setTitle("生成成功")
@@ -490,11 +531,15 @@ class MinimaxVoiceCloneInterface(QWidget):
                 parent=self,
             )
 
-            # 刷新音色列表
-            await self._load_cloned_voices()
+            # 刷新音色数量
+            await self._async_load_voice_count()
 
-            # 重置表单
-            self._reset_form()
+            # 显示音频预览
+            if response.demo_audio:
+                self._show_audio_preview(voice_id, voice_name, response.demo_audio)
+            else:
+                # 没有预览音频，只重置表单
+                self._reset_form()
 
             logger.info(f"音色克隆成功: {voice_id} ({voice_name})")
 
@@ -544,3 +589,103 @@ class MinimaxVoiceCloneInterface(QWidget):
         self.example_audio_upload_widget.clear_uploaded_file()
         self.example_description_edit.clear()
         self.example_desc_container.hide()  # 隐藏描述文本框
+        # 隐藏预览区域
+        self.preview_audio_card.hide()
+        self._preview_audio_url = None
+        self._preview_audio_bytes = None
+
+    def _show_audio_preview(
+        self, voice_id: str, voice_name: str, audio_url: str
+    ) -> None:
+        """显示音频预览区域
+
+        Args:
+            voice_id: 音色ID
+            voice_name: 音色名称
+            audio_url: 预览音频URL
+        """
+        self._preview_audio_url = audio_url
+        self._preview_audio_bytes = None  # 清空之前的音频数据
+
+        # 更新提示文本
+        self.success_label.setText(
+            f"音色 <b>{voice_name}</b> (ID: {voice_id}) 已成功生成！\n点击播放按钮试听预览音频。"
+        )
+        self.preview_status_label.setText("点击播放预览音频")
+
+        # 显示预览区域
+        self.preview_audio_card.show()
+
+        logger.info(f"显示音频预览: {audio_url}")
+
+    @asyncSlot()
+    async def _on_play_preview_audio(self) -> None:
+        """播放预览音频"""
+        if not self._preview_audio_url:
+            InfoBar.warning(
+                title="无预览音频",
+                content="没有可用的预览音频",
+                orient=Qt.Orientation.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=2000,
+                parent=self,
+            )
+            return
+
+        # 防止重复播放
+        if self._is_playing_preview:
+            return
+
+        self._is_playing_preview = True
+        self.play_preview_button.setEnabled(False)
+        self.preview_status_label.setText("正在播放...")
+
+        try:
+            # 如果还没有下载音频数据，先下载
+            if not self._preview_audio_bytes:
+                self.preview_status_label.setText("正在下载音频...")
+                logger.info(f"下载预览音频: {self._preview_audio_url}")
+
+                # 使用 httpx 下载音频
+                import httpx
+
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    response = await client.get(self._preview_audio_url)
+                    response.raise_for_status()
+                    self._preview_audio_bytes = response.content
+
+                logger.info(f"音频下载完成: {len(self._preview_audio_bytes)} 字节")
+
+            # 播放音频
+            self.preview_status_label.setText("正在播放...")
+            await audio_player.play_bytes_async(self._preview_audio_bytes)
+
+            self.preview_status_label.setText("播放完成，可以重新播放")
+
+            InfoBar.success(
+                title="播放完成",
+                content="",
+                orient=Qt.Orientation.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=1000,
+                parent=self,
+            )
+
+        except Exception as e:
+            logger.exception(f"播放预览音频失败: {e}")
+            self.preview_status_label.setText("播放失败，请重试")
+
+            InfoBar.error(
+                title="播放失败",
+                content=str(e),
+                orient=Qt.Orientation.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=3000,
+                parent=self,
+            )
+        finally:
+            self._is_playing_preview = False
+            self.play_preview_button.setEnabled(True)

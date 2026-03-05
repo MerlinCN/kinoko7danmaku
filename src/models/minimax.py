@@ -129,10 +129,18 @@ class FileUploadResponse(BaseModel):
     base_resp: BaseResp = Field(..., description="基础响应")
 
 
+class InputSensitive(BaseModel):
+    """内容安全检查结果"""
+
+    type: int = Field(
+        ...,
+        description="内容类别（0=正常，1=严重违规，2=色情，3=广告，4=禁止内容，5=辱骂，6=暴力/恐怖，7=其他）",
+    )
+
+
 class VoiceCloneResponse(BaseModel):
     """音色克隆响应"""
 
-    voice_id: str = Field(..., description="音色ID")
-    status: str = Field(..., description="处理状态")
-    message: str = Field(default="", description="响应消息")
+    input_sensitive: InputSensitive = Field(..., description="内容安全检查结果")
+    demo_audio: Optional[str] = Field(default=None, description="预览音频URL")
     base_resp: BaseResp = Field(..., description="基础响应")
