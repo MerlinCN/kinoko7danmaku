@@ -96,3 +96,43 @@ class VoiceListResponse(BaseModel):
 
     voice_cloning: List[VoiceItem] = Field(..., description="音色克隆列表")
     base_resp: BaseResp = Field(..., description="基础响应")
+
+
+class ClonePrompt(BaseModel):
+    """克隆提示配置"""
+
+    example_audio_id: str = Field(..., description="示例音频ID")
+    description: str = Field(default="", description="音色描述")
+
+
+class VoiceCloneRequest(BaseModel):
+    """音色克隆请求"""
+
+    file_id: str = Field(..., description="源音频文件ID")
+    voice_id: str = Field(..., description="自定义音色ID")
+    voice_name: str = Field(..., description="音色名称")
+    model: str = Field(..., description="使用的模型")
+    clone_prompt: Optional[ClonePrompt] = Field(
+        default=None, description="示例音频配置"
+    )
+    denoise: bool = Field(default=False, description="是否去除背景噪音")
+    accent_optimization: bool = Field(default=False, description="是否启用口音优化")
+
+
+class FileUploadResponse(BaseModel):
+    """文件上传响应"""
+
+    file_id: str = Field(..., description="文件ID")
+    file_name: str = Field(..., description="文件名")
+    file_size: int = Field(..., description="文件大小（字节）")
+    duration: float = Field(..., description="音频时长（秒）")
+    base_resp: BaseResp = Field(..., description="基础响应")
+
+
+class VoiceCloneResponse(BaseModel):
+    """音色克隆响应"""
+
+    voice_id: str = Field(..., description="音色ID")
+    status: str = Field(..., description="处理状态")
+    message: str = Field(default="", description="响应消息")
+    base_resp: BaseResp = Field(..., description="基础响应")

@@ -5,8 +5,11 @@ from tenacity import retry, retry_if_exception_type, stop_after_attempt
 from core.qconfig import cfg
 from models.minimax import (
     AudioSetting,
+    FileUploadResponse,
     MinimaxTTSRequest,
     MinimaxTTSResponse,
+    VoiceCloneRequest,
+    VoiceCloneResponse,
     VoiceListResponse,
     VoiceSetting,
 )
@@ -166,3 +169,119 @@ class MinimaxService(TTSService):
         response.raise_for_status()
 
         return VoiceListResponse.model_validate(response.json())
+
+    async def upload_audio_file(
+        self, file_path: str, api_key: str | None = None
+    ) -> FileUploadResponse:
+        """上传音频文件到 MiniMax
+
+        Args:
+            file_path: 音频文件路径
+            api_key: API密钥，为 None 时从配置读取
+
+        Returns:
+            FileUploadResponse: 包含 file_id 的响应
+
+        Raises:
+            ValueError: API Key 为空或文件不存在
+            httpx.HTTPStatusError: HTTP请求失败
+        """
+        if api_key is None:
+            api_key = cfg.minimaxApiKey.value
+        if not api_key:
+            raise ValueError("MiniMax API Key 未配置")
+
+        api_key = api_key.strip()
+        api_url = "https://api.minimax.io/v1/audio/upload"
+
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+        }
+
+        # 验证文件存在
+        from pathlib import Path
+
+        file = Path(file_path)
+        if not file.exists():
+            raise ValueError(f"文件不存在: {file_path}")
+
+        # 使用 multipart/form-data 上传文件
+        with file.open("rb") as f:
+            files = {"file": (file.name, f, "audio/*")}
+            client = self._get_client()
+            response = await client.post(api_url, files=files, headers=headers)
+
+        response.raise_for_status()
+
+        return FileUploadResponse.model_validate(response.json())
+
+    async def create_voice_clone(
+        self, request: VoiceCloneRequest, api_key: str | None = None
+    ) -> VoiceCloneResponse:
+        """创建音色克隆
+
+        Args:
+            request: 音色克隆请求
+            api_key: API密钥，为 None 时从配置读取
+
+        Returns:
+            VoiceCloneResponse: 克隆响应
+
+        Raises:
+            ValueError: API Key 为空
+            httpx.HTTPStatusError: HTTP请求失败
+        """
+        if api_key is None:
+            api_key = cfg.minimaxApiKey.value
+        if not api_key:
+            raise ValueError("MiniMax API Key 未配置")
+
+        api_key = api_key.strip()
+        api_url = "https://api.minimax.io/v1/voice_clone"
+
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+
+        client = self._get_client()
+        response = await client.post(
+            api_url, json=request.model_dump(exclude_none=True), headers=headers
+        )
+        response.raise_for_status()
+
+        return VoiceCloneResponse.model_validate(response.json())
+
+    async def delete_voice_clone(
+        self, voice_id: str, api_key: str | None = None
+    ) -> bool:
+        """删除音色克隆
+
+        Args:
+            voice_id: 音色ID
+            api_key: API密钥，为 None 时从配置读取
+
+        Returns:
+            bool: 是否删除成功
+
+        Raises:
+            ValueError: API Key 为空
+            httpx.HTTPStatusError: HTTP请求失败
+        """
+        if api_key is None:
+            api_key = cfg.minimaxApiKey.value
+        if not api_key:
+            raise ValueError("MiniMax API Key 未配置")
+
+        api_key = api_key.strip()
+        api_url = f"https://api.minimax.io/v1/voice_clone/{voice_id}"
+
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+        }
+
+        client = self._get_client()
+        response = await client.delete(api_url, headers=headers)
+        response.raise_for_status()
+
+        return True
