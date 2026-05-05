@@ -113,6 +113,8 @@ class BiliService(QObject):
             if not cfg.superChatOn.value:
                 return
             super_chat_message = SuperChatMessage.parse(event)
+            if super_chat_message.price < cfg.superChatThreshold.value:
+                return
             logger.info(super_chat_message)
 
             # 发射信号到 GUI

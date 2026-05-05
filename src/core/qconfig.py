@@ -1,6 +1,8 @@
 """基于 qfluentwidgets 的配置管理"""
 
+import json
 from enum import StrEnum
+from pathlib import Path
 from typing import override
 
 import httpx
@@ -24,7 +26,6 @@ from .const import (
     GPT_SOVITS_TEXT_SPLIT_METHODS,
     MINIMAX_ERROR_VOICE_ID,
     MINIMAX_MODELS,
-    MINIMAX_VOICE_IDS,
     SUPPORTED_SERVICES,
 )
 from .player import audio_player
@@ -51,6 +52,7 @@ class ConfigKey(StrEnum):
     NORMAL_DANMAKU_ON = "NormalDanmakuOn"
     GUARD_ON = "GuardOn"
     SUPER_CHAT_ON = "SuperChatOn"
+    SUPER_CHAT_THRESHOLD = "SuperChatThreshold"
     WELCOME_ON = "WelcomeOn"
     DEBUG = "Debug"
     GIFT_ON_TEXT = "GiftOnText"
@@ -215,15 +217,14 @@ class VoiceIdValidator(OptionsValidator):
             value: 音色 ID
 
         Returns:
-            str: 有效的音色 ID
+            str: 有效的音色 ID；voiceDict 为空时返回 ""
         """
         available_voice_ids = list(self.voice_dict_config_item.value.keys())
         if value in available_voice_ids:
             return value
-        # 如果没有可用的音色 ID，使用默认的
         if available_voice_ids:
             return available_voice_ids[0]
-        return list(MINIMAX_VOICE_IDS.keys())[0]
+        return ""
 
 
 def get_voices(api_key: str) -> list[str]:
@@ -301,6 +302,13 @@ class Config(QConfig):
         validator=BoolValidator(),
     )
 
+    superChatThreshold = ConfigItem(
+        group=ConfigGroup.BILI_SERVICE,
+        name=ConfigKey.SUPER_CHAT_THRESHOLD,
+        default=30,
+        validator=IntValidator(),
+    )
+
     debug = ConfigItem(
         group=ConfigGroup.BILI_SERVICE,
         name=ConfigKey.DEBUG,
@@ -336,13 +344,6 @@ class Config(QConfig):
         group=ConfigGroup.BILI_SERVICE,
         name=ConfigKey.ALIAS_DICT,
         default={"Merlin": "么林"},
-        validator=DictValidator(),
-    )
-
-    voiceDict = ConfigItem(
-        group=ConfigGroup.BILI_SERVICE,
-        name=ConfigKey.VOICE_DICT,
-        default=MINIMAX_VOICE_IDS,
         validator=DictValidator(),
     )
 
@@ -388,6 +389,13 @@ class Config(QConfig):
         group=ConfigGroup.MINIMAX_SERVICE,
         name=ConfigKey.MINIMAX_API_KEY,
         default="",
+    )
+
+    voiceDict = ConfigItem(
+        group=ConfigGroup.MINIMAX_SERVICE,
+        name=ConfigKey.VOICE_DICT,
+        default={"kinoko7_v1": "kinoko7_v1"},
+        validator=DictValidator(),
     )
 
     minimaxModel = OptionsConfigItem(
@@ -549,6 +557,31 @@ class Config(QConfig):
     )
 
 
+def _migrate_voice_dict_to_minimax(config_path: Path) -> None:
+    """把旧 BiliService.VoiceDict 物理迁到 MinimaxService.VoiceDict
+
+    幂等：迁移后从 BiliService 删除 VoiceDict 字段并写回；若 MinimaxService 已有
+    VoiceDict，保留新值仅清理旧字段。
+    """
+    if not config_path.exists():
+        return
+    try:
+        raw = json.loads(config_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return
+    bili = raw.get("BiliService", {})
+    if "VoiceDict" not in bili:
+        return
+    minimax = raw.setdefault("MinimaxService", {})
+    minimax.setdefault("VoiceDict", bili.pop("VoiceDict"))
+    config_path.write_text(
+        json.dumps(raw, ensure_ascii=False, indent=4),
+        encoding="utf-8",
+    )
+
+
+_migrate_voice_dict_to_minimax(DATA_DIR / "config.json")
+
 # 创建全局配置实例
 cfg = Config()
 
@@ -557,4 +590,6 @@ qconfig.load(str(DATA_DIR / "config.json"), cfg)
 
 cfg.minimaxVoiceId.validator = VoiceIdValidator(cfg.voiceDict)
 if cfg.minimaxVoiceId.value not in cfg.minimaxVoiceId.options:
-    cfg.minimaxVoiceId.value = cfg.minimaxVoiceId.options[0]
+    cfg.minimaxVoiceId.value = (
+        cfg.minimaxVoiceId.options[0] if cfg.minimaxVoiceId.options else ""
+    )

@@ -107,13 +107,33 @@ class SettingsInterface(ScrollArea):
             parent=self.biliGroup,
         )
 
+        # 醒目留言设置卡片（可展开）
+        self.superChatSettingCard = ExpandGroupSettingCard(
+            icon=FIF.MESSAGE,
+            title="醒目留言设置",
+            content="配置醒目留言播报的相关参数",
+            parent=self.biliGroup,
+        )
+
         self.superChatCard = SwitchSettingCard(
             icon=FIF.MESSAGE,
             title="醒目留言",
             content="是否播报醒目留言",
             configItem=cfg.superChatOn,
-            parent=self.biliGroup,
+            parent=self.superChatSettingCard,
         )
+
+        self.superChatThresholdCard = IntSettingCard(
+            configItem=cfg.superChatThreshold,
+            icon=FIF.MESSAGE,
+            title="醒目留言阈值（元）",
+            content="只播报价值大于等于此阈值的醒目留言",
+            parent=self.superChatSettingCard,
+        )
+
+        # 将子卡片添加到展开卡片中
+        self.superChatSettingCard.addGroupWidget(self.superChatCard)
+        self.superChatSettingCard.addGroupWidget(self.superChatThresholdCard)
 
         self.debugCard = SwitchSettingCard(
             icon=FIF.CODE,
@@ -561,7 +581,7 @@ class SettingsInterface(ScrollArea):
         self.biliGroup.addSettingCard(self.freeGiftOnCard)
         self.biliGroup.addSettingCard(self.normalDanmakuCard)
         self.biliGroup.addSettingCard(self.guardCard)
-        self.biliGroup.addSettingCard(self.superChatCard)
+        self.biliGroup.addSettingCard(self.superChatSettingCard)
         self.biliGroup.addSettingCard(self.debugCard)
         self.biliGroup.addSettingCard(self.giftOnTextCard)
         self.biliGroup.addSettingCard(self.danmakuOnTextCard)
