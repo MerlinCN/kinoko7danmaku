@@ -27,7 +27,7 @@ from core.const import MINIMAX_MODELS
 from core.player import audio_player
 from core.qconfig import cfg
 from gui.components import SingleAudioUploadWidget
-from models.minimax import ClonePrompt, VoiceCloneRequest, VoiceItem
+from models.minimax import ClonePrompt, FilePurpose, VoiceCloneRequest, VoiceItem
 from tts_service.minimax import MinimaxService
 
 
@@ -90,18 +90,18 @@ class MinimaxVoiceCloneInterface(QWidget):
 
         scroll_layout.addWidget(upload_card)
 
-        # === 步骤2：示例音频上传（可选）===
+        # === 步骤2：示例音频上传（必填）===
         example_card = CardWidget()
         example_layout = QVBoxLayout(example_card)
         example_layout.setContentsMargins(20, 20, 20, 20)
         example_layout.setSpacing(12)
 
-        example_title = SubtitleLabel("2. 示例音频上传（可选）")
+        example_title = SubtitleLabel("2. 示例音频上传（必填）")
         example_layout.addWidget(example_title)
 
         # 说明文本
         example_desc = CaptionLabel(
-            "上传一段示例音频（<8秒）可以增强音色克隆质量，提供更好的音色表现"
+            "上传一段 <8 秒的示例音频，并填写音频中念的台词，用于克隆音色"
         )
         example_desc.setTextColor("#606060", "#d2d2d2")
         example_desc.setWordWrap(True)
@@ -113,6 +113,7 @@ class MinimaxVoiceCloneInterface(QWidget):
             max_duration=8.0,
             max_size_mb=20.0,
             tip_text="支持 mp3/m4a/wav 格式，建议8秒以内，最大20MB",
+            purpose=FilePurpose.PROMPT_AUDIO,
         )
         self.example_audio_upload_widget.fileUploaded.connect(
             self._on_example_file_uploaded
@@ -128,12 +129,12 @@ class MinimaxVoiceCloneInterface(QWidget):
         example_desc_layout.setContentsMargins(0, 0, 0, 0)
         example_desc_layout.setSpacing(4)
 
-        example_desc_label = BodyLabel("音色描述（可选）")
+        example_desc_label = BodyLabel("台词转录（必填）")
         example_desc_layout.addWidget(example_desc_label)
 
         self.example_description_edit = TextEdit()
         self.example_description_edit.setPlaceholderText(
-            "输入音色描述，例如：温柔、磁性、活泼等..."
+            "请输入示例音频中念的完整台词，需与音频内容一致并以标点结尾"
         )
         self.example_description_edit.setMaximumHeight(80)
         example_desc_layout.addWidget(self.example_description_edit)
@@ -172,15 +173,6 @@ class MinimaxVoiceCloneInterface(QWidget):
         denoise_layout.addStretch()
         denoise_layout.addWidget(self.denoise_switch)
         advanced_layout.addLayout(denoise_layout)
-
-        # 口音优化
-        accent_layout = QHBoxLayout()
-        accent_label = BodyLabel("启用口音优化")
-        self.accent_switch = SwitchButton()
-        accent_layout.addWidget(accent_label)
-        accent_layout.addStretch()
-        accent_layout.addWidget(self.accent_switch)
-        advanced_layout.addLayout(accent_layout)
 
         scroll_layout.addWidget(advanced_card)
 
@@ -353,26 +345,30 @@ class MinimaxVoiceCloneInterface(QWidget):
         remaining = total_slots - used_slots
         self.slot_hint_label.setText(f"剩余音色槽位: {remaining} / {total_slots}")
 
-    def _on_source_file_uploaded(self, file_response) -> None:
+    def _on_source_file_uploaded(self, file_response, duration: float) -> None:
         """源音频文件上传成功事件
 
         Args:
             file_response: 文件上传响应
+            duration: 本地解析的音频时长（秒）
         """
-        logger.info(f"源音频文件上传成功: {file_response.file_name}")
+        logger.info(
+            f"源音频文件上传成功: {file_response.file.filename} ({duration:.1f}秒)"
+        )
 
-    def _on_example_file_uploaded(self, file_response) -> None:
+    def _on_example_file_uploaded(self, file_response, duration: float) -> None:
         """示例音频文件上传成功事件
 
         Args:
             file_response: 文件上传响应
+            duration: 本地解析的音频时长（秒）
         """
-        logger.info(f"示例音频文件上传成功: {file_response.file_name}")
+        logger.info(f"示例音频文件上传成功: {file_response.file.filename}")
         # 示例音频时长验证（<8秒）
-        if file_response.duration > 8.0:
+        if duration > 8.0:
             InfoBar.warning(
                 title="示例音频过长",
-                content=f"示例音频时长为 {file_response.duration:.1f}秒，建议使用8秒以内的音频以获得更好效果",
+                content=f"示例音频时长为 {duration:.1f}秒，建议使用8秒以内的音频以获得更好效果",
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
@@ -489,30 +485,35 @@ class MinimaxVoiceCloneInterface(QWidget):
         state_tooltip.show()
 
         try:
-            # 获取示例音频（如果有）
+            # 校验示例音频与转录文本（新版 API clone_prompt 为必填）
             example_file = self.example_audio_upload_widget.get_uploaded_file()
-            clone_prompt = None
-            if example_file:
-                # 获取描述文本
-                description = self.example_description_edit.toPlainText().strip()
-                # 构建 ClonePrompt
-                clone_prompt = ClonePrompt(
-                    example_audio_id=example_file.file_id,
-                    description=description,
-                )
+            if not example_file:
+                state_tooltip.setState(False)
+                state_tooltip.setTitle("缺少示例音频")
+                state_tooltip.setContent("请上传 <8 秒的示例音频")
+                return
+            prompt_text = self.example_description_edit.toPlainText().strip()
+            if not prompt_text:
+                state_tooltip.setState(False)
+                state_tooltip.setTitle("缺少台词转录")
+                state_tooltip.setContent("请填写示例音频对应的台词转录")
+                return
+
+            clone_prompt = ClonePrompt(
+                prompt_audio=example_file.file.file_id,
+                prompt_text=prompt_text,
+            )
 
             # 获取选择的模型
             selected_model = self.model_combo.currentText()
 
             # 构建请求
             request = VoiceCloneRequest(
-                file_id=source_file.file_id,
+                file_id=source_file.file.file_id,
                 voice_id=voice_id,
-                voice_name=voice_name,
-                model=selected_model,
                 clone_prompt=clone_prompt,
-                denoise=self.denoise_switch.isChecked(),
-                accent_optimization=self.accent_switch.isChecked(),
+                model=selected_model,
+                need_noise_reduction=self.denoise_switch.isChecked(),
             )
 
             # 调用 API
@@ -583,7 +584,6 @@ class MinimaxVoiceCloneInterface(QWidget):
         self.voice_name_edit.clear()
         self.model_combo.setCurrentIndex(0)  # 重置为第一个模型
         self.denoise_switch.setChecked(False)
-        self.accent_switch.setChecked(False)
         self.test_text_edit.clear()
         self.source_audio_upload_widget.clear_uploaded_file()
         self.example_audio_upload_widget.clear_uploaded_file()

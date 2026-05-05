@@ -27,11 +27,11 @@ from tts_service.minimax import MinimaxService
 class UploadedFileCard(CardWidget):
     """已上传文件卡片"""
 
-    deleteClicked = Signal(str)  # 删除按钮点击信号 (file_id)
+    deleteClicked = Signal(int)  # 删除按钮点击信号 (file_id)
 
     def __init__(
         self,
-        file_id: str,
+        file_id: int,
         file_name: str,
         file_size: int,
         duration: float,
@@ -40,7 +40,7 @@ class UploadedFileCard(CardWidget):
         """初始化已上传文件卡片
 
         Args:
-            file_id: 文件ID
+            file_id: 文件ID（int64）
             file_name: 文件名
             file_size: 文件大小（字节）
             duration: 音频时长（秒）
@@ -92,7 +92,7 @@ class UploadedFileCard(CardWidget):
 class AudioUploadWidget(CardWidget):
     """音频上传组件"""
 
-    fileUploaded = Signal(FileUploadResponse)  # 文件上传成功信号
+    fileUploaded = Signal(FileUploadResponse, float)  # 文件上传成功信号（响应, 时长秒）
 
     def __init__(
         self,
@@ -114,6 +114,7 @@ class AudioUploadWidget(CardWidget):
         super().__init__(parent)
         self._tts_service = MinimaxService()
         self._uploaded_files: list[FileUploadResponse] = []
+        self._uploaded_durations: dict[int, float] = {}
         self._is_uploading = False
 
         # 验证参数
@@ -173,21 +174,21 @@ class AudioUploadWidget(CardWidget):
             # 异步上传文件
             self._upload_file(file_path)
 
-    def _validate_audio_file(self, file_path: str) -> tuple[bool, str]:
+    def _validate_audio_file(self, file_path: str) -> tuple[bool, str, float]:
         """验证音频文件
 
         Args:
             file_path: 文件路径
 
         Returns:
-            (是否有效, 错误消息)
+            (是否有效, 错误消息, 音频时长秒)
         """
         file = Path(file_path)
 
         # 检查格式
         allowed_extensions = {".mp3", ".m4a", ".wav"}
         if file.suffix.lower() not in allowed_extensions:
-            return False, f"不支持的格式：{file.suffix}，仅支持 mp3/m4a/wav"
+            return False, f"不支持的格式：{file.suffix}，仅支持 mp3/m4a/wav", 0.0
 
         # 检查大小
         max_size = self._max_size_mb * 1024 * 1024
@@ -197,13 +198,14 @@ class AudioUploadWidget(CardWidget):
             return (
                 False,
                 f"文件过大：{size_mb:.2f}MB，最大支持 {self._max_size_mb:.0f}MB",
+                0.0,
             )
 
         # 检查时长
         try:
             audio = MutagenFile(file_path)
             if audio is None or audio.info is None:
-                return False, "无法读取音频信息"
+                return False, "无法读取音频信息", 0.0
 
             duration = audio.info.length
 
@@ -211,6 +213,7 @@ class AudioUploadWidget(CardWidget):
                 return (
                     False,
                     f"音频时长过短：{duration:.1f}秒，需要至少 {self._min_duration:.0f}秒",
+                    0.0,
                 )
             if duration > self._max_duration:
                 max_display = (
@@ -218,13 +221,17 @@ class AudioUploadWidget(CardWidget):
                     if self._max_duration >= 60
                     else f"{self._max_duration:.0f}秒"
                 )
-                return False, f"音频时长过长：{duration:.1f}秒，最多支持 {max_display}"
+                return (
+                    False,
+                    f"音频时长过长：{duration:.1f}秒，最多支持 {max_display}",
+                    0.0,
+                )
 
         except Exception as e:
             logger.exception(f"检查音频时长失败: {e}")
-            return False, f"读取音频信息失败：{e}"
+            return False, f"读取音频信息失败：{e}", 0.0
 
-        return True, ""
+        return True, "", duration
 
     @asyncSlot()
     async def _upload_file(self, file_path: str) -> None:
@@ -238,7 +245,7 @@ class AudioUploadWidget(CardWidget):
             return
 
         # 验证文件
-        is_valid, error_msg = self._validate_audio_file(file_path)
+        is_valid, error_msg, duration = self._validate_audio_file(file_path)
         if not is_valid:
             InfoBar.warning(
                 title="文件验证失败",
@@ -267,17 +274,18 @@ class AudioUploadWidget(CardWidget):
 
             # 保存上传结果
             self._uploaded_files.append(response)
+            self._uploaded_durations[response.file.file_id] = duration
 
             # 添加到已上传列表
-            self._add_uploaded_file_card(response)
+            self._add_uploaded_file_card(response, duration)
 
             # 发射信号
-            self.fileUploaded.emit(response)
+            self.fileUploaded.emit(response, duration)
 
             state_tooltip.setState(True)
             state_tooltip.setTitle("上传成功")
             logger.info(
-                f"文件上传成功: {response.file_name} (file_id: {response.file_id})"
+                f"文件上传成功: {response.file.filename} (file_id: {response.file.file_id})"
             )
 
         except ValueError as e:
@@ -294,31 +302,37 @@ class AudioUploadWidget(CardWidget):
             self._is_uploading = False
             self.upload_button.setEnabled(True)
 
-    def _add_uploaded_file_card(self, file_response: FileUploadResponse) -> None:
+    def _add_uploaded_file_card(
+        self, file_response: FileUploadResponse, duration: float
+    ) -> None:
         """添加已上传文件卡片
 
         Args:
             file_response: 文件上传响应
+            duration: 本地解析的音频时长（秒）
         """
         card = UploadedFileCard(
-            file_id=file_response.file_id,
-            file_name=file_response.file_name,
-            file_size=file_response.file_size,
-            duration=file_response.duration,
+            file_id=file_response.file.file_id,
+            file_name=file_response.file.filename,
+            file_size=file_response.file.bytes,
+            duration=duration,
             parent=self.file_list_container,
         )
         card.setFixedWidth(400)
         card.deleteClicked.connect(self._on_file_delete_clicked)
         self.file_list_layout.addWidget(card)
 
-    def _on_file_delete_clicked(self, file_id: str) -> None:
+    def _on_file_delete_clicked(self, file_id: int) -> None:
         """删除文件按钮点击事件
 
         Args:
             file_id: 文件ID
         """
         # 从列表中移除
-        self._uploaded_files = [f for f in self._uploaded_files if f.file_id != file_id]
+        self._uploaded_files = [
+            f for f in self._uploaded_files if f.file.file_id != file_id
+        ]
+        self._uploaded_durations.pop(file_id, None)
 
         # 从 UI 中移除
         for i in range(self.file_list_layout.count()):
@@ -349,6 +363,7 @@ class AudioUploadWidget(CardWidget):
     def clear_uploaded_files(self) -> None:
         """清空已上传文件列表"""
         self._uploaded_files.clear()
+        self._uploaded_durations.clear()
 
         # 清空 UI
         for i in reversed(range(self.file_list_layout.count())):

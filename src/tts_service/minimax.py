@@ -5,6 +5,7 @@ from tenacity import retry, retry_if_exception_type, stop_after_attempt
 from core.qconfig import cfg
 from models.minimax import (
     AudioSetting,
+    FilePurpose,
     FileUploadResponse,
     MinimaxTTSRequest,
     MinimaxTTSResponse,
@@ -15,6 +16,7 @@ from models.minimax import (
 )
 
 from .base import TTSService
+from pathlib import Path
 
 
 class MinimaxService(TTSService):
@@ -171,12 +173,16 @@ class MinimaxService(TTSService):
         return VoiceListResponse.model_validate(response.json())
 
     async def upload_audio_file(
-        self, file_path: str, api_key: str | None = None
+        self,
+        file_path: str,
+        purpose: FilePurpose = FilePurpose.VOICE_CLONE,
+        api_key: str | None = None,
     ) -> FileUploadResponse:
         """上传音频文件到 MiniMax
 
         Args:
             file_path: 音频文件路径
+            purpose: 文件用途；voice_clone 接口源音频用 VOICE_CLONE，示例音频用 PROMPT_AUDIO
             api_key: API密钥，为 None 时从配置读取
 
         Returns:
@@ -192,28 +198,33 @@ class MinimaxService(TTSService):
             raise ValueError("MiniMax API Key 未配置")
 
         api_key = api_key.strip()
-        api_url = "https://api.minimax.io/v1/audio/upload"
+        api_url = "https://api.minimax.io/v1/files/upload"
 
         headers = {
             "Authorization": f"Bearer {api_key}",
         }
 
         # 验证文件存在
-        from pathlib import Path
 
         file = Path(file_path)
         if not file.exists():
             raise ValueError(f"文件不存在: {file_path}")
 
-        # 使用 multipart/form-data 上传文件
+        # 使用 multipart/form-data 上传文件：文件用 files，普通字段用 data
         with file.open("rb") as f:
             files = {"file": (file.name, f, "audio/*")}
+            data = {"purpose": purpose.value}
             client = self._get_client()
-            response = await client.post(api_url, files=files, headers=headers)
+            response = await client.post(
+                api_url, files=files, data=data, headers=headers
+            )
+        result = response.json()
+        status_msg = result.get("base_resp", {}).get("status_msg", "success")
+        status_code = result.get("base_resp", {}).get("status_code", 0)
+        if status_code != 0:
+            raise ValueError(status_msg)
 
-        response.raise_for_status()
-
-        return FileUploadResponse.model_validate(response.json())
+        return FileUploadResponse.model_validate(result)
 
     async def create_voice_clone(
         self, request: VoiceCloneRequest, api_key: str | None = None
@@ -248,9 +259,13 @@ class MinimaxService(TTSService):
         response = await client.post(
             api_url, json=request.model_dump(exclude_none=True), headers=headers
         )
-        response.raise_for_status()
+        result = response.json()
+        status_code = result.get("base_resp", {}).get("status_code", 0)
+        status_msg = result.get("base_resp", {}).get("status_msg", "unknown error")
+        if status_code != 0:
+            raise ValueError(status_msg)
 
-        return VoiceCloneResponse.model_validate(response.json())
+        return VoiceCloneResponse.model_validate(result)
 
     async def delete_voice_clone(
         self, voice_id: str, api_key: str | None = None

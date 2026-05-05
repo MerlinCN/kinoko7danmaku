@@ -173,3 +173,5 @@ resource/version.txt
 
 CLAUDE.md
 .claude
+data/
+.DS_Store
