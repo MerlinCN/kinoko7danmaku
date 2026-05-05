@@ -6,15 +6,34 @@ import sys
 from pathlib import Path
 
 from bilibili_api.utils import network
+from loguru import logger
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
 from qasync import QApplication, QEventLoop
 
+from core.const import DATA_DIR
 from gui import MainWindow
 
 
 def main() -> None:
     """主函数"""
+
+    # 创建日志目录
+    log_dir = DATA_DIR / "logs"
+    log_dir.mkdir(exist_ok=True)
+
+    # 添加文件处理器
+    logger.add(
+        sink=str(log_dir / "{time:YYYY-MM-DD_HH}.log"),
+        rotation="1 hour",  # 每小时轮转一次
+        retention="30 days",  # 保留 30 天的日志
+        level="INFO",  # 只记录 INFO 及以上级别
+        encoding="utf-8",  # UTF-8 编码
+        format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
+        enqueue=True,  # 异步写入,避免阻塞
+        compression="zip",  # 压缩旧日志文件
+    )
+
     # 启用高 DPI 支持（Qt6 默认启用，这里只设置缩放策略）
     QApplication.setHighDpiScaleFactorRoundingPolicy(
         Qt.HighDpiScaleFactorRoundingPolicy.PassThrough

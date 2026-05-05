@@ -40,6 +40,7 @@ from core.update_checker import UpdateChecker
 
 from ..components import HomePanel, LoginPanel
 from .audio_test import AudioTestInterface
+from .minimax import MinimaxHomeInterface, MinimaxVoiceCloneInterface, MinimaxVoiceListInterface
 from .settings import SettingsInterface
 
 
@@ -185,6 +186,16 @@ class MainWindow(FluentWindow):
         self.audio_test_interface = AudioTestInterface(self)
         self.audio_test_interface.setObjectName("audioTestInterface")
 
+        # 创建 MiniMax 音色相关界面
+        self.minimax_interface = MinimaxHomeInterface(self)
+        self.minimax_interface.setObjectName("minimaxInterface")
+
+        self.minimax_voice_list_interface = MinimaxVoiceListInterface(self)
+        self.minimax_voice_list_interface.setObjectName("minimaxVoiceListInterface")
+
+        self.minimax_voice_clone_interface = MinimaxVoiceCloneInterface(self)
+        self.minimax_voice_clone_interface.setObjectName("minimaxVoiceCloneInterface")
+
         # 创建设置界面
         self.settings_interface = SettingsInterface(self)
         self.settings_interface.setObjectName("settingsInterface")
@@ -198,6 +209,26 @@ class MainWindow(FluentWindow):
         self.addSubInterface(
             self.audio_test_interface, FIF.MUSIC, "音频测试", NavigationItemPosition.TOP
         )
+
+        # 添加 MiniMax 父菜单和子菜单
+        self.addSubInterface(
+            self.minimax_interface, FIF.ROBOT, "MiniMax", NavigationItemPosition.TOP
+        )
+        self.addSubInterface(
+            self.minimax_voice_list_interface,
+            FIF.MICROPHONE,
+            "音色列表",
+            parent=self.minimax_interface,
+        )
+        self.addSubInterface(
+            self.minimax_voice_clone_interface,
+            FIF.ADD,
+            "音色克隆",
+            parent=self.minimax_interface,
+        )
+
+        # 启用 MiniMax 菜单的展开状态记忆
+        self.navigationInterface.widget("minimaxInterface").setRememberExpandState(True)
 
         self.navigationInterface.addItem(
             routeKey="update",

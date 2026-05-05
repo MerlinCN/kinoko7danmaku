@@ -1,6 +1,6 @@
 [project]
 name = "kinoko7danmaku"
-version = "3.4.0"
+version = "3.5.0"
 requires-python = ">=3.12"
 dependencies = [
     "aiohttp>=3.12.14",
@@ -8,6 +8,7 @@ dependencies = [
     "faker>=37.12.0",
     "httpx[socks]>=0.28.1",
     "loguru>=0.7.3",
+    "mutagen>=1.47.0",
     "pyaudio>=0.2.14",
     "pydantic>=2.11.7",
     "pydantic-settings>=2.11.0",
