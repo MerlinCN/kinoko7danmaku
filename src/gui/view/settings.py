@@ -510,7 +510,6 @@ class SettingsInterface(ScrollArea):
         toast.show()
         if not cfg.minimaxApiKey.value:
             voices = [MINIMAX_ERROR_VOICE_ID]
-            cfg.minimaxVoiceId.validator.options = voices
             cfg.minimaxVoiceId.value = MINIMAX_ERROR_VOICE_ID
             self._update_voice_options(voices, MINIMAX_ERROR_VOICE_ID)
             return
@@ -519,8 +518,6 @@ class SettingsInterface(ScrollArea):
         voices = await asyncio.to_thread(get_voices, cfg.minimaxApiKey.value)
         if not voices:
             voices = [MINIMAX_ERROR_VOICE_ID]
-
-        cfg.minimaxVoiceId.validator.options = voices
 
         # 如果当前值不在新列表中，使用第一个选项
         value = voices[0] if voices else MINIMAX_ERROR_VOICE_ID
@@ -546,11 +543,9 @@ class SettingsInterface(ScrollArea):
         if not voice_dict:
             return
 
-        # 获取音色 ID 列表（键）和显示名称列表（值）
         voice_ids = list(voice_dict.keys())
 
-        # 更新验证器的选项
-        cfg.minimaxVoiceId.validator.options = voice_ids
+        # validator.options 是 property 实时读取，不需手动同步
         # 如果当前值不在新列表中，使用第一个选项
         current_value = cfg.minimaxVoiceId.value
         if current_value not in voice_ids:
