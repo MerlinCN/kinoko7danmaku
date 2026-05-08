@@ -178,12 +178,13 @@ class OutputDeviceValidator(OptionsValidator):
         return value if self.validate(value) else self.options[0]
 
 
-class VoiceIdValidator(OptionsValidator):
+class VoiceIdValidator(ConfigValidator):
     """音色 ID 验证器
 
-    动态从 voiceDict 获取可用的音色 ID 列表进行验证。
-    在加载配置时，如果用户在 voiceDict 中添加了自定义音色，
-    也能正确验证而不会被重置为默认值。
+    options/validate/correct 都从 voiceDict 实时读取，无任何缓存，
+    避免初始化时 voiceDict 还是 default 导致缓存的列表过时。
+    OptionsConfigItem.options 直接读 validator.options，因此 ComboBoxSettingCard
+    构造时也能拿到最新的音色列表。
     """
 
     def __init__(self, voice_dict_config_item):
@@ -193,38 +194,24 @@ class VoiceIdValidator(OptionsValidator):
             voice_dict_config_item: voiceDict 的 ConfigItem 实例
         """
         self.voice_dict_config_item = voice_dict_config_item
-        # 初始化父类，设置初始 options
-        super().__init__(list(voice_dict_config_item.value.keys()))
+
+    @property
+    def options(self) -> list[str]:
+        """实时返回 voiceDict 当前的音色 ID 列表"""
+        return list(self.voice_dict_config_item.value.keys())
 
     @override
     def validate(self, value) -> bool:
-        """验证音色 ID 是否在可用列表中
-
-        Args:
-            value: 音色 ID
-
-        Returns:
-            bool: 是否有效
-        """
-        available_voice_ids = list(self.voice_dict_config_item.value.keys())
-        return value in available_voice_ids
+        """验证音色 ID 是否在 voiceDict 中"""
+        return value in self.voice_dict_config_item.value
 
     @override
     def correct(self, value):
-        """修正音色 ID 为有效值
-
-        Args:
-            value: 音色 ID
-
-        Returns:
-            str: 有效的音色 ID；voiceDict 为空时返回 ""
-        """
-        available_voice_ids = list(self.voice_dict_config_item.value.keys())
-        if value in available_voice_ids:
+        """修正音色 ID；voiceDict 为空时返回 ""，否则返回第一个 key"""
+        if self.validate(value):
             return value
-        if available_voice_ids:
-            return available_voice_ids[0]
-        return ""
+        keys = list(self.voice_dict_config_item.value.keys())
+        return keys[0] if keys else ""
 
 
 def get_voices(api_key: str) -> list[str]:
@@ -585,11 +572,25 @@ _migrate_voice_dict_to_minimax(DATA_DIR / "config.json")
 # 创建全局配置实例
 cfg = Config()
 
+
+def _preload_voice_dict(config_path: Path) -> None:
+    """qconfig.load 按 json 字段顺序反序列化，若 VoiceId 出现在 VoiceDict 之前，
+    VoiceId 会被 VoiceIdValidator.correct 拿过期的（default）voiceDict 覆写成
+    kinoko7_v1。这里在 load 之前先把 VoiceDict 拉到 cfg，保证后续 VoiceId 校验
+    拿到完整的音色列表。
+    """
+    if not config_path.exists():
+        return
+    try:
+        raw = json.loads(config_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return
+    saved = raw.get("MinimaxService", {}).get("VoiceDict")
+    if isinstance(saved, dict):
+        cfg.voiceDict.value = saved
+
+
+_preload_voice_dict(DATA_DIR / "config.json")
+
 # 加载配置文件
 qconfig.load(str(DATA_DIR / "config.json"), cfg)
-
-cfg.minimaxVoiceId.validator = VoiceIdValidator(cfg.voiceDict)
-if cfg.minimaxVoiceId.value not in cfg.minimaxVoiceId.options:
-    cfg.minimaxVoiceId.value = (
-        cfg.minimaxVoiceId.options[0] if cfg.minimaxVoiceId.options else ""
-    )
