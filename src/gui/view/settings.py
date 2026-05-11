@@ -34,6 +34,7 @@ from core.qconfig import cfg, get_voices
 from ..components import FloatRangeSettingCard, IntSettingCard, StrSettingCard
 from ..components.alias_dict_card import AliasDictCard
 from ..components.dict_edit_card import DictEditCard
+from ..icons import CustomIcon
 
 
 class SettingsInterface(ScrollArea):
@@ -66,7 +67,7 @@ class SettingsInterface(ScrollArea):
         # 房间号设置
         self.roomIdCard = IntSettingCard(
             configItem=cfg.roomId,
-            icon=FIF.CHAT,
+            icon=FIF.VIDEO,
             title="房间号",
             content="设置要监控的B站直播间房间号",
             parent=self.biliGroup,
@@ -76,7 +77,7 @@ class SettingsInterface(ScrollArea):
         # 礼物阈值设置
         self.giftThresholdCard = IntSettingCard(
             configItem=cfg.giftThreshold,
-            icon=FIF.HEART,
+            icon=CustomIcon.YUAN,
             title="礼物阈值（元）",
             content="只播报价值大于等于此阈值的礼物",
             parent=self.biliGroup,
@@ -125,7 +126,7 @@ class SettingsInterface(ScrollArea):
 
         self.superChatThresholdCard = IntSettingCard(
             configItem=cfg.superChatThreshold,
-            icon=FIF.MESSAGE,
+            icon=CustomIcon.YUAN,
             title="醒目留言阈值（元）",
             content="只播报价值大于等于此阈值的醒目留言",
             parent=self.superChatSettingCard,
@@ -145,7 +146,7 @@ class SettingsInterface(ScrollArea):
 
         self.giftOnTextCard = StrSettingCard(
             configItem=cfg.giftOnText,
-            icon=FIF.HEART,
+            icon=FIF.FONT,
             title="礼物触发文本模板",
             content="礼物消息的文本模板（支持变量: {user_name}, {gift_num}, {gift_name}）",
             parent=self.biliGroup,
@@ -154,7 +155,7 @@ class SettingsInterface(ScrollArea):
 
         self.danmakuOnTextCard = StrSettingCard(
             configItem=cfg.danmakuOnText,
-            icon=FIF.CHAT,
+            icon=FIF.FONT,
             title="弹幕触发文本模板",
             content="弹幕消息的文本模板（支持变量: {user_name}, {message}）",
             parent=self.biliGroup,
@@ -163,7 +164,7 @@ class SettingsInterface(ScrollArea):
 
         self.guardOnTextCard = StrSettingCard(
             configItem=cfg.guardOnText,
-            icon=FIF.PEOPLE,
+            icon=FIF.FONT,
             title="舰长触发文本模板",
             content="舰长购买的文本模板（支持变量: {user_name}, {guard_name}）",
             parent=self.biliGroup,
@@ -172,7 +173,7 @@ class SettingsInterface(ScrollArea):
 
         self.superChatOnTextCard = StrSettingCard(
             configItem=cfg.superChatOnText,
-            icon=FIF.MESSAGE,
+            icon=FIF.FONT,
             title="醒目留言触发文本模板",
             content="醒目留言的文本模板（支持变量: {user_name}, {message}）",
             parent=self.biliGroup,
@@ -181,7 +182,7 @@ class SettingsInterface(ScrollArea):
 
         # 礼物合并设置卡片（可展开）
         self.giftMergeCard = ExpandGroupSettingCard(
-            icon=FIF.TRANSPARENT,
+            icon=CustomIcon.MERGE,
             title="礼物合并设置",
             content="配置礼物合并的相关参数",
             parent=self.biliGroup,
@@ -254,7 +255,7 @@ class SettingsInterface(ScrollArea):
 
         self.minimaxApiKeyCard = StrSettingCard(
             configItem=cfg.minimaxApiKey,
-            icon=FIF.EDIT,
+            icon=CustomIcon.KEY,
             title="API Key",
             content="设置 Minimax TTS 服务的 API 密钥",
             parent=self.minimaxGroup,
@@ -263,7 +264,7 @@ class SettingsInterface(ScrollArea):
 
         self.voiceDictCard = DictEditCard(
             config_item=cfg.voiceDict,
-            icon=FIF.MICROPHONE,
+            icon=FIF.DICTIONARY,
             title="音色字典",
             content="设置音色 ID 与显示名称的映射关系",
             key_label="音色ID",
@@ -382,7 +383,7 @@ class SettingsInterface(ScrollArea):
 
         self.gptSovitsRefTextCard = StrSettingCard(
             configItem=cfg.gptSovitsRefText,
-            icon=FIF.EDIT,
+            icon=CustomIcon.FORMAT_QUOTE,
             title="参考文本",
             content="设置参考音频对应的文本内容",
             parent=self.gptSovitsGroup,
@@ -418,7 +419,7 @@ class SettingsInterface(ScrollArea):
 
         self.gptSovitsTemperatureCard = FloatRangeSettingCard(
             configItem=cfg.gptSovitsTemperature,
-            icon=FIF.CARE_RIGHT_SOLID,
+            icon=CustomIcon.THERMOSTAT,
             title="采样温度",
             content=f"设置采样温度（{cfg.gptSovitsTemperature.range[0]}-{cfg.gptSovitsTemperature.range[1]}）",
             step=0.1,
@@ -455,7 +456,7 @@ class SettingsInterface(ScrollArea):
 
         self.gptSovitsSampleStepsCard = IntSettingCard(
             configItem=cfg.gptSovitsSampleSteps,
-            icon=FIF.IOT,
+            icon=CustomIcon.STAIRS,
             title="采样步数",
             content="设置采样步数",
             parent=self.gptSovitsGroup,
@@ -484,7 +485,7 @@ class SettingsInterface(ScrollArea):
 
         self.playerDeviceCard = ComboBoxSettingCard(
             configItem=cfg.playerDevice,
-            icon=FIF.ALBUM,
+            icon=FIF.SPEAKERS,
             title="输出设备",
             content="设置音频输出设备",
             parent=self.playerGroup,

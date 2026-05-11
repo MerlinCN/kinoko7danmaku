@@ -7,6 +7,7 @@ from .home_panel import HomePanel
 from .int_setting_card import IntSettingCard
 from .login_panel import LoginPanel
 from .message_display_card import MessageDisplayCard
+from .readonly_info_card import ReadOnlyInfoCard
 from .single_audio_upload_widget import SingleAudioUploadWidget
 from .str_setting_card import StrSettingCard
 from .user_info_card import UserInfoCard
@@ -21,6 +22,7 @@ __all__ = [
     "IntSettingCard",
     "LoginPanel",
     "MessageDisplayCard",
+    "ReadOnlyInfoCard",
     "SingleAudioUploadWidget",
     "StrSettingCard",
     "UploadedFileCard",

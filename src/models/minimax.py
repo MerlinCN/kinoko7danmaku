@@ -105,6 +105,58 @@ class BaseResp(BaseModel):
     status_msg: str = Field(..., description="状态信息")
 
 
+MINIMAX_ERROR_MESSAGES: dict[int, str] = {
+    1000: "服务出现未知错误，请稍后重试",
+    1001: "请求超时，请检查网络后重试",
+    1002: "调用过于频繁（QPS 限流），请稍后重试",
+    1004: "API Key 鉴权失败，请检查 API Key 是否正确并已激活",
+    1008: "账户余额不足，请前往官网充值",
+    1024: "服务内部错误，请稍后重试",
+    1026: "输入文本含敏感内容，请修改后重试",
+    1027: "生成内容触发敏感检测，请调整输入文本后重试",
+    1033: "系统故障，请稍后重试",
+    1039: "触发 TPM 限流（每分钟 Token 数超限），请稍后重试",
+    1041: "连接数达到上限，如持续出现请联系官方客服",
+    1042: "文本中无效字符超过 10%，请检查文本或别名词典",
+    1043: "ASR 相似度检查未通过，请确认克隆音频与文本是否一致",
+    1044: "克隆样本与示例文本不匹配，请检查 prompt_audio 与 prompt_text",
+    2013: "请求参数无效，请检查配置",
+    2037: "克隆音频时长不合规，请调整为允许范围内的时长",
+    2039: "音色 ID 已存在，请更换一个未使用的 voice_id",
+    2042: "无权访问该音色，请确认音色归属或联系官方客服",
+    2045: "请求增长过快，请平滑请求频率",
+    2048: "示例音频（prompt_audio）超过 8 秒，请使用更短的音频",
+    2049: "API Key 无效，请检查 Key 是否正确且已激活",
+    2053: "账户余额不足，请前往官网充值或升级订阅套餐",
+    2056: "使用量已达上限，请等待 5 小时配额周期重置",
+    20132: "样本或音色 ID 无效，请检查 file_id 与 voice_id",
+}
+
+
+class MinimaxAPIError(Exception):
+    """MiniMax API 业务错误（HTTP 200 但 base_resp.status_code != 0）
+
+    Attributes:
+        status_code: MiniMax 返回的业务错误码
+        status_msg: MiniMax 返回的原始错误信息
+    """
+
+    def __init__(self, status_code: int, status_msg: str) -> None:
+        """构造异常对象，已知错误码转中文，未知码兜底拼原始信息
+
+        Args:
+            status_code: 业务错误码
+            status_msg: 原始错误信息（英文）
+        """
+        self.status_code = status_code
+        self.status_msg = status_msg
+        friendly = MINIMAX_ERROR_MESSAGES.get(
+            status_code,
+            f"MiniMax 接口错误 [{status_code}]：{status_msg}",
+        )
+        super().__init__(friendly)
+
+
 class VoiceListResponse(BaseModel):
     """MiniMax 获取音色列表响应"""
 

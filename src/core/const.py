@@ -1,9 +1,28 @@
 """全局常量定义"""
 
 import shutil
+import sys
 from pathlib import Path
 
 from models.service import ServiceDetail, ServiceType
+
+
+def get_resource_dir() -> Path:
+    """获取资源目录
+
+    打包环境：从 sys._MEIPASS 下的 resource 读取
+    开发环境：从项目根目录的 resource/ 读取
+
+    Returns:
+        资源目录路径
+    """
+    if getattr(sys, "frozen", False):
+        return Path(sys._MEIPASS) / "resource"  # type: ignore
+    return Path(__file__).resolve().parent.parent.parent / "resource"
+
+
+# 资源目录
+RESOURCE_DIR = get_resource_dir()
 
 
 def get_data_dir() -> Path:
