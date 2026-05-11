@@ -1,9 +1,13 @@
 """音频测试界面"""
 
+from loguru import logger
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 from qasync import asyncSlot
 from qfluentwidgets import (
     CardWidget,
+    InfoBar,
+    InfoBarPosition,
     TextEdit,
     TitleLabel,
     ToolButton,
@@ -69,6 +73,18 @@ class AudioTestInterface(QWidget):
         text = self.text_edit.toPlainText()
         if not text:
             return
-        tts_service = get_tts_service()
-        audio = await tts_service.text_to_speech(text)
-        await audio_player.play_bytes_async(audio)
+        try:
+            tts_service = get_tts_service()
+            audio = await tts_service.text_to_speech(text)
+            await audio_player.play_bytes_async(audio)
+        except Exception as e:
+            logger.exception(f"音频测试失败: {e}")
+            InfoBar.error(
+                title="测试失败",
+                content=str(e),
+                orient=Qt.Orientation.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=3000,
+                parent=self,
+            )

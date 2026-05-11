@@ -1,3 +1,6 @@
+from pathlib import Path
+from typing import Any
+
 import httpx
 from loguru import logger
 from tenacity import retry, retry_if_exception_type, stop_after_attempt
@@ -5,8 +8,10 @@ from tenacity import retry, retry_if_exception_type, stop_after_attempt
 from core.qconfig import cfg
 from models.minimax import (
     AudioSetting,
+    BaseResp,
     FilePurpose,
     FileUploadResponse,
+    MinimaxAPIError,
     MinimaxTTSRequest,
     MinimaxTTSResponse,
     VoiceCloneRequest,
@@ -16,7 +21,6 @@ from models.minimax import (
 )
 
 from .base import TTSService
-from pathlib import Path
 
 
 class MinimaxService(TTSService):
@@ -40,6 +44,33 @@ class MinimaxService(TTSService):
         if self._client is not None and not self._client.is_closed:
             await self._client.aclose()
             self._client = None
+
+    def _parse_response(self, response: httpx.Response) -> dict[str, Any]:
+        """统一处理 MiniMax API 响应
+
+        MiniMax 经常返回 HTTP 200 但 `base_resp.status_code != 0` 表示业务错误。
+        本方法把 HTTP 层错误和业务层错误统一收口。
+
+        Args:
+            response: httpx 响应对象
+
+        Returns:
+            dict: 解析后的 JSON（空 body 返回 {}）
+
+        Raises:
+            httpx.HTTPStatusError: HTTP 状态码非 2xx
+            MinimaxAPIError: MiniMax 业务错误码非 0
+        """
+        response.raise_for_status()
+        if not response.content:
+            return {}
+        result = response.json()
+        base_resp_data = result.get("base_resp")
+        if base_resp_data:
+            base_resp = BaseResp.model_validate(base_resp_data)
+            if base_resp.status_code != 0:
+                raise MinimaxAPIError(base_resp.status_code, base_resp.status_msg)
+        return result
 
     @retry(
         stop=stop_after_attempt(3),
@@ -73,6 +104,7 @@ class MinimaxService(TTSService):
 
         Raises:
             httpx.HTTPStatusError: HTTP请求失败
+            MinimaxAPIError: MiniMax 业务错误（鉴权失败、限流、非法字符等）
         """
         # 从配置中读取默认值（确保每次调用都使用最新配置）
         if api_key is None:
@@ -127,11 +159,10 @@ class MinimaxService(TTSService):
         )
         logger.debug(f"收到响应，状态码: {response.status_code}")
 
-        response.raise_for_status()
+        result = self._parse_response(response)
+        tts_resp = MinimaxTTSResponse.model_validate(result)
 
-        result: MinimaxTTSResponse = MinimaxTTSResponse.model_validate(response.json())
-
-        audio_bytes = bytes.fromhex(result.data.audio)
+        audio_bytes = bytes.fromhex(tts_resp.data.audio)
         logger.info(
             f"Minimax TTS 成功: {text[:50]}... (音频大小: {len(audio_bytes)} 字节)"
         )
@@ -150,6 +181,7 @@ class MinimaxService(TTSService):
         Raises:
             ValueError: API Key 为空
             httpx.HTTPStatusError: HTTP请求失败
+            MinimaxAPIError: MiniMax 业务错误（鉴权失败、限流等）
         """
         if api_key is None:
             api_key = cfg.minimaxApiKey.value
@@ -168,9 +200,9 @@ class MinimaxService(TTSService):
 
         client = self._get_client()
         response = await client.post(api_url, json=request_body, headers=headers)
-        response.raise_for_status()
+        result = self._parse_response(response)
 
-        return VoiceListResponse.model_validate(response.json())
+        return VoiceListResponse.model_validate(result)
 
     async def upload_audio_file(
         self,
@@ -191,6 +223,7 @@ class MinimaxService(TTSService):
         Raises:
             ValueError: API Key 为空或文件不存在
             httpx.HTTPStatusError: HTTP请求失败
+            MinimaxAPIError: MiniMax 业务错误（鉴权失败、文件不合规等）
         """
         if api_key is None:
             api_key = cfg.minimaxApiKey.value
@@ -218,12 +251,7 @@ class MinimaxService(TTSService):
             response = await client.post(
                 api_url, files=files, data=data, headers=headers
             )
-        result = response.json()
-        status_msg = result.get("base_resp", {}).get("status_msg", "success")
-        status_code = result.get("base_resp", {}).get("status_code", 0)
-        if status_code != 0:
-            raise ValueError(status_msg)
-
+        result = self._parse_response(response)
         return FileUploadResponse.model_validate(result)
 
     async def create_voice_clone(
@@ -241,6 +269,7 @@ class MinimaxService(TTSService):
         Raises:
             ValueError: API Key 为空
             httpx.HTTPStatusError: HTTP请求失败
+            MinimaxAPIError: MiniMax 业务错误（鉴权失败、克隆失败等）
         """
         if api_key is None:
             api_key = cfg.minimaxApiKey.value
@@ -259,12 +288,7 @@ class MinimaxService(TTSService):
         response = await client.post(
             api_url, json=request.model_dump(exclude_none=True), headers=headers
         )
-        result = response.json()
-        status_code = result.get("base_resp", {}).get("status_code", 0)
-        status_msg = result.get("base_resp", {}).get("status_msg", "unknown error")
-        if status_code != 0:
-            raise ValueError(status_msg)
-
+        result = self._parse_response(response)
         return VoiceCloneResponse.model_validate(result)
 
     async def delete_voice_clone(
@@ -282,6 +306,7 @@ class MinimaxService(TTSService):
         Raises:
             ValueError: API Key 为空
             httpx.HTTPStatusError: HTTP请求失败
+            MinimaxAPIError: MiniMax 业务错误（鉴权失败、音色不存在等）
         """
         if api_key is None:
             api_key = cfg.minimaxApiKey.value
@@ -297,6 +322,6 @@ class MinimaxService(TTSService):
 
         client = self._get_client()
         response = await client.delete(api_url, headers=headers)
-        response.raise_for_status()
+        self._parse_response(response)
 
         return True
