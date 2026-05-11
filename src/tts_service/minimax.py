@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 from typing import Any
 
@@ -172,6 +173,9 @@ class MinimaxService(TTSService):
     async def get_voice_list(self, api_key: str | None = None) -> VoiceListResponse:
         """获取音色列表
 
+        实际网络 IO 通过 ``asyncio.to_thread`` 放到工作线程，避免在 qasync 主线程上
+        持有长时 await 造成 UI 卡死（页面切换 + SSL 握手 + 慢响应叠加时尤其明显）。
+
         Args:
             api_key: API密钥，为 None 时从配置读取
 
@@ -187,21 +191,25 @@ class MinimaxService(TTSService):
             api_key = cfg.minimaxApiKey.value
         if not api_key:
             raise ValueError("MiniMax API Key 未配置")
+        return await asyncio.to_thread(self._fetch_voice_list_sync, api_key.strip())
 
-        api_key = api_key.strip()
+    def _fetch_voice_list_sync(self, api_key: str) -> VoiceListResponse:
+        """同步获取音色列表（仅供 ``get_voice_list`` 在线程池中调用）
+
+        Args:
+            api_key: 已 strip 的 API 密钥
+
+        Returns:
+            VoiceListResponse: 音色列表响应
+        """
         api_url = "https://api.minimax.io/v1/get_voice"
-
         headers = {
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }
-
         request_body = {"voice_type": "voice_cloning"}
-
-        client = self._get_client()
-        response = await client.post(api_url, json=request_body, headers=headers)
+        response = httpx.post(api_url, json=request_body, headers=headers, timeout=60.0)
         result = self._parse_response(response)
-
         return VoiceListResponse.model_validate(result)
 
     async def upload_audio_file(
