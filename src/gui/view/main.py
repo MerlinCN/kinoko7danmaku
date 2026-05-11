@@ -1,7 +1,6 @@
 """主窗口"""
 
 import asyncio
-import sys
 from pathlib import Path
 
 from bilibili_api.utils import network
@@ -34,13 +33,18 @@ from qfluentwidgets import (
 )
 
 from bilibili import bili_service
-from core.const import AUTHOR_BILIBILI_URL, GITHUB_URL
+from core.const import AUTHOR_BILIBILI_URL, GITHUB_URL, RESOURCE_DIR
 from core.player import audio_player
 from core.update_checker import UpdateChecker
 
 from ..components import HomePanel, LoginPanel
+from ..icons import CustomIcon
 from .audio_test import AudioTestInterface
-from .minimax import MinimaxHomeInterface, MinimaxVoiceCloneInterface, MinimaxVoiceListInterface
+from .minimax import (
+    MinimaxHomeInterface,
+    MinimaxVoiceCloneInterface,
+    MinimaxVoiceListInterface,
+)
 from .settings import SettingsInterface
 
 
@@ -53,13 +57,7 @@ def get_resource_path(relative_path: str) -> Path:
     Returns:
         资源文件的绝对路径
     """
-    if getattr(sys, "frozen", False):
-        # PyInstaller 打包后，资源在 _MEIPASS 临时目录
-        base_path = Path(sys._MEIPASS)  # type: ignore
-    else:
-        # 开发环境，资源在项目根目录
-        base_path = Path.cwd()
-    return base_path / "resource" / relative_path
+    return RESOURCE_DIR / relative_path
 
 
 class MainInterface(QWidget):
@@ -212,17 +210,20 @@ class MainWindow(FluentWindow):
 
         # 添加 MiniMax 父菜单和子菜单
         self.addSubInterface(
-            self.minimax_interface, FIF.ROBOT, "MiniMax", NavigationItemPosition.TOP
+            self.minimax_interface,
+            CustomIcon.MINIMAX,
+            "MiniMax",
+            NavigationItemPosition.TOP,
         )
         self.addSubInterface(
             self.minimax_voice_list_interface,
-            FIF.MICROPHONE,
+            FIF.LIBRARY,
             "音色列表",
             parent=self.minimax_interface,
         )
         self.addSubInterface(
             self.minimax_voice_clone_interface,
-            FIF.ADD,
+            FIF.MICROPHONE,
             "音色克隆",
             parent=self.minimax_interface,
         )
@@ -242,7 +243,7 @@ class MainWindow(FluentWindow):
 
         self.navigationInterface.addItem(
             routeKey="author_bilibili",
-            icon=FIF.VIDEO,
+            icon=CustomIcon.BILIBILI,
             text="B站",
             onClick=lambda: QDesktopServices.openUrl(QUrl(AUTHOR_BILIBILI_URL)),
             selectable=False,
