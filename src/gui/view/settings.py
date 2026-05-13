@@ -494,7 +494,7 @@ class SettingsInterface(ScrollArea):
 
         self.piperVoiceCard = StrSettingCard(
             configItem=cfg.piperVoice,
-            icon=FIF.TAG,
+            icon=FIF.ROBOT,
             title="语音模型",
             content="设置 Piper TTS 使用的语音模型",
             parent=self.piperGroup,
@@ -503,7 +503,7 @@ class SettingsInterface(ScrollArea):
 
         self.piperSpeakerCard = StrSettingCard(
             configItem=cfg.piperSpeaker,
-            icon=FIF.TAG,
+            icon=FIF.CHAT,
             title="说话者",
             content="设置多说话者模型的说话者",
             parent=self.piperGroup,
@@ -520,7 +520,7 @@ class SettingsInterface(ScrollArea):
 
         self.piperLengthScaleCard = FloatRangeSettingCard(
             configItem=cfg.piperLengthScale,
-            icon=FIF.TAG,
+            icon=FIF.SPEED_OFF,
             title="模型语速",
             content="设置模型的说话语速（持续时间系数, 值越大越慢）",
             step=0.1,
@@ -530,7 +530,7 @@ class SettingsInterface(ScrollArea):
 
         self.piperNoiseScaleCard = FloatRangeSettingCard(
             configItem=cfg.piperNoiseScale,
-            icon=FIF.TAG,
+            icon=FIF.PALETTE,
             title="模型噪声比例",
             content="设置模型的噪声比例（语音变化程度）",
             step=0.001,
@@ -540,7 +540,7 @@ class SettingsInterface(ScrollArea):
 
         self.piperNoiseWScaleCard = FloatRangeSettingCard(
             configItem=cfg.piperNoiseWScale,
-            icon=FIF.TAG,
+            icon=FIF.PALETTE,
             title="模型噪声宽度",
             content="设置模型的噪声宽度（音素时长变化程度）",
             step=0.01,
