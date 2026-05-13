@@ -39,6 +39,7 @@ class ConfigGroup(StrEnum):
     MINIMAX_SERVICE = "MinimaxService"
     FISH_SPEECH_SERVICE = "FishSpeechService"
     GPT_SOVITS_SERVICE = "GptSovitsService"
+    PIPER_SERVICE = "PiperService"
     PLAYER = "Player"
 
 
@@ -96,6 +97,15 @@ class ConfigKey(StrEnum):
     GPT_SOVITS_SAMPLE_STEPS = "SampleSteps"
     GPT_SOVITS_SUPER_SAMPLING = "SuperSampling"
     GPT_SOVITS_PAUSE_SECONDS = "PauseSeconds"
+
+    # Piper 服务
+    PIPER_API_URL = "ApiUrl"
+    PIPER_VOICE = "Voice"
+    PIPER_SPEAKER = "Speaker"
+    PIPER_SPEAKER_ID = "SpeakerId"
+    PIPER_LENGTH_SCALE = "LengthScale"
+    PIPER_NOISE_SCALE = "NoiseScale"
+    PIPER_NOISE_W_SCALE = "NoiseWScale"
 
     # 播放器
     PLAYER_DEVICE = "PlayerDevice"
@@ -533,6 +543,53 @@ class Config(QConfig):
         name=ConfigKey.GPT_SOVITS_PAUSE_SECONDS,
         default=0.3,
         validator=RangeValidator(0.0, 5.0),
+    )
+
+    # Piper TTS 服务配置
+    piperApiUrl = ConfigItem(
+        group=ConfigGroup.PIPER_SERVICE,
+        name=ConfigKey.PIPER_API_URL,
+        default="http://localhost:5000",
+    )
+    
+    piperVoice = ConfigItem(
+        group=ConfigGroup.PIPER_SERVICE,
+        name=ConfigKey.PIPER_VOICE,
+        default="",
+    )
+
+    piperSpeaker = ConfigItem(
+        group=ConfigGroup.PIPER_SERVICE,
+        name=ConfigKey.PIPER_SPEAKER,
+        default="",
+    )
+
+    piperSpeakerId = ConfigItem(
+        group=ConfigGroup.PIPER_SERVICE,
+        name=ConfigKey.PIPER_SPEAKER_ID,
+        default=0,
+        validator=IntValidator(),
+    )
+
+    piperLengthScale = RangeConfigItem(
+        group=ConfigGroup.PIPER_SERVICE,
+        name=ConfigKey.PIPER_LENGTH_SCALE,
+        default=1.0,
+        validator=RangeValidator(0.0, 3.0),
+    )
+
+    piperNoiseScale = RangeConfigItem(
+        group=ConfigGroup.PIPER_SERVICE,
+        name=ConfigKey.PIPER_NOISE_SCALE,
+        default=0.667,
+        validator=RangeValidator(0.0, 1.0),
+    )
+
+    piperNoiseWScale = RangeConfigItem(
+        group=ConfigGroup.PIPER_SERVICE,
+        name=ConfigKey.PIPER_NOISE_W_SCALE,
+        default=0.8,
+        validator=RangeValidator(0.0, 1.0),
     )
 
     # 播放器配置
