@@ -135,9 +135,10 @@ kinoko7danmaku/
 1. 在 `src/tts_service/` 创建新的适配器类，继承 `TTSService`
 2. 实现 `text_to_speech` 异步方法（返回 WAV 格式音频数据）
 3. 在 `src/models/service.py` 的 `ServiceType` 枚举中添加服务类型
-4. 在 `src/core/qconfig.py` 添加配置类（继承 `ConfigItem`）
-5. 在 `src/tts_service/__init__.py` 的 `get_tts_service()` 中注册服务
-6. 在 `src/gui/view/settings.py` 添加对应的设置卡片
+4. 在 `src/core/const.py` 的 `SUPPORTED_SERVICES` 添加支持的 TTS 服务配置
+5. 在 `src/core/qconfig.py` 添加配置类（继承 `ConfigItem`）
+6. 在 `src/tts_service/__init__.py` 的 `get_tts_service()` 中注册服务
+7. 在 `src/gui/view/settings.py` 添加对应的设置卡片
 
 **注意事项：**
 - 参数默认值使用 `None`，在函数体内从配置读取
