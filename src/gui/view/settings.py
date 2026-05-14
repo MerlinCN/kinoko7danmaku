@@ -480,6 +480,74 @@ class SettingsInterface(ScrollArea):
             parent=self.gptSovitsGroup,
         )
 
+        # Piper 服务设置组
+        self.piperGroup = SettingCardGroup("Piper 设置", self.scrollWidget)
+
+        self.piperApiUrlCard = StrSettingCard(
+            configItem=cfg.piperApiUrl,
+            icon=FIF.LINK,
+            title="API 地址",
+            content="设置 Piper TTS 服务的 API 地址",
+            parent=self.piperGroup,
+            placeholder="http://localhost:5000",
+        )
+
+        self.piperVoiceCard = StrSettingCard(
+            configItem=cfg.piperVoice,
+            icon=FIF.ROBOT,
+            title="语音模型",
+            content="设置 Piper TTS 使用的语音模型",
+            parent=self.piperGroup,
+            placeholder="语音模型名称",
+        )
+
+        self.piperSpeakerCard = StrSettingCard(
+            configItem=cfg.piperSpeaker,
+            icon=FIF.CHAT,
+            title="说话者",
+            content="设置多说话者模型的说话者",
+            parent=self.piperGroup,
+            placeholder="说话者名称",
+        )
+
+        self.piperSpeakerIdCard = IntSettingCard(
+            configItem=cfg.piperSpeakerId,
+            icon=FIF.TAG,
+            title="说话者ID",
+            content="设置多说话者模型的说话者ID（会覆盖名称设置）",
+            parent=self.piperGroup,
+        )
+
+        self.piperLengthScaleCard = FloatRangeSettingCard(
+            configItem=cfg.piperLengthScale,
+            icon=FIF.SPEED_OFF,
+            title="模型语速",
+            content="设置模型的说话语速（持续时间系数, 值越大越慢）",
+            step=0.1,
+            decimals=1,
+            parent=self.piperGroup,
+        )
+
+        self.piperNoiseScaleCard = FloatRangeSettingCard(
+            configItem=cfg.piperNoiseScale,
+            icon=FIF.PALETTE,
+            title="模型噪声比例",
+            content="设置模型的噪声比例（语音变化程度）",
+            step=0.001,
+            decimals=3,
+            parent=self.piperGroup,
+        )
+
+        self.piperNoiseWScaleCard = FloatRangeSettingCard(
+            configItem=cfg.piperNoiseWScale,
+            icon=FIF.PALETTE,
+            title="模型噪声宽度",
+            content="设置模型的噪声宽度（音素时长变化程度）",
+            step=0.01,
+            decimals=2,
+            parent=self.piperGroup,
+        )
+
         # 播放器设置组
         self.playerGroup = SettingCardGroup("音频设置", self.scrollWidget)
 
@@ -618,6 +686,15 @@ class SettingsInterface(ScrollArea):
         self.gptSovitsGroup.addSettingCard(self.gptSovitsSampleStepsCard)
         self.gptSovitsGroup.addSettingCard(self.gptSovitsSuperSamplingCard)
         self.gptSovitsGroup.addSettingCard(self.gptSovitsPauseSecondsCard)
+        
+        # 添加 Piper 服务设置卡片
+        self.piperGroup.addSettingCard(self.piperApiUrlCard)
+        self.piperGroup.addSettingCard(self.piperVoiceCard)
+        self.piperGroup.addSettingCard(self.piperSpeakerCard)
+        self.piperGroup.addSettingCard(self.piperSpeakerIdCard)
+        self.piperGroup.addSettingCard(self.piperLengthScaleCard)
+        self.piperGroup.addSettingCard(self.piperNoiseScaleCard)
+        self.piperGroup.addSettingCard(self.piperNoiseWScaleCard)
 
         # 添加播放器设置卡片
         self.playerGroup.addSettingCard(self.playerDeviceCard)
@@ -632,6 +709,7 @@ class SettingsInterface(ScrollArea):
         self.expandLayout.addWidget(self.minimaxGroup)
         self.expandLayout.addWidget(self.fishSpeechGroup)
         self.expandLayout.addWidget(self.gptSovitsGroup)
+        self.expandLayout.addWidget(self.piperGroup)
 
         # 设置滚动区域
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)

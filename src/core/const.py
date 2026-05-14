@@ -64,6 +64,9 @@ SUPPORTED_SERVICES = {
     ServiceType.FISH_SPEECH: ServiceDetail(
         name=ServiceType.FISH_SPEECH, description="Fish Speech"
     ),
+    ServiceType.PIPER: ServiceDetail(
+        name=ServiceType.PIPER, description="Piper"
+    ),
 }
 
 # MiniMax 支持的模型列表
