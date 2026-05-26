@@ -268,7 +268,8 @@ class AudioTestInterface(ScrollArea):
     async def _on_test_button_clicked(self) -> None:
         """测试按钮点击事件"""
         text = self.text_edit.toPlainText()
-        if not text:
+        # 去除首尾空格后如果为空直接返回
+        if not text.strip():
             return
         try:
             tts_service = get_tts_service()
