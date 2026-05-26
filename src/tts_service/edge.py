@@ -16,13 +16,13 @@ class EdgeService(TTSService):
     async def text_to_speech(
         self,
         text: str,
-        voice: str = "zh-CN-XiaoxiaoNeural",
-        rate: str = "+0%",
-        volume: str = "+0%", 
-        pitch: str = "+0Hz",
+        voice: str | None = None,
+        rate: str | None = None,
+        volume: str | None = None, 
+        pitch: str | None = None,
     ) -> bytes:
         """
-        使用 edge-tts 将文本转换为语音
+        使用 Edge TTS 将文本转换为语音
 
         Args:
             text: 要转换的文本
@@ -54,7 +54,7 @@ class EdgeService(TTSService):
                 rate=rate,
                 volume=volume,
                 pitch=pitch)
-        
+
         async for chunk in communicate.stream():
             if chunk["type"] == "audio":
                 audio_data.write(chunk["data"])
