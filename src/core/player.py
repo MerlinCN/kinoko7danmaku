@@ -3,6 +3,7 @@ import io
 import wave
 
 import pyaudio
+import miniaudio
 import sounddevice as sd
 from loguru import logger
 
@@ -74,20 +75,22 @@ class StreamPlayer:
             return False
 
     def play_bytes(self, audio_bytes: bytes):
-        """播放音频字节流（WAV 格式）
+        """播放音频字节流（WAV/MP3 格式）
 
         Args:
-            audio_bytes: WAV 格式的音频字节流
+            audio_bytes: WAV/MP3 格式的音频字节流
         """
-        # 使用 wave 模块解析 WAV 文件
-        with wave.open(io.BytesIO(audio_bytes), "rb") as wf:
-            # 获取音频参数
-            channels = wf.getnchannels()
-            sample_width = wf.getsampwidth()
-            frame_rate = wf.getframerate()
+        # 解析音频文件
+        try:
+            decoded_file = miniaudio.decode(audio_bytes)
+        except Exception as e:
+            logger.error(f"音频解码失败: {e}")
+            return
 
-            # 读取所有音频数据
-            raw_data = wf.readframes(wf.getnframes())
+        sample_width = decoded_file.sample_width
+        channels = decoded_file.nchannels
+        frame_rate = decoded_file.sample_rate
+        raw_data = decoded_file.samples.tobytes()
 
         # 使用 pyaudio 播放音频
         stream = None
