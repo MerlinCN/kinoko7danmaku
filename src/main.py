@@ -3,6 +3,7 @@
 import asyncio
 import atexit
 import sys
+import multiprocessing
 from pathlib import Path
 
 from bilibili_api.utils import network
@@ -65,4 +66,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
     main()
