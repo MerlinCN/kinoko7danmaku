@@ -1,6 +1,4 @@
 import asyncio
-import io
-import wave
 
 import pyaudio
 import miniaudio
@@ -83,7 +81,7 @@ class StreamPlayer:
         # 解析音频文件
         try:
             decoded_file = miniaudio.decode(audio_bytes)
-        except Exception as e:
+        except miniaudio.DecodeError as e:
             logger.error(f"音频解码失败: {e}")
             return
 
