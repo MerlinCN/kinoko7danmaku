@@ -26,6 +26,7 @@ from .const import (
     GPT_SOVITS_TEXT_SPLIT_METHODS,
     MINIMAX_ERROR_VOICE_ID,
     MINIMAX_MODELS,
+    EDGE_VOICES,
     SUPPORTED_SERVICES,
 )
 from .player import audio_player
@@ -40,6 +41,7 @@ class ConfigGroup(StrEnum):
     FISH_SPEECH_SERVICE = "FishSpeechService"
     GPT_SOVITS_SERVICE = "GptSovitsService"
     PIPER_SERVICE = "PiperService"
+    EDGE_SERVICE = "EdgeService"
     PLAYER = "Player"
 
 
@@ -106,6 +108,12 @@ class ConfigKey(StrEnum):
     PIPER_LENGTH_SCALE = "LengthScale"
     PIPER_NOISE_SCALE = "NoiseScale"
     PIPER_NOISE_W_SCALE = "NoiseWScale"
+
+    # Edge 服务
+    EDGE_VOICE  = "Voice"
+    EDGE_RATE = "Rate"
+    EDGE_VOLUME = "Volume"
+    EDGE_PITCH = "Pitch"
 
     # 播放器
     PLAYER_DEVICE = "PlayerDevice"
@@ -590,6 +598,35 @@ class Config(QConfig):
         name=ConfigKey.PIPER_NOISE_W_SCALE,
         default=0.8,
         validator=RangeValidator(0.0, 1.0),
+    )
+
+    # Edge TTS 服务配置
+    edgeVoice = OptionsConfigItem(
+        group=ConfigGroup.EDGE_SERVICE,
+        name=ConfigKey.EDGE_VOICE,
+        default="zh-CN-XiaoxiaoNeural",
+        validator=OptionsValidator(EDGE_VOICES)
+    )
+
+    edgeRate = RangeConfigItem(
+        group=ConfigGroup.EDGE_SERVICE,
+        name=ConfigKey.EDGE_RATE,
+        default=1.0,
+        validator=RangeValidator(0.0, 3.0),
+    )     
+    
+    edgeVolume = RangeConfigItem(
+        group=ConfigGroup.EDGE_SERVICE,
+        name=ConfigKey.EDGE_VOLUME,
+        default=1.0,
+        validator=RangeValidator(0.0, 3.0),
+    )   
+
+    edgePitch = RangeConfigItem(
+        group=ConfigGroup.EDGE_SERVICE,
+        name=ConfigKey.EDGE_PITCH,
+        default=0,
+        validator=RangeValidator(-300, 300),
     )
 
     # 播放器配置

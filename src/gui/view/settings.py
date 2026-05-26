@@ -9,6 +9,7 @@ from qfluentwidgets import (
     ComboBoxSettingCard,
     ExpandGroupSettingCard,
     ExpandLayout,
+    RangeSettingCard,
     ScrollArea,
     SettingCardGroup,
     StateToolTip,
@@ -26,6 +27,7 @@ from core.const import (
     GPT_SOVITS_TEXT_SPLIT_METHODS,
     MINIMAX_ERROR_VOICE_ID,
     MINIMAX_MODELS,
+    EDGE_VOICES,
     SUPPORTED_SERVICES,
 )
 from core.player import audio_player
@@ -548,6 +550,46 @@ class SettingsInterface(ScrollArea):
             parent=self.piperGroup,
         )
 
+        # Edge 服务设置组
+        self.edgeGroup = SettingCardGroup("Edge TTS 设置", self.scrollWidget)
+
+        self.edgeVoiceCard = ComboBoxSettingCard(
+            configItem=cfg.edgeVoice,
+            icon=FIF.TAG,
+            title="语音模型",
+            content="设置 Edge TTS 的语音模型",
+            texts=EDGE_VOICES,
+            parent=self.edgeGroup,
+        )
+
+        self.edgeRateCard = FloatRangeSettingCard(
+            configItem=cfg.edgeRate,
+            icon=FIF.SPEED_OFF,
+            title="语音速率",
+            content="设置 Edge TTS 的语音速率",
+            step=0.05,
+            decimals=2,
+            parent=self.edgeGroup,
+        )
+
+        self.edgeVolumeCard = FloatRangeSettingCard(
+            configItem=cfg.edgeVolume,
+            icon=FIF.VOLUME,
+            title="语音音量",
+            content="设置 Edge TTS 的语音音量",
+            step=0.05,
+            decimals=2,
+            parent=self.edgeGroup,
+        )
+
+        self.edgePitchCard = RangeSettingCard(
+            configItem=cfg.edgePitch,
+            icon=FIF.MUSIC,
+            title="语音音调",
+            content="设置 Edge TTS 的语音音调",
+            parent=self.edgeGroup,
+        )
+
         # 播放器设置组
         self.playerGroup = SettingCardGroup("音频设置", self.scrollWidget)
 
@@ -695,6 +737,12 @@ class SettingsInterface(ScrollArea):
         self.piperGroup.addSettingCard(self.piperLengthScaleCard)
         self.piperGroup.addSettingCard(self.piperNoiseScaleCard)
         self.piperGroup.addSettingCard(self.piperNoiseWScaleCard)
+        
+        # 添加 Edge 服务设置卡片
+        self.edgeGroup.addSettingCard(self.edgeVoiceCard)
+        self.edgeGroup.addSettingCard(self.edgeRateCard)
+        self.edgeGroup.addSettingCard(self.edgeVolumeCard)
+        self.edgeGroup.addSettingCard(self.edgePitchCard)
 
         # 添加播放器设置卡片
         self.playerGroup.addSettingCard(self.playerDeviceCard)
@@ -710,6 +758,7 @@ class SettingsInterface(ScrollArea):
         self.expandLayout.addWidget(self.fishSpeechGroup)
         self.expandLayout.addWidget(self.gptSovitsGroup)
         self.expandLayout.addWidget(self.piperGroup)
+        self.expandLayout.addWidget(self.edgeGroup)
 
         # 设置滚动区域
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)

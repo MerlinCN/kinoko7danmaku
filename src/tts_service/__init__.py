@@ -6,11 +6,12 @@ from .fish_speech import FishSpeechService
 from .gpt_sovits import GPTSovitsService
 from .minimax import MinimaxService
 from .piper import PiperService
+from .edge import EdgeService
 
 _default_tts_service = None
 
 
-def get_tts_service() -> FishSpeechService | GPTSovitsService | MinimaxService | PiperService:
+def get_tts_service() -> FishSpeechService | GPTSovitsService | MinimaxService | PiperService | EdgeService:
     """获取TTS服务"""
 
     global _default_tts_service
@@ -29,6 +30,9 @@ def get_tts_service() -> FishSpeechService | GPTSovitsService | MinimaxService |
     elif model_type == ServiceType.PIPER:
         _default_tts_service = PiperService()
 
+    elif model_type == ServiceType.EDGE:
+        _default_tts_service = EdgeService()
+
     else:
         raise ValueError(f"Invalid TTS service: {model_type}")
     return _default_tts_service
@@ -40,5 +44,6 @@ __all__ = [
     "GPTSovitsService",
     "MinimaxService",
     "PiperService",
+    "EdgeService",
     "get_tts_service",
 ]

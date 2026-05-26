@@ -67,6 +67,9 @@ SUPPORTED_SERVICES = {
     ServiceType.PIPER: ServiceDetail(
         name=ServiceType.PIPER, description="Piper"
     ),
+    ServiceType.EDGE: ServiceDetail(
+        name=ServiceType.EDGE, description="Edge"
+    )
 }
 
 # MiniMax 支持的模型列表
@@ -104,6 +107,23 @@ GPT_SOVITS_TEXT_SPLIT_METHODS = [
 
 MINIMAX_ERROR_VOICE_ID = "未获取到音色列表，请检查API 密钥，然后刷新"
 
+# Edge TTS 语音选项
+EDGE_VOICES = [
+    "zh-CN-XiaoxiaoNeural",
+    "zh-CN-XiaoyiNeural",
+    "zh-CN-YunjianNeural",
+    "zh-CN-YunxiNeural",
+    "zh-CN-YunxiaNeural",
+    "zh-CN-YunyangNeural",
+    "zh-CN-liaoning-XiaobeiNeural",
+    "zh-CN-shaanxi-XiaoniNeural",
+    "zh-HK-HiuGaaiNeural",
+    "zh-HK-HiuMaanNeural",
+    "zh-HK-WanLungNeural",
+    "zh-TW-HsiaoChenNeural",
+    "zh-TW-HsiaoYuNeural",
+    "zh-TW-YunJheNeural",
+]
 
 COOKIES_PATH = DATA_DIR / "cookies.json"
 
