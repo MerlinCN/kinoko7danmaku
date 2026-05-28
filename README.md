@@ -1,191 +1,80 @@
+# Kinoko7Danmaku
+
 <div align="center">
-<img src="https://socialify.git.ci/MerlinCN/kinoko7danmaku/image?description=1&forks=1&issues=1&language=1&name=1&owner=1&stargazers=1&theme=Light" alt="kinoko7danmaku" width="640" height="320" />
 
-
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python)](https://www.python.org/)
 [![Build and Release](https://github.com/MerlinCN/kinoko7danmaku/actions/workflows/pyinstaller.yml/badge.svg)](https://github.com/MerlinCN/kinoko7danmaku/actions/workflows/pyinstaller.yml)
+[![Release](https://img.shields.io/github/v/release/MerlinCN/kinoko7danmaku)](https://github.com/MerlinCN/kinoko7danmaku/releases)
 
 </div>
 
-## 简介
+基于 PySide6 的 B 站直播弹幕姬，实时将弹幕、礼物、SC、舰长等消息转为语音播报。
 
-基于 PySide6 + qfluentwidgets 的 B 站直播弹幕姬，支持多种 TTS 服务，实时将弹幕、礼物、舰长等信息转为语音播报。
+## 特性
 
-## 展示
+- **多 TTS 引擎** — 支持 MiniMax、Fish Speech、GPT-SoVITS、Piper、Edge 五种语音服务
+- **实时监控** — 弹幕 / 礼物 / SC / 舰长 / 醒目留言实时捕获与播报
+- **礼物合并** — 短时间内的连续礼物自动合并播报，避免刷屏
+- **别名字典** — 支持特殊词汇的自定义发音替换
+- **文本模板** — 各类消息的播报文案可自由定制
+- **音频测试** — 内置 TTS 试听页面，支持 WAV / MP3 格式
+- **扫码登录** — 通过 B 站 APP 扫码安全登录
+- **跨平台** — 提供 Windows 可执行文件，macOS / Linux 可从源码运行
 
-![image-20251102121451987](img/image-20251102121451987.png)
+## 截图
 
-![image-20251102121622061](img/image-20251102121622061.png)
+![主界面](img/image-20251102121451987.png)
 
-
-## 环境要求
-
-- Python 3.11+
-- [uv](https://docs.astral.sh/uv/) (推荐的Python包管理器)
-
+![设置页面](img/image-20251102121622061.png)
 
 ## 快速开始
 
-### 1. 克隆项目
+### 环境要求
+
+- Python 3.12+
+- [uv](https://docs.astral.sh/uv/)（推荐包管理器）
+
+### 安装 & 运行
 
 ```bash
 git clone https://github.com/MerlinCN/kinoko7danmaku.git
 cd kinoko7danmaku
-```
-
-### 2. 安装 uv (推荐)
-
-```bash
-# macOS/Linux
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Windows
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-
-# 或使用 pip 安装
-pip install uv
-```
-
-### 3. 安装依赖
-
-```bash
-uv sync # 仅安装
-uv sync --all-extras # 开发
-```
-
-### 4. 运行程序
-
-```bash
-# 使用 uv
+uv sync
 uv run src/main.py
-
-# 或直接使用 python
-python src/main.py
 ```
 
-启动会打开 GUI 界面：
-1. **扫码登录** - 使用 B 站 APP 扫描二维码登录
-2. **配置设置** - 在设置页面配置 TTS 服务、直播间房间号等
-3. **开始监听** - 点击"开始监听"按钮即可开始弹幕播报
+启动后：
+1. 点击「登录」用 B 站 APP 扫码
+2. 在设置页面配置 TTS 服务与直播间房间号
+3. 点击「开始监听」
 
-## 配置说明
+### Windows 用户
 
-启动后点击左下角"设置"即可进入：
+直接下载 [Releases](https://github.com/MerlinCN/kinoko7danmaku/releases) 中的 `Kinoko7Danmaku.exe`，无需安装 Python。
 
-- **B 站服务** - 配置直播间房间号、礼物阈值、弹幕开关等
-- **TTS 服务** - 选择并配置 TTS 服务（MiniMax、Fish Speech、GPT-SoVITS）
-- **音频播放** - 选择音频输出设备
-- **别名字典** - 管理特殊词汇的发音替换规则
-- **文本模板** - 自定义各类消息的播报文本
+## 支持的 TTS 服务
 
-所有设置会自动保存到 `data/config.json` 文件中。
+| 服务 | 说明 | 需要 API Key |
+|------|------|:---:|
+| MiniMax | 高品质云端语音合成 | ✅ |
+| Fish Speech | 开源语音合成 | 自部署 |
+| GPT-SoVITS | 少样本语音克隆 | 自部署 |
+| Piper | 本地离线 TTS | 自部署 |
+| Edge | 微软免费 TTS | ❌ |
 
+## 设置
 
+所有配置在 GUI 设置页面中完成，包括：
 
-## 项目结构
+- **B 站服务** — 直播间房间号、弹幕开关、礼物阈值
+- **TTS 服务** — 选择引擎及对应参数（语速、音色等）
+- **音频输出** — 输出设备选择
+- **别名字典** — 自定义词汇发音替换
+- **文本模板** — 各类消息的播报文案
 
-```
-kinoko7danmaku/
-├── src/
-│   ├── bilibili/          # B站直播间连接服务
-│   │   ├── bili_service.py    # 直播间事件监听
-│   │   └── __init__.py
-│   ├── core/              # 核心功能模块
-│   │   ├── const.py           # 常量定义
-│   │   ├── player.py          # 音频播放器
-│   │   ├── qconfig.py         # Qt 配置管理
-│   │   └── __init__.py
-│   ├── gui/               # GUI 界面
-│   │   ├── components/        # 可复用组件
-│   │   │   ├── alias_dict_card.py      # 别名字典卡片
-│   │   │   ├── danmaku_control_card.py # 弹幕控制卡片
-│   │   │   ├── message_display_card.py # 消息显示卡片
-│   │   │   ├── user_info_card.py       # 用户信息卡片
-│   │   │   └── ...
-│   │   ├── view/              # 视图页面
-│   │   │   ├── main.py            # 主窗口
-│   │   │   ├── settings.py        # 设置界面
-│   │   │   ├── audio_test.py      # 音频测试界面
-│   │   │   └── __init__.py
-│   │   └── __init__.py
-│   ├── models/            # 数据模型
-│   │   ├── bilibili.py        # B站消息模型
-│   │   ├── minimax.py         # MiniMax API 模型
-│   │   ├── device.py          # 音频设备模型
-│   │   ├── service.py         # 服务类型枚举
-│   │   └── __init__.py
-│   ├── tts_service/       # TTS 服务适配器
-│   │   ├── base.py            # TTS 服务基类
-│   │   ├── minimax.py         # MiniMax 适配器
-│   │   ├── fish_speech.py     # Fish Speech 适配器
-│   │   ├── gpt_sovits.py      # GPT-SoVITS 适配器
-│   │   └── __init__.py
-│   └── main.py            # 程序入口
-|
-├── resource/              # 资源文件
-│   ├── qss/                   # 样式表
-│   └── icon.ico               # 应用图标
-├── config.toml            # 配置文件（运行时自动生成）
-└── pyproject.toml         # 项目依赖定义
-```
-
-## 开发指南
-
-### 添加新的 TTS 服务
-
-1. 在 `src/tts_service/` 创建新的适配器类，继承 `TTSService`
-2. 实现 `text_to_speech` 异步方法（返回 WAV 格式音频数据）
-3. 在 `src/models/service.py` 的 `ServiceType` 枚举中添加服务类型
-4. 在 `src/core/const.py` 的 `SUPPORTED_SERVICES` 添加支持的 TTS 服务配置
-5. 在 `src/core/qconfig.py` 添加配置类（继承 `ConfigItem`）
-6. 在 `src/tts_service/__init__.py` 的 `get_tts_service()` 中注册服务
-7. 在 `src/gui/view/settings.py` 添加对应的设置卡片
-
-**注意事项：**
-- 参数默认值使用 `None`，在函数体内从配置读取
-- 确保返回的音频格式为 WAV（PCM 16-bit）
-
-### 添加新的 GUI 组件
-
-1. 在 `src/gui/components/` 创建新组件
-2. 继承 qfluentwidgets 的相应基类（如 `CardWidget`、`SettingCard`）
-3. 实现 UI 布局和信号槽连接
-4. 在 `__init__.py` 中导出组件
-
-### 代码规范
-
-- **类型注解**：所有函数必须添加类型注解
-- **文档字符串**：使用中文编写 docstring
-- **导入顺序**：标准库 → 第三方库 → 本地模块
-- **代码检查**：使用 `ruff` 进行格式化和检查
-
-```bash
-# 检查单个文件
-uv run ruff check --fix src/path/to/file.py
-
-# 检查整个项目（谨慎使用，建议先询问）
-uv run ruff check --fix src/
-```
-
-## 支持与贡献
-
-觉得好用可以给这个项目点个 Star 或者去 [爱发电](https://afdian.net/a/MerlinCN) 投喂我。
-
-有意见或建议欢迎提交 Issues 和 Pull Requests。
-
-感谢以下用户对我的帮助：
-
-<table>
-  <tr>
-    <td align="center">
-      <a href="https://github.com/zjp-shadow">
-        <img src="https://avatars.githubusercontent.com/zjp-shadow?v=4" width="80px;" alt="shadow"/><br />
-        <sub><b>shadow</b></sub>
-      </a>
-    </td>
-  </tr>
-</table>
-
+配置自动保存至 `~/.kinoko7danmaku/config.json`。
 
 ## 许可证
 
-本项目使用 [GNU AGPLv3](https://choosealicense.com/licenses/agpl-3.0/) 作为开源许可证。
+[GNU AGPL v3](LICENSE) © MerlinCN
