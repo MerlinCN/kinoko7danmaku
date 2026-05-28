@@ -1,15 +1,16 @@
 import asyncio
 
-import pyaudio
 import miniaudio
+import pyaudio
 import sounddevice as sd
+
 from loguru import logger
 
 from models.device import OutputDevice
 
 
 class StreamPlayer:
-    def __init__(self):
+    def __init__(self) -> None:
         self.p = pyaudio.PyAudio()
         self.device_index = sd.default.device[1]
         self.audio_queue: asyncio.Queue[bytes] | None = None
@@ -47,7 +48,7 @@ class StreamPlayer:
 
         return choices
 
-    def set_output_device_by_name(self, device_name: str):
+    def set_output_device_by_name(self, device_name: str) -> None:
         """根据设备名称设置输出设备"""
         for device in self.get_output_devices():
             if device_name in device.name:
@@ -55,7 +56,7 @@ class StreamPlayer:
                 return
         logger.error(f"未找到设备: {device_name}")
 
-    def set_output_device(self, device_index: int):
+    def set_output_device(self, device_index: int) -> bool | None:
         """设置输出设备"""
         try:
             if device_index == -1:
@@ -64,15 +65,16 @@ class StreamPlayer:
             if int(device_info["max_output_channels"]) > 0:  # type: ignore
                 logger.info(f"已设置输出设备: {device_info['name']}")
                 self.device_index = device_index
-                return True
             else:
                 logger.error(f"设备 {device_index} 不支持音频输出")
                 return False
         except Exception as e:
             logger.exception(f"设置设备失败: {e}")
             return False
+        else:
+            return True
 
-    def play_bytes(self, audio_bytes: bytes):
+    def play_bytes(self, audio_bytes: bytes) -> None:
         """播放音频字节流（WAV/MP3 格式）
 
         Args:
@@ -109,7 +111,7 @@ class StreamPlayer:
             if stream:
                 stream.close()
 
-    async def _play_worker(self):
+    async def _play_worker(self) -> None:
         """后台任务：从队列中取出音频并播放"""
         if self.audio_queue is None:
             logger.error("音频队列未初始化")
@@ -128,7 +130,7 @@ class StreamPlayer:
             except Exception as e:
                 logger.exception(f"播放音频时出错: {e}")
 
-    def start_worker(self):
+    def start_worker(self) -> None:
         """启动音频播放队列处理任务"""
         if not self.is_running:
             # 在事件循环运行时创建队列，避免在 __init__ 中创建导致 RuntimeError
@@ -137,7 +139,7 @@ class StreamPlayer:
             self.worker_task = asyncio.create_task(self._play_worker())
             logger.info("音频播放队列已启动")
 
-    async def stop_worker(self):
+    async def stop_worker(self) -> None:
         """停止音频播放队列处理任务"""
         if self.is_running:
             self.is_running = False
@@ -158,7 +160,7 @@ class StreamPlayer:
                 self.audio_queue = None
             logger.info("音频播放队列已停止")
 
-    async def play_bytes_async(self, audio_bytes: bytes):
+    async def play_bytes_async(self, audio_bytes: bytes) -> None:
         """异步方式播放音频（添加到队列）
 
         Args:
@@ -169,7 +171,7 @@ class StreamPlayer:
             return
         await self.audio_queue.put(audio_bytes)
 
-    def close(self):
+    def close(self) -> None:
         self.p.terminate()
 
 

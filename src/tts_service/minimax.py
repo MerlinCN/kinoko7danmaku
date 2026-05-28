@@ -1,8 +1,10 @@
 import asyncio
+
 from pathlib import Path
 from typing import Any
 
 import httpx
+
 from loguru import logger
 from tenacity import retry, retry_if_exception_type, stop_after_attempt
 
@@ -248,17 +250,20 @@ class MinimaxService(TTSService):
         # 验证文件存在
 
         file = Path(file_path)
-        if not file.exists():
+        if not await asyncio.to_thread(file.exists):
             raise ValueError(f"文件不存在: {file_path}")
 
         # 使用 multipart/form-data 上传文件：文件用 files，普通字段用 data
-        with file.open("rb") as f:
+        f = await asyncio.to_thread(file.open, "rb")
+        try:
             files = {"file": (file.name, f, "audio/*")}
             data = {"purpose": purpose.value}
             client = self._get_client()
             response = await client.post(
                 api_url, files=files, data=data, headers=headers
             )
+        finally:
+            f.close()
         result = self._parse_response(response)
         return FileUploadResponse.model_validate(result)
 

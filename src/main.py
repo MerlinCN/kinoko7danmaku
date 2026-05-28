@@ -2,14 +2,15 @@
 
 import asyncio
 import atexit
-import sys
 import multiprocessing
+import sys
+
 from pathlib import Path
 
-from bilibili_api.utils import network
-from loguru import logger
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
+from bilibili_api.utils import network
+from loguru import logger
 from qasync import QApplication, QEventLoop
 
 from core.const import DATA_DIR

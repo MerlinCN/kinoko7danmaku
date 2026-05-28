@@ -2,10 +2,10 @@
 
 from pathlib import Path
 
-from loguru import logger
-from mutagen import File as MutagenFile
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QFileDialog, QHBoxLayout, QVBoxLayout, QWidget
+from loguru import logger
+from mutagen import File as MutagenFile
 from qasync import asyncSlot
 from qfluentwidgets import (
     BodyLabel,
@@ -83,7 +83,10 @@ class SingleAudioUploadWidget(CardWidget):
             if self._min_duration == 0:
                 tip_text = f"支持 mp3/m4a/wav 格式，最长{self._max_duration:.0f}秒，最大{self._max_size_mb:.0f}MB"
             else:
-                tip_text = f"支持 mp3/m4a/wav 格式，{self._min_duration:.0f}秒-{self._max_duration / 60:.0f}分钟，最大{self._max_size_mb:.0f}MB"
+                tip_text = (
+                    f"支持 mp3/m4a/wav 格式，{self._min_duration:.0f}秒"
+                    f"-{self._max_duration / 60:.0f}分钟，最大{self._max_size_mb:.0f}MB"
+                )
         else:
             tip_text = self._tip_text
 

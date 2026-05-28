@@ -1,24 +1,26 @@
 from io import BytesIO
-from loguru import logger
+
 import edge_tts
+
+from loguru import logger
 
 from core.qconfig import cfg
 
 from .base import TTSService
+
 
 class EdgeService(TTSService):
     """Edge TTS 适配器"""
 
     def __init__(self) -> None:
         """初始化 Edge 适配器"""
-        pass
 
     async def text_to_speech(
         self,
         text: str,
         voice: str | None = None,
         rate: str | None = None,
-        volume: str | None = None, 
+        volume: str | None = None,
         pitch: str | None = None,
     ) -> bytes:
         """
@@ -58,9 +60,9 @@ class EdgeService(TTSService):
         async for chunk in communicate.stream():
             if chunk["type"] == "audio":
                 audio_data.write(chunk["data"])
-        
+
         data = {
-            "text": text, 
+            "text": text,
             "voice": voice,
             "rate": rate,
             "volume": volume,
@@ -69,5 +71,5 @@ class EdgeService(TTSService):
 
         logger.debug(f"Edge 请求 data 为: {data}")
         logger.info(f"Edge TTS 成功: {text}")
-        
+
         return audio_data.getvalue()

@@ -1,9 +1,9 @@
 import asyncio
 import json
 
+from PySide6.QtCore import QObject, QTimer, Signal
 from bilibili_api import Credential, live, user
 from loguru import logger
-from PySide6.QtCore import QObject, QTimer, Signal
 
 from core.const import COOKIES_PATH
 from core.player import audio_player
@@ -32,7 +32,7 @@ class BiliService(QObject):
     guard_received = Signal(str)  # 舰长消息信号
     superchat_received = Signal(str)  # SC 消息信号
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.credential: Credential | None = None
         self.room_obj: live.LiveDanmaku | None = None
@@ -42,7 +42,7 @@ class BiliService(QObject):
         # 连接礼物合并管理器的信号
         gift_merger.merged_gift_received.connect(self.gift_received.emit)
 
-    def _check_room_status(self):
+    def _check_room_status(self) -> None:
         """检查直播间状态，如果关闭则重新连接"""
         if not self.run_task or not self.room_obj:
             return
@@ -57,9 +57,9 @@ class BiliService(QObject):
             self.run_task = asyncio.create_task(self.room_obj.connect())
             logger.info("已重新创建直播间连接任务")
 
-    def add_event_listener(self):
+    def add_event_listener(self) -> None:
         @self.room_obj.on(EventType.DANMU_MSG)
-        async def on_danmaku(event):
+        async def on_danmaku(event: dict[str, object]) -> None:
             if not cfg.normalDanmakuOn.value:
                 return
             danmu_message = DanmuMessage.parse(event)
@@ -76,7 +76,7 @@ class BiliService(QObject):
             await audio_player.play_bytes_async(audio)
 
         @self.room_obj.on(EventType.SEND_GIFT)
-        async def on_send_gift(event):
+        async def on_send_gift(event: dict[str, object]) -> None:
             gift_message = GiftMessage.parse(event)
             if not cfg.freeGiftOn.value and gift_message.coin_type == "silver":
                 return
@@ -91,7 +91,7 @@ class BiliService(QObject):
             await gift_merger.add_gift(gift_message)
 
         @self.room_obj.on(EventType.GUARD_BUY)
-        async def on_guard_buy(event):
+        async def on_guard_buy(event: dict[str, object]) -> None:
             if not cfg.guardOn.value:
                 return
             guard_buy_message = GuardBuy.parse(event)
@@ -109,7 +109,7 @@ class BiliService(QObject):
             await audio_player.play_bytes_async(audio)
 
         @self.room_obj.on(EventType.SUPER_CHAT_MESSAGE)
-        async def on_super_chat_message(event):
+        async def on_super_chat_message(event: dict[str, object]) -> None:
             if not cfg.superChatOn.value:
                 return
             super_chat_message = SuperChatMessage.parse(event)
@@ -128,8 +128,8 @@ class BiliService(QObject):
             audio = await tts_service.text_to_speech(display_text)
             await audio_player.play_bytes_async(audio)
 
-    def load_credential(self):
-        with open(COOKIES_PATH, "r", encoding="utf-8") as f:
+    def load_credential(self) -> None:
+        with open(COOKIES_PATH, encoding="utf-8") as f:
             cookies = json.load(f)
 
         for cookie in cookies["cookie_info"]["cookies"]:
@@ -146,7 +146,7 @@ class BiliService(QObject):
             bili_jct=bili_jct, sessdata=sessdata, dedeuserid=dedeuserid
         )
 
-    async def run(self):
+    async def run(self) -> None:
         self.load_credential()
         self.room_obj = live.LiveDanmaku(
             cfg.roomId.value,
@@ -166,7 +166,7 @@ class BiliService(QObject):
         # 启动礼物合并定时器（必须在 Qt 事件循环启动后）
         gift_merger.start()
 
-    async def stop(self):
+    async def stop(self) -> None:
         if self.run_task:
             self.run_task.cancel()
             self.run_task = None
@@ -179,7 +179,7 @@ class BiliService(QObject):
     def is_logged_in(self) -> bool:
         return self.credential is not None
 
-    async def logout(self):
+    async def logout(self) -> None:
         await self.stop()
         self.credential = None
         self.room_obj = None

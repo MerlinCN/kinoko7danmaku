@@ -2,11 +2,11 @@ from core.qconfig import cfg
 from models.service import ServiceType
 
 from .base import TTSService
+from .edge import EdgeService
 from .fish_speech import FishSpeechService
 from .gpt_sovits import GPTSovitsService
 from .minimax import MinimaxService
 from .piper import PiperService
-from .edge import EdgeService
 
 _default_tts_service = None
 
@@ -26,7 +26,7 @@ def get_tts_service() -> FishSpeechService | GPTSovitsService | MinimaxService |
 
     elif model_type == ServiceType.MINIMAX:
         _default_tts_service = MinimaxService()
-    
+
     elif model_type == ServiceType.PIPER:
         _default_tts_service = PiperService()
 
@@ -39,11 +39,11 @@ def get_tts_service() -> FishSpeechService | GPTSovitsService | MinimaxService |
 
 
 __all__ = [
-    "TTSService",
+    "EdgeService",
     "FishSpeechService",
     "GPTSovitsService",
     "MinimaxService",
     "PiperService",
-    "EdgeService",
+    "TTSService",
     "get_tts_service",
 ]

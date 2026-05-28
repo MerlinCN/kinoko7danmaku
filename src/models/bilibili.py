@@ -1,7 +1,8 @@
 import json
 import time
-from enum import Enum
-from typing import Any, Dict
+
+from enum import Enum, StrEnum
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -30,7 +31,7 @@ class GuardLevel(Enum):
         return name_map.get(self, "未知等级")
 
 
-class EventType(str, Enum):
+class EventType(StrEnum):
     """事件类型枚举"""
 
     DANMU_MSG = "DANMU_MSG"  # 弹幕
@@ -51,13 +52,13 @@ class DanmuMessage(BaseModel):
     reply_mid: int = Field(default=0, description="回复用户 ID")
     reply_uname: str = Field(default="", description="回复用户名")
     timestamp: int = Field(default=0, description="发送时的 UNIX 毫秒时间戳")
-    emotion: Dict[str, str] = Field(
+    emotion: dict[str, str] = Field(
         default_factory=dict, description="表情相关信息 (用于文本替换)"
     )
     pic_emoticon: str = Field(default="", description="图片表情")
 
     @classmethod
-    def parse(cls, event_data: Dict[str, Any]) -> "DanmuMessage":
+    def parse(cls, event_data: dict[str, Any]) -> "DanmuMessage":
         """
         解析弹幕信息
         Args:
@@ -76,10 +77,7 @@ class DanmuMessage(BaseModel):
         info = event_data["data"]["info"]
         instance.message = info[1]
         instance.timestamp = info[0][4]
-        if info[0][15]:
-            extra = json.loads(info[0][15].get("extra", "{}"))
-        else:
-            extra = {}
+        extra = json.loads(info[0][15].get("extra", "{}")) if info[0][15] else {}
         emotion = extra.get("emots", {})
         if emotion:
             for k, v in emotion.items():
@@ -107,7 +105,7 @@ class DanmuMessage(BaseModel):
 
         return instance
 
-    def __str__(self):
+    def __str__(self) -> str:
         result = ""
         if self.guard_level.value:
             result += f"[{self.guard_level.name_cn}]"
@@ -134,7 +132,7 @@ class InteractWord(BaseModel):
     timestamp: int = Field(default=0, description="发送时的 UNIX 毫秒时间戳")
 
     @classmethod
-    def parse(cls, event_data: Dict[str, Any]) -> "InteractWord":
+    def parse(cls, event_data: dict[str, Any]) -> "InteractWord":
         instance = cls()
         instance.room_id = int(event_data["room_display_id"])
         instance.user_mid = event_data["data"]["data"]["uid"]
@@ -154,7 +152,7 @@ class GuardBuy(BaseModel):
     timestamp: int = Field(default=0, description="发送时的 UNIX 毫秒时间戳")
 
     @classmethod
-    def parse(cls, event_data: Dict[str, Any]) -> "GuardBuy":
+    def parse(cls, event_data: dict[str, Any]) -> "GuardBuy":
         instance = cls()
         data = event_data["data"]["data"]
         instance.room_id = int(event_data["room_display_id"])
@@ -166,7 +164,7 @@ class GuardBuy(BaseModel):
         instance.timestamp = int(time.time())
         return instance
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.user_name}[{self.user_mid}] 购买了 {self.guard_level.name_cn}，价值 {self.price} 元"
 
 
@@ -184,7 +182,7 @@ class SuperChatMessage(BaseModel):
     timestamp: int = Field(default=0, description="发送时的 UNIX 毫秒时间戳")
 
     @classmethod
-    def parse(cls, event_data: Dict[str, Any]) -> "SuperChatMessage":
+    def parse(cls, event_data: dict[str, Any]) -> "SuperChatMessage":
         instance = cls()
         instance.room_id = int(event_data["room_display_id"])
         data = event_data["data"]["data"]
@@ -200,7 +198,7 @@ class SuperChatMessage(BaseModel):
 
         return instance
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.user_name}[{self.user_mid}] 发送了一条醒目留言，他说“{self.message}”，价值 {self.price} 元"
 
 
@@ -215,7 +213,7 @@ class GiftMessage(BaseModel):
     coin_type: str = Field(default="", description="付费类型")
 
     @classmethod
-    def parse(cls, event_data: Dict[str, Any]) -> "GiftMessage":
+    def parse(cls, event_data: dict[str, Any]) -> "GiftMessage":
         instance = cls()
         instance.room_id = int(event_data["room_display_id"])
         data = event_data["data"]["data"]
@@ -228,8 +226,11 @@ class GiftMessage(BaseModel):
         instance.coin_type = data["coin_type"]
         return instance
 
-    def __str__(self):
-        return f"{self.user_name}[{self.user_mid}] 赠送了 {self.gift_num} 个 {self.gift_name}，价值 {self.gift_price} 元"
+    def __str__(self) -> str:
+        return (
+            f"{self.user_name}[{self.user_mid}] 赠送了 "
+            f"{self.gift_num} 个 {self.gift_name}，价值 {self.gift_price} 元"
+        )
 
 
 class OnlineCount(BaseModel):
@@ -238,7 +239,7 @@ class OnlineCount(BaseModel):
     timestamp: int = Field(default=0, description="发送时的 UNIX 毫秒时间戳")
 
     @classmethod
-    def parse(cls, event_data: Dict[str, Any]) -> "OnlineCount":
+    def parse(cls, event_data: dict[str, Any]) -> "OnlineCount":
         instance = cls()
         instance.room_id = int(event_data["room_display_id"])
         data = event_data["data"]["data"]
@@ -254,7 +255,7 @@ class RoomBlockMsg(BaseModel):
     timestamp: int = Field(default=0, description="发送时的 UNIX 毫秒时间戳")
 
     @classmethod
-    def parse(cls, event_data: Dict[str, Any]) -> "RoomBlockMsg":
+    def parse(cls, event_data: dict[str, Any]) -> "RoomBlockMsg":
         instance = cls()
         instance.room_id = int(event_data["room_display_id"])
         data = event_data["data"]["data"]
@@ -274,7 +275,7 @@ class AnchorLotStart(BaseModel):
     timestamp: int = Field(default=0, description="发送时的 UNIX 毫秒时间戳")
 
     @classmethod
-    def parse(cls, event_data: Dict[str, Any]) -> "AnchorLotStart":
+    def parse(cls, event_data: dict[str, Any]) -> "AnchorLotStart":
         instance = cls()
         instance.room_id = int(event_data["room_display_id"])
         data = event_data["data"]["data"]
@@ -297,7 +298,7 @@ class AnchorLotAward(BaseModel):
     timestamp: int = Field(default=0, description="发送时的 UNIX 毫秒时间戳")
 
     @classmethod
-    def parse(cls, event_data: Dict[str, Any]) -> "AnchorLotAward":
+    def parse(cls, event_data: dict[str, Any]) -> "AnchorLotAward":
         instance = cls()
         instance.room_id = int(event_data["room_display_id"])
         data = event_data["data"]["data"]

@@ -1,6 +1,7 @@
 """版本信息管理"""
 
 import sys
+
 from pathlib import Path
 
 from loguru import logger
@@ -16,24 +17,20 @@ def get_version() -> str:
         版本号字符串，如 "3.0.0" 或 "dev"
     """
     try:
-        if is_packaged():
-            # 打包后的环境
-            base_path = Path(sys._MEIPASS)  # type: ignore
-        else:
-            base_path = Path.cwd()
+        base_path = Path(sys._MEIPASS) if is_packaged() else Path.cwd()  # type: ignore
         version_file = base_path / "resource" / "version.txt"
 
         if version_file.exists():
             version = version_file.read_text(encoding="utf-8").strip()
             logger.info(f"当前版本: {version}")
-            return version
         else:
             logger.warning(f"打包环境中找不到 version.txt: {version_file}")
-            return "0.1.0"
-
+            version = "0.1.0"
     except Exception as e:
         logger.exception(f"读取版本号失败: {e}")
         return "0.1.0"
+    else:
+        return version
 
 
 def is_packaged() -> bool:

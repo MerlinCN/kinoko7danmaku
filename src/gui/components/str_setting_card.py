@@ -1,9 +1,9 @@
 """字符串输入设置卡片"""
 
-from typing import Union
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QWidget
 from qfluentwidgets import (
     ConfigItem,
     FluentIconBase,
@@ -29,10 +29,10 @@ class StrSettingCard(SettingCard):
     def __init__(
         self,
         configItem: ConfigItem,
-        icon: Union[str, QIcon, FluentIconBase],
+        icon: str | QIcon | FluentIconBase,
         title: str,
         content: str | None = None,
-        parent=None,
+        parent: QWidget | None = None,
         placeholder: str = "",
         refreshable: bool = False,
     ) -> None:

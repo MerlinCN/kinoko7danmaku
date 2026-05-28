@@ -1,10 +1,11 @@
 """只读信息展示卡片"""
 
 from collections.abc import Callable
-from typing import Any, Union
+from typing import Any
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QWidget
 from qfluentwidgets import (
     BodyLabel,
     ConfigItem,
@@ -26,7 +27,7 @@ def default_formatter(value: Any) -> str:
     """
     if isinstance(value, bool):
         return "开" if value else "关"
-    if value is None or value == "":
+    if value is None or not value:
         return EMPTY_TEXT
     return str(value)
 
@@ -56,12 +57,12 @@ class ReadOnlyInfoCard(SettingCard):
     def __init__(
         self,
         configItem: ConfigItem,
-        icon: Union[str, QIcon, FluentIconBase],
+        icon: str | QIcon | FluentIconBase,
         title: str,
         content: str | None = None,
         formatter: Callable[[Any], str] | None = None,
         mask: bool = False,
-        parent=None,
+        parent: QWidget | None = None,
     ) -> None:
         """初始化只读信息卡片
 
@@ -94,8 +95,5 @@ class ReadOnlyInfoCard(SettingCard):
     def refresh(self, *_: Any) -> None:
         """根据当前 configItem 值刷新展示文本"""
         value = self.configItem.value
-        if self._mask:
-            text = mask_secret(value if isinstance(value, str) else str(value))
-        else:
-            text = self._formatter(value)
+        text = mask_secret(value if isinstance(value, str) else str(value)) if self._mask else self._formatter(value)
         self.valueLabel.setText(text)

@@ -1,11 +1,13 @@
 """通用字典编辑设置卡片"""
 
 from PySide6.QtCore import Signal
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QHBoxLayout, QWidget
 from qfluentwidgets import (
     BodyLabel,
     ConfigItem,
     ExpandGroupSettingCard,
+    FluentIconBase,
     LineEdit,
     ToolButton,
 )
@@ -147,8 +149,7 @@ class DictEditCard(ExpandGroupSettingCard):
     def __init__(
         self,
         config_item: ConfigItem,
-        icon,
-        title: str,
+        icon: str | QIcon | FluentIconBase, title: str,
         content: str,
         key_label: str = "键",
         value_label: str = "值",

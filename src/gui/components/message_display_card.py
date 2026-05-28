@@ -1,7 +1,7 @@
 """消息显示卡片组件"""
 
 from collections import deque
-from datetime import datetime
+from datetime import UTC, datetime
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QVBoxLayout, QWidget
@@ -38,7 +38,7 @@ class MessageDisplayCard(CardWidget):
         self.main_layout.addWidget(self.title_label)
 
         # 创建消息标签（固定 5 行）
-        for i in range(self.max_lines):
+        for _i in range(self.max_lines):
             label = BodyLabel("")
             label.setWordWrap(True)  # 允许换行
             label.setAlignment(Qt.AlignmentFlag.AlignLeft)
@@ -53,7 +53,7 @@ class MessageDisplayCard(CardWidget):
         """
         # 添加到队列（自动移除最旧的消息）
         self.messages.append(
-            f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]:{message}"
+            f"[{datetime.now(tz=UTC).astimezone().strftime('%Y-%m-%d %H:%M:%S')}]:{message}"
         )
 
         # 更新显示

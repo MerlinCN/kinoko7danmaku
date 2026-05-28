@@ -1,11 +1,10 @@
 """主窗口"""
 
 import asyncio
+
 from pathlib import Path
 
-from bilibili_api.utils import network
-from loguru import logger
-from PySide6.QtCore import QEvent, Qt, QTimer, QUrl
+from PySide6.QtCore import QEvent, QTimer, QUrl, Qt
 from PySide6.QtGui import QCloseEvent, QDesktopServices, QIcon
 from PySide6.QtWidgets import (
     QApplication,
@@ -14,6 +13,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from bilibili_api.utils import network
+from loguru import logger
 from qasync import asyncSlot
 from qfluentwidgets import (
     Action,
@@ -36,9 +37,9 @@ from bilibili import bili_service
 from core.const import AUTHOR_BILIBILI_URL, GITHUB_URL, RESOURCE_DIR
 from core.player import audio_player
 from core.update_checker import UpdateChecker
+from gui.components import HomePanel, LoginPanel
+from gui.icons import CustomIcon
 
-from ..components import HomePanel, LoginPanel
-from ..icons import CustomIcon
 from .audio_test import AudioTestInterface
 from .minimax import (
     MinimaxHomeInterface,
@@ -275,7 +276,10 @@ class MainWindow(FluentWindow):
             w = InfoBar.new(
                 icon=FIF.GITHUB,
                 title="版本检测",
-                content=f"当前版本: v{UpdateChecker.get_current_version()}，最新版本: {version_info.version}，是否下载？",
+                content=(
+                    f"当前版本: v{UpdateChecker.get_current_version()}，"
+                    f"最新版本: {version_info.version}，是否下载？"
+                ),
                 orient=Qt.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.BOTTOM,
@@ -309,8 +313,7 @@ class MainWindow(FluentWindow):
         qss_path = get_resource_path(f"qss/{theme}/main_window.qss")
 
         if qss_path.exists():
-            with open(qss_path, encoding="utf-8") as f:
-                self.setStyleSheet(f.read())
+            self.setStyleSheet(qss_path.read_text(encoding="utf-8"))
 
     def _on_theme_changed(self) -> None:
         """主题改变时的回调"""
@@ -363,10 +366,9 @@ class MainWindow(FluentWindow):
         Args:
             event: 事件对象
         """
-        if event.type() == QEvent.Type.WindowStateChange:
-            if self.isMinimized():
-                # 使用 QTimer 延迟隐藏窗口，确保窗口状态完全更新
-                QTimer.singleShot(0, self.hide)
+        if event.type() == QEvent.Type.WindowStateChange and self.isMinimized():
+            # 使用 QTimer 延迟隐藏窗口，确保窗口状态完全更新
+            QTimer.singleShot(0, self.hide)
         super().changeEvent(event)
 
     @asyncSlot()
@@ -387,9 +389,9 @@ class MainWindow(FluentWindow):
 
         # run_forever() 返回后（QApplication.quit() 被调用后）
         # 在事件循环关闭前，手动清理 bilibili_api 的 session
-        async def cleanup_bilibili_sessions():
-            for _, pool in network.session_pool.items():
-                for _, client in pool.items():
+        async def cleanup_bilibili_sessions() -> None:
+            for pool in network.session_pool.values():
+                for client in pool.values():
                     await client.close()
 
         await cleanup_bilibili_sessions()

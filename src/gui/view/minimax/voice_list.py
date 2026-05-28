@@ -1,9 +1,11 @@
 """MiniMax 音色列表界面"""
 
-from loguru import logger
-from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtGui import QGuiApplication
+from typing import TYPE_CHECKING
+
+from PySide6.QtCore import QTimer, Qt, Signal
+from PySide6.QtGui import QGuiApplication, QMouseEvent, QShowEvent
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
+from loguru import logger
 from qasync import asyncSlot
 from qfluentwidgets import (
     BodyLabel,
@@ -30,8 +32,10 @@ from core.const import MINIMAX_MODELS
 from core.player import audio_player
 from core.qconfig import cfg
 from gui.components import FloatRangeSettingCard
-from models.minimax import VoiceItem
 from tts_service.minimax import MinimaxService
+
+if TYPE_CHECKING:
+    from models.minimax import VoiceItem
 
 
 class VoiceCard(CardWidget):
@@ -109,7 +113,7 @@ class VoiceCard(CardWidget):
             parent=self.window(),
         )
 
-    def mousePressEvent(self, event) -> None:
+    def mousePressEvent(self, event: QMouseEvent) -> None:
         """鼠标点击事件
 
         Args:
@@ -321,7 +325,7 @@ class MinimaxVoiceListInterface(QWidget):
 
         main_layout.addLayout(content_layout, 1)
 
-    def showEvent(self, event) -> None:
+    def showEvent(self, event: QShowEvent) -> None:
         """界面显示事件
 
         Args:

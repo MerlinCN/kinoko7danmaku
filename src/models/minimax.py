@@ -1,10 +1,10 @@
-from enum import Enum
-from typing import Any, Dict, List, Optional
+from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel, Field
 
 
-class FilePurpose(str, Enum):
+class FilePurpose(StrEnum):
     """MiniMax 文件上传用途
 
     - VOICE_CLONE: 源音频，用于 voice_clone 接口的 file_id 字段
@@ -29,7 +29,7 @@ class VoiceSetting(BaseModel):
 class PronunciationDict(BaseModel):
     """MiniMax 发音字典"""
 
-    tone: List[str] = Field(
+    tone: list[str] = Field(
         default_factory=list, description="音调列表，格式: '文字/(拼音)'"
     )
 
@@ -52,20 +52,20 @@ class MinimaxTTSRequest(BaseModel):
     language_boost: str = Field(default="auto", description="语言增强模式")
     output_format: str = Field(default="hex", description="输出格式")
     voice_setting: VoiceSetting = Field(..., description="音色设置")
-    pronunciation_dict: Optional[PronunciationDict] = Field(
+    pronunciation_dict: PronunciationDict | None = Field(
         default=None, description="发音字典"
     )
-    audio_setting: Optional[AudioSetting] = Field(default=None, description="音频设置")
+    audio_setting: AudioSetting | None = Field(default=None, description="音频设置")
 
 
 class ExtraInfo(BaseModel):
     """MiniMax 响应额外信息"""
 
-    audio_length: Optional[float] = Field(default=None, description="音频长度(秒)")
-    audio_size: Optional[int] = Field(default=None, description="音频大小(字节)")
-    audio_sample_rate: Optional[int] = Field(default=None, description="音频采样率")
-    audio_channels: Optional[int] = Field(default=None, description="音频声道数")
-    bitrate: Optional[int] = Field(default=None, description="比特率")
+    audio_length: float | None = Field(default=None, description="音频长度(秒)")
+    audio_size: int | None = Field(default=None, description="音频大小(字节)")
+    audio_sample_rate: int | None = Field(default=None, description="音频采样率")
+    audio_channels: int | None = Field(default=None, description="音频声道数")
+    bitrate: int | None = Field(default=None, description="比特率")
 
 
 class AudioData(BaseModel):
@@ -73,18 +73,18 @@ class AudioData(BaseModel):
 
     audio: str = Field(..., description="音频数据")
     status: int = Field(..., description="状态码")
-    ced: Optional[str] = Field(default=None, description="错误信息")
+    ced: str | None = Field(default=None, description="错误信息")
 
 
 class MinimaxTTSResponse(BaseModel):
     """MiniMax TTS 响应体"""
 
-    trace_id: Optional[str] = Field(default=None, description="追踪ID")
-    audio_file: Optional[str] = Field(default=None, description="音频文件URL或hex编码")
-    data: Optional[AudioData] = Field(default=None, description="音频数据")
-    subtitle_file: Optional[str] = Field(default=None, description="字幕文件")
-    extra_info: Optional[ExtraInfo] = Field(default=None, description="额外信息")
-    base_resp: Optional[Dict[str, Any]] = Field(
+    trace_id: str | None = Field(default=None, description="追踪ID")
+    audio_file: str | None = Field(default=None, description="音频文件URL或hex编码")
+    data: AudioData | None = Field(default=None, description="音频数据")
+    subtitle_file: str | None = Field(default=None, description="字幕文件")
+    extra_info: ExtraInfo | None = Field(default=None, description="额外信息")
+    base_resp: dict[str, Any] | None = Field(
         default=None, description="基础响应信息"
     )
 
@@ -94,7 +94,7 @@ class VoiceItem(BaseModel):
 
     voice_id: str = Field(..., description="音色ID")
     voice_name: str = Field(default="", description="音色名称")
-    description: List[str] = Field(default_factory=list, description="描述")
+    description: list[str] = Field(default_factory=list, description="描述")
     created_time: str = Field(..., description="创建时间")
 
 
@@ -160,7 +160,7 @@ class MinimaxAPIError(Exception):
 class VoiceListResponse(BaseModel):
     """MiniMax 获取音色列表响应"""
 
-    voice_cloning: List[VoiceItem] = Field(..., description="音色克隆列表")
+    voice_cloning: list[VoiceItem] = Field(..., description="音色克隆列表")
     base_resp: BaseResp = Field(..., description="基础响应")
 
 
@@ -177,8 +177,8 @@ class VoiceCloneRequest(BaseModel):
     file_id: int = Field(..., description="源音频文件ID（int64）")
     voice_id: str = Field(..., description="自定义音色ID")
     clone_prompt: ClonePrompt = Field(..., description="样本音频与转录（必填）")
-    text: Optional[str] = Field(default=None, description="预览文本")
-    model: Optional[str] = Field(default=None, description="预览合成模型")
+    text: str | None = Field(default=None, description="预览文本")
+    model: str | None = Field(default=None, description="预览合成模型")
     need_noise_reduction: bool = Field(default=False, description="是否去除背景噪音")
     need_volume_normalization: bool = Field(
         default=False, description="是否启用音量归一化"
@@ -210,5 +210,5 @@ class VoiceCloneResponse(BaseModel):
         default=0,
         description="内容类别（0=正常，1=严重违规，2=色情，3=广告，4=禁止内容，5=辱骂，6=暴力/恐怖，7=其他）",
     )
-    demo_audio: Optional[str] = Field(default=None, description="预览音频URL")
+    demo_audio: str | None = Field(default=None, description="预览音频URL")
     base_resp: BaseResp = Field(..., description="基础响应")

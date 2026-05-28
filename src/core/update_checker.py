@@ -3,9 +3,11 @@
 import json
 import re
 import time
+
 from typing import NamedTuple
 
 import httpx
+
 from loguru import logger
 
 from core.const import DATA_DIR

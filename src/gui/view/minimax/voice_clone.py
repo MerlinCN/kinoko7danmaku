@@ -1,8 +1,10 @@
 """MiniMax 音色克隆界面"""
 
-from loguru import logger
-from PySide6.QtCore import Qt, QTimer
+from typing import Any
+
+from PySide6.QtCore import QTimer, Qt
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
+from loguru import logger
 from qasync import asyncSlot
 from qfluentwidgets import (
     BodyLabel,
@@ -345,7 +347,7 @@ class MinimaxVoiceCloneInterface(QWidget):
         remaining = total_slots - used_slots
         self.slot_hint_label.setText(f"剩余音色槽位: {remaining} / {total_slots}")
 
-    def _on_source_file_uploaded(self, file_response, duration: float) -> None:
+    def _on_source_file_uploaded(self, file_response: Any, duration: float) -> None:
         """源音频文件上传成功事件
 
         Args:
@@ -356,7 +358,7 @@ class MinimaxVoiceCloneInterface(QWidget):
             f"源音频文件上传成功: {file_response.file.filename} ({duration:.1f}秒)"
         )
 
-    def _on_example_file_uploaded(self, file_response, duration: float) -> None:
+    def _on_example_file_uploaded(self, file_response: Any, duration: float) -> None:
         """示例音频文件上传成功事件
 
         Args:

@@ -1,9 +1,9 @@
 """整数输入设置卡片"""
 
-from typing import Union
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIcon, QIntValidator
+from PySide6.QtWidgets import QWidget
 from qfluentwidgets import ConfigItem, FluentIconBase, LineEdit, SettingCard, qconfig
 
 
@@ -18,10 +18,10 @@ class IntSettingCard(SettingCard):
     def __init__(
         self,
         configItem: ConfigItem,
-        icon: Union[str, QIcon, FluentIconBase],
+        icon: str | QIcon | FluentIconBase,
         title: str,
         content: str | None = None,
-        parent=None,
+        parent: QWidget | None = None,
         placeholder: str = "",
     ) -> None:
         """初始化整数输入设置卡片
@@ -30,8 +30,9 @@ class IntSettingCard(SettingCard):
             configItem: 配置项
             icon: 图标
             title: 标题
-            content: 描述内容
+            content: 描述
             parent: 父组件
+            placeholder: 占位提示文本
         """
         super().__init__(icon, title, content, parent)
         self.configItem = configItem

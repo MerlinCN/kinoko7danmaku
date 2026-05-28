@@ -1,13 +1,14 @@
 """用户信息卡片组件"""
 
 import aiohttp
-from loguru import logger
+
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QVBoxLayout,
     QWidget,
 )
+from loguru import logger
 from qasync import asyncSlot
 from qfluentwidgets import (
     AvatarWidget,
@@ -92,7 +93,7 @@ class UserInfoCard(CardWidget):
 
         except Exception as e:
             logger.error(f"加载用户信息失败: {e}")
-            self.name_label.setText(f"加载失败: {str(e)}")
+            self.name_label.setText(f"加载失败: {e!s}")
 
     def _update_ui(self) -> None:
         """更新 UI"""

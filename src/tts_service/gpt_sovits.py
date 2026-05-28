@@ -1,8 +1,12 @@
+import asyncio
+import pathlib
 import time
-from typing import Any, Dict, List, Optional
+
+from typing import Any
 
 import aiohttp
 import httpx
+
 from loguru import logger
 from tenacity import retry, stop_after_attempt
 
@@ -17,14 +21,14 @@ class GradioClient:
     referenced in gpt-sovits-tts/tts.py and tts_client.py.
     """
 
-    def __init__(self, base_url: str, ssl_verify: bool = False, timeout: int = 300):
+    def __init__(self, base_url: str, ssl_verify: bool = False, timeout: int = 300) -> None:
         self.base_url = base_url if base_url.endswith("/") else (base_url + "/")
         self.ssl_verify = ssl_verify
         self.timeout = aiohttp.ClientTimeout(total=timeout)
-        self._session: Optional[aiohttp.ClientSession] = None
-        self._fn_map: Dict[str, int] = {}
+        self._session: aiohttp.ClientSession | None = None
+        self._fn_map: dict[str, int] = {}
 
-    async def ensure(self):
+    async def ensure(self) -> None:
         if self._session is None:
             connector = aiohttp.TCPConnector(ssl=self.ssl_verify)
             self._session = aiohttp.ClientSession(
@@ -32,7 +36,7 @@ class GradioClient:
             )
             await self._load_config()
 
-    async def _load_config(self):
+    async def _load_config(self) -> None:
         assert self._session is not None
         url = self.base_url + "config"
         async with self._session.get(url) as resp:
@@ -47,7 +51,7 @@ class GradioClient:
                     (dep or {}).get("id", i)
                 )
 
-    async def close(self):
+    async def close(self) -> None:
         if self._session is not None:
             s = self._session
             self._session = None
@@ -60,8 +64,7 @@ class GradioClient:
         assert self._session is not None
         url = self.base_url + "upload"
         data = aiohttp.FormData()
-        with open(file_path, "rb") as f:
-            file_content = f.read()
+        file_content = await asyncio.to_thread(pathlib.Path(file_path).read_bytes)
         data.add_field(
             "files",
             file_content,
@@ -74,8 +77,8 @@ class GradioClient:
             # returns list of uploaded paths
             return j[0]
 
-    async def _process_inputs(self, args: List[Any]) -> List[Any]:
-        processed: List[Any] = []
+    async def _process_inputs(self, args: list[Any]) -> list[Any]:
+        processed: list[Any] = []
         for a in args:
             if (
                 isinstance(a, dict)
@@ -128,10 +131,10 @@ class GPTSovitsService(TTSService):
     def __init__(self) -> None:
         self.client = GradioClient(cfg.gptSovitsApiUrl.value)
 
-    async def close(self):
+    async def close(self) -> None:
         await self.client.close()
 
-    async def init(self):
+    async def init(self) -> None:
         await self.client.ensure()
         result = await self.client.predict(
             "/change_sovits_weights",

@@ -72,21 +72,20 @@ class DanmakuControlCard(CardWidget):
     def _setup_signals(self) -> None:
         """设置信号连接"""
         # 这里会在 HomePanel 中连接
-        pass
 
     @asyncSlot()
     async def _on_start_listening(self) -> None:
         """启动监听"""
         await bili_service.run()
         self.is_listening = True
-        self._update_status(True)
+        self._update_status(is_connected=True)
 
     @asyncSlot()
     async def _on_stop_listening(self) -> None:
         """停止监听"""
         await bili_service.stop()
         self.is_listening = False
-        self._update_status(False)
+        self._update_status(is_connected=False)
 
     def _update_status(self, is_connected: bool) -> None:
         """更新连接状态"""

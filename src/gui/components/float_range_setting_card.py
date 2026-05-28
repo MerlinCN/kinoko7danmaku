@@ -1,9 +1,9 @@
 """浮点数范围设置卡片"""
 
-from typing import Union
 
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import QWidget
 from qfluentwidgets import RangeSettingCard, qconfig
 from qfluentwidgets.common.config import RangeConfigItem
 from qfluentwidgets.common.icon import FluentIconBase
@@ -23,12 +23,12 @@ class FloatRangeSettingCard(RangeSettingCard):
     def __init__(
         self,
         configItem: RangeConfigItem,
-        icon: Union[str, QIcon, FluentIconBase],
+        icon: str | QIcon | FluentIconBase,
         title: str,
         content: str | None = None,
         step: float = 0.1,
         decimals: int = 1,
-        parent=None,
+        parent: QWidget | None = None,
     ) -> None:
         """初始化浮点数范围设置卡片
 
@@ -56,8 +56,7 @@ class FloatRangeSettingCard(RangeSettingCard):
         min_val, max_val = self.configItem.range
 
         # 阻止信号触发，避免在设置范围时触发 valueChanged
-        self.slider.blockSignals(True)
-
+        self.slider.blockSignals(blocked=True)
         # 将浮点数范围转换为整数范围
         self.slider.setRange(
             int(min_val * self._internal_step), int(max_val * self._internal_step)
@@ -66,8 +65,7 @@ class FloatRangeSettingCard(RangeSettingCard):
         self.slider.setValue(int(self.configItem.value * self._internal_step))
 
         # 恢复信号
-        self.slider.blockSignals(False)
-
+        self.slider.blockSignals(blocked=False)
         # 更新显示标签
         self._update_label(self.configItem.value)
 
@@ -102,7 +100,7 @@ class FloatRangeSettingCard(RangeSettingCard):
         self._update_label(float_value)
 
         # 更新滑块（使用 blockSignals 避免触发信号循环）
-        self.slider.blockSignals(True)
+        self.slider.blockSignals(blocked=True)
         internal_value = int(float_value * self._internal_step)
         self.slider.setValue(internal_value)
-        self.slider.blockSignals(False)
+        self.slider.blockSignals(blocked=False)

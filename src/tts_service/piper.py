@@ -1,4 +1,5 @@
 import httpx
+
 from loguru import logger
 
 from core.qconfig import cfg
@@ -64,7 +65,7 @@ class PiperService(TTSService):
                 "length_scale": length_scale,
                 "noise_scale": noise_scale,
                 "noise_w_scale": noise_w_scale
-            }.items() if v 
+            }.items() if v
         }
 
         async with httpx.AsyncClient() as client:

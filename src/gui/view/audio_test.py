@@ -1,8 +1,8 @@
 """音频测试界面"""
 
-from loguru import logger
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
+from loguru import logger
 from qasync import asyncSlot
 from qfluentwidgets import (
     CardWidget,
@@ -21,10 +21,9 @@ from qfluentwidgets import (
 
 from core.player import audio_player
 from core.qconfig import cfg
+from gui.components import ReadOnlyInfoCard
 from models.service import ServiceType
 from tts_service import get_tts_service
-
-from ..components import ReadOnlyInfoCard
 
 
 def _format_voice(voice_id: str) -> str:

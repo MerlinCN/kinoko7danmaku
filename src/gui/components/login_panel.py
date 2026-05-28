@@ -5,16 +5,18 @@ import hashlib
 import json
 import time
 import urllib.parse
+
 from io import BytesIO
 
 import httpx
 import qrcode as qr
 import stream_gears
-from faker import Faker
-from loguru import logger
-from PySide6.QtCore import QSize, Qt, QTimer, Signal
+
+from PySide6.QtCore import QSize, QTimer, Qt, Signal
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
+from faker import Faker
+from loguru import logger
 from qasync import asyncSlot
 from qfluentwidgets import BodyLabel, ImageLabel, PushButton
 
@@ -83,11 +85,12 @@ class LoginPanel(QWidget):
                 stream_gears.login_by_cookies(str(COOKIES_PATH), proxy=None)
                 logger.info("检测到有效的登录信息")
                 self._on_login_success()
-                return
             except RuntimeError as e:
                 logger.warning(f"登录信息过期: {e}")
                 if COOKIES_PATH.exists():
                     COOKIES_PATH.unlink()
+            else:
+                return
 
         # 获取新的二维码
         logger.info("获取二维码...")
@@ -201,8 +204,8 @@ class LoginPanel(QWidget):
             if COOKIES_PATH.exists():
                 COOKIES_PATH.unlink()
             COOKIES_PATH.parent.mkdir(parents=True, exist_ok=True)
-            with open(COOKIES_PATH, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=4, ensure_ascii=False)
+            content = json.dumps(data, indent=4, ensure_ascii=False)
+            await asyncio.to_thread(COOKIES_PATH.write_text, content, encoding="utf-8")
 
             self._on_login_success()
 

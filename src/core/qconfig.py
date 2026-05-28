@@ -1,11 +1,13 @@
 """基于 qfluentwidgets 的配置管理"""
 
 import json
+
 from enum import StrEnum
 from pathlib import Path
-from typing import override
+from typing import Any, override
 
 import httpx
+
 from qfluentwidgets import (
     BoolValidator,
     ConfigItem,
@@ -22,11 +24,11 @@ from models.service import ServiceType
 
 from .const import (
     DATA_DIR,
+    EDGE_VOICES,
     GPT_SOVITS_LANGUAGES,
     GPT_SOVITS_TEXT_SPLIT_METHODS,
     MINIMAX_ERROR_VOICE_ID,
     MINIMAX_MODELS,
-    EDGE_VOICES,
     SUPPORTED_SERVICES,
 )
 from .player import audio_player
@@ -110,7 +112,7 @@ class ConfigKey(StrEnum):
     PIPER_NOISE_W_SCALE = "NoiseWScale"
 
     # Edge 服务
-    EDGE_VOICE  = "Voice"
+    EDGE_VOICE = "Voice"
     EDGE_RATE = "Rate"
     EDGE_VOLUME = "Volume"
     EDGE_PITCH = "Pitch"
@@ -131,11 +133,11 @@ class DictValidator(ConfigValidator):
     验证配置值是否为字典类型。
     """
 
-    def validate(self, value) -> bool:
+    def validate(self, value: object) -> bool:
         """验证值是否为字典"""
         return isinstance(value, dict)
 
-    def correct(self, value):
+    def correct(self, value: object) -> dict[str, object]:
         """将值修正为字典"""
         if isinstance(value, dict):
             return value
@@ -148,11 +150,11 @@ class IntValidator(ConfigValidator):
     验证配置值是否为整数类型，不限制范围。
     """
 
-    def validate(self, value) -> bool:
+    def validate(self, value: object) -> bool:
         """验证值是否为整数"""
         return isinstance(value, int)
 
-    def correct(self, value):
+    def correct(self, value: object) -> int:
         """将值修正为整数"""
         try:
             return int(value)
@@ -166,11 +168,11 @@ class OutputDeviceValidator(OptionsValidator):
     动态获取输出设备列表，验证设备索引是否有效。
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.options = [device.index for device in audio_player.get_output_devices()]
 
     @override
-    def validate(self, value) -> bool:
+    def validate(self, value: object) -> bool:
         """验证值是否为有效的设备索引
 
         Args:
@@ -184,7 +186,7 @@ class OutputDeviceValidator(OptionsValidator):
         return value in self.options
 
     @override
-    def correct(self, value) -> int:
+    def correct(self, value: object) -> int:
         """将值修正为有效的设备索引
 
         Args:
@@ -205,7 +207,7 @@ class VoiceIdValidator(ConfigValidator):
     构造时也能拿到最新的音色列表。
     """
 
-    def __init__(self, voice_dict_config_item):
+    def __init__(self, voice_dict_config_item: Any) -> None:
         """初始化验证器
 
         Args:
@@ -219,12 +221,12 @@ class VoiceIdValidator(ConfigValidator):
         return list(self.voice_dict_config_item.value.keys())
 
     @override
-    def validate(self, value) -> bool:
+    def validate(self, value: object) -> bool:
         """验证音色 ID 是否在 voiceDict 中"""
         return value in self.voice_dict_config_item.value
 
     @override
-    def correct(self, value):
+    def correct(self, value: object) -> str:
         """修正音色 ID；voiceDict 为空时返回 ""，否则返回第一个 key"""
         if self.validate(value):
             return value
@@ -248,11 +250,9 @@ def get_voices(api_key: str) -> list[str]:
         result = response.json()
     except httpx.HTTPStatusError:
         return [MINIMAX_ERROR_VOICE_ID]
-    ret = []
     if not result or "voice_cloning" not in result:
         return [MINIMAX_ERROR_VOICE_ID]
-    for voice in result["voice_cloning"]:
-        ret.append(voice["voice_id"])
+    ret = [voice["voice_id"] for voice in result["voice_cloning"]]
     if not ret:
         return [MINIMAX_ERROR_VOICE_ID]
     return ret
@@ -413,7 +413,7 @@ class Config(QConfig):
     minimaxVoiceId = OptionsConfigItem(
         group=ConfigGroup.MINIMAX_SERVICE,
         name=ConfigKey.MINIMAX_VOICE_ID,
-        default=list(voiceDict.value.keys())[0],
+        default=next(iter(voiceDict.value.keys())),
         validator=VoiceIdValidator(voiceDict),
     )
 
@@ -559,7 +559,7 @@ class Config(QConfig):
         name=ConfigKey.PIPER_API_URL,
         default="http://localhost:5000",
     )
-    
+
     piperVoice = ConfigItem(
         group=ConfigGroup.PIPER_SERVICE,
         name=ConfigKey.PIPER_VOICE,
@@ -613,14 +613,14 @@ class Config(QConfig):
         name=ConfigKey.EDGE_RATE,
         default=1.0,
         validator=RangeValidator(0.0, 3.0),
-    )     
-    
+    )
+
     edgeVolume = RangeConfigItem(
         group=ConfigGroup.EDGE_SERVICE,
         name=ConfigKey.EDGE_VOLUME,
         default=1.0,
         validator=RangeValidator(0.0, 3.0),
-    )   
+    )
 
     edgePitch = RangeConfigItem(
         group=ConfigGroup.EDGE_SERVICE,

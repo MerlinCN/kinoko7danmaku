@@ -2,34 +2,41 @@
 # See https://pre-commit.com for more information
 
 repos:
-  # Ruff - Python linter and formatter
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.4
-    hooks:
-      # Run the linter with auto-fix
-      - id: ruff
-        name: ruff check
-        args: [--fix]
-        types_or: [python, pyi]
-
-      # Run the formatter
-      - id: ruff-format
-        name: ruff format
-        types_or: [python, pyi]
-
-  # Basic file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
-      # Check for merge conflicts
-      - id: check-merge-conflict
-
-      # Check YAML syntax
+      - id: end-of-file-fixer
+      - id: check-json
       - id: check-yaml
-        args: ['--unsafe']  # Allow custom YAML tags
-
-      # Check TOML syntax
       - id: check-toml
+
+  - repo: https://github.com/tombi-toml/tombi-pre-commit
+    rev: v0.9.25
+    hooks:
+      - id: tombi-lint
+        args: ["--offline"]
+      - id: tombi-format
+        args: ["--offline"]
+
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.15.12
+    hooks:
+      - id: ruff-check
+        args:
+          # https://github.com/astral-sh/ruff-pre-commit/issues/64
+          - '--fix'
+          - '--unsafe-fixes'
+      - id: ruff-format
+
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.11.8
+    hooks:
+      - id: uv-lock
+      - id: uv-export
+        args:
+          - '-o'
+          - 'requirements.txt'
+          - '--no-hashes'
 
 # Configuration options
 default_language_version:

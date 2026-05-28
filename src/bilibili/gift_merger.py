@@ -5,9 +5,9 @@
 
 from time import time
 
+from PySide6.QtCore import QObject, QTimer, Signal
 from loguru import logger
 from pydantic import BaseModel, Field
-from PySide6.QtCore import QObject, QTimer, Signal
 from qasync import asyncSlot
 
 from core.player import audio_player
@@ -51,7 +51,7 @@ class GiftMerger(QObject):
 
     merged_gift_received = Signal(str)
 
-    def __init__(self):
+    def __init__(self) -> None:
         """初始化礼物合并管理器
 
         创建单用户礼物组字典和定时器。
@@ -79,7 +79,7 @@ class GiftMerger(QObject):
             self.check_timer.stop()
             logger.info("礼物检查定时器已停止")
 
-    async def add_gift(self, gift_message: GiftMessage):
+    async def add_gift(self, gift_message: GiftMessage) -> None:
         """添加礼物到合并队列
 
         如果开启礼物合并，将礼物添加到单用户礼物组；否则直接播报。
@@ -92,7 +92,7 @@ class GiftMerger(QObject):
         else:
             await self._process_single_gift(gift_message)
 
-    async def _add_to_user_gift_group(self, gift_message: GiftMessage):
+    async def _add_to_user_gift_group(self, gift_message: GiftMessage) -> None:
         """添加礼物到单用户礼物组
 
         如果是新礼物组，使用初始窗口时间；
@@ -135,7 +135,7 @@ class GiftMerger(QObject):
             )
 
     @asyncSlot()
-    async def _check_gift_groups(self):
+    async def _check_gift_groups(self) -> None:
         """定时检查所有礼物组，处理满足条件的组
 
         由 QTimer 每秒触发一次，检查单用户礼物组的窗口期。
@@ -160,7 +160,7 @@ class GiftMerger(QObject):
         for user_key in user_keys_to_process:
             await self._process_user_gift_group(user_key)
 
-    async def _process_user_gift_group(self, user_key: tuple[str, str]):
+    async def _process_user_gift_group(self, user_key: tuple[str, str]) -> None:
         """处理单用户礼物组，合并单个用户的礼物并播报
 
         从字典中取出单用户礼物组，格式化文本后发送信号到 GUI 并进行 TTS 播报。
@@ -186,7 +186,7 @@ class GiftMerger(QObject):
         )
         await self._process_single_gift(merged_gift)
 
-    async def _process_single_gift(self, gift_message: GiftMessage):
+    async def _process_single_gift(self, gift_message: GiftMessage) -> None:
         """处理单个礼物（不合并）
 
         当礼物合并功能关闭时调用，直接格式化文本并播报，不进行合并。
@@ -208,7 +208,7 @@ class GiftMerger(QObject):
         audio = await tts_service.text_to_speech(display_text)
         await audio_player.play_bytes_async(audio)
 
-    async def clear_all(self):
+    async def clear_all(self) -> None:
         """清空所有礼物组
 
         清除字典中所有未处理的单用户礼物组。

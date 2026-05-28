@@ -5,7 +5,7 @@ from typing import Any
 class TTSService(ABC):
     """TTS适配器基类，定义统一的接口规范"""
 
-    def __init__(self, api_url: str):
+    def __init__(self, api_url: str) -> None:
         self.api_url = api_url
 
     @abstractmethod
@@ -20,4 +20,3 @@ class TTSService(ABC):
         Returns:
             bytes: 音频数据（WAV格式）
         """
-        pass

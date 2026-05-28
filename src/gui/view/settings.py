@@ -23,20 +23,19 @@ from qfluentwidgets import (
 )
 
 from core.const import (
+    EDGE_VOICES,
     GPT_SOVITS_LANGUAGES,
     GPT_SOVITS_TEXT_SPLIT_METHODS,
     MINIMAX_ERROR_VOICE_ID,
     MINIMAX_MODELS,
-    EDGE_VOICES,
     SUPPORTED_SERVICES,
 )
 from core.player import audio_player
 from core.qconfig import cfg, get_voices
-
-from ..components import FloatRangeSettingCard, IntSettingCard, StrSettingCard
-from ..components.alias_dict_card import AliasDictCard
-from ..components.dict_edit_card import DictEditCard
-from ..icons import CustomIcon
+from gui.components import FloatRangeSettingCard, IntSettingCard, StrSettingCard
+from gui.components.alias_dict_card import AliasDictCard
+from gui.components.dict_edit_card import DictEditCard
+from gui.icons import CustomIcon
 
 
 class SettingsInterface(ScrollArea):
@@ -728,7 +727,7 @@ class SettingsInterface(ScrollArea):
         self.gptSovitsGroup.addSettingCard(self.gptSovitsSampleStepsCard)
         self.gptSovitsGroup.addSettingCard(self.gptSovitsSuperSamplingCard)
         self.gptSovitsGroup.addSettingCard(self.gptSovitsPauseSecondsCard)
-        
+
         # 添加 Piper 服务设置卡片
         self.piperGroup.addSettingCard(self.piperApiUrlCard)
         self.piperGroup.addSettingCard(self.piperVoiceCard)
@@ -737,7 +736,7 @@ class SettingsInterface(ScrollArea):
         self.piperGroup.addSettingCard(self.piperLengthScaleCard)
         self.piperGroup.addSettingCard(self.piperNoiseScaleCard)
         self.piperGroup.addSettingCard(self.piperNoiseWScaleCard)
-        
+
         # 添加 Edge 服务设置卡片
         self.edgeGroup.addSettingCard(self.edgeVoiceCard)
         self.edgeGroup.addSettingCard(self.edgeRateCard)
