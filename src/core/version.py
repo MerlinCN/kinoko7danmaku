@@ -18,17 +18,17 @@ def get_version() -> str:
     """
     try:
         base_path = Path(sys._MEIPASS) if is_packaged() else Path.cwd()  # type: ignore
-        version_file = base_path / "resource" / "version.txt"
+        version_file = base_path / 'resource' / 'version.txt'
 
         if version_file.exists():
-            version = version_file.read_text(encoding="utf-8").strip()
-            logger.info(f"当前版本: {version}")
+            version = version_file.read_text(encoding='utf-8').strip()
+            logger.info(f'当前版本: {version}')
         else:
-            logger.warning(f"打包环境中找不到 version.txt: {version_file}")
-            version = "0.1.0"
+            logger.warning(f'打包环境中找不到 version.txt: {version_file}')
+            version = '0.1.0'
     except Exception as e:
-        logger.exception(f"读取版本号失败: {e}")
-        return "0.1.0"
+        logger.exception(f'读取版本号失败: {e}')
+        return '0.1.0'
     else:
         return version
 
@@ -39,7 +39,7 @@ def is_packaged() -> bool:
     Returns:
         True 表示打包环境，False 表示开发环境
     """
-    return getattr(sys, "frozen", False)
+    return getattr(sys, 'frozen', False)
 
 
 # 导出版本号

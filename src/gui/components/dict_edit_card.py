@@ -29,12 +29,12 @@ class DictItemWidget(QWidget):
 
     def __init__(
         self,
-        key: str = "",
-        value: str = "",
-        key_label: str = "键",
-        value_label: str = "值",
-        key_placeholder: str = "输入键",
-        value_placeholder: str = "输入值",
+        key: str = '',
+        value: str = '',
+        key_label: str = '键',
+        value_label: str = '值',
+        key_placeholder: str = '输入键',
+        value_placeholder: str = '输入值',
         parent: QWidget | None = None,
     ) -> None:
         """初始化字典项组件
@@ -49,9 +49,7 @@ class DictItemWidget(QWidget):
             parent: 父组件
         """
         super().__init__(parent=parent)
-        self._init_ui(
-            key, value, key_label, value_label, key_placeholder, value_placeholder
-        )
+        self._init_ui(key, value, key_label, value_label, key_placeholder, value_placeholder)
 
     def _init_ui(
         self,
@@ -78,7 +76,7 @@ class DictItemWidget(QWidget):
         layout.setSpacing(12)
 
         # 键标签
-        self.key_label = BodyLabel(f"{key_label}：", self)
+        self.key_label = BodyLabel(f'{key_label}：', self)
         layout.addWidget(self.key_label)
 
         # 键输入框
@@ -92,7 +90,7 @@ class DictItemWidget(QWidget):
         layout.addSpacing(16)
 
         # 值标签
-        self.value_label = BodyLabel(f"{value_label}：", self)
+        self.value_label = BodyLabel(f'{value_label}：', self)
         layout.addWidget(self.value_label)
 
         # 值输入框
@@ -149,12 +147,13 @@ class DictEditCard(ExpandGroupSettingCard):
     def __init__(
         self,
         config_item: ConfigItem,
-        icon: str | QIcon | FluentIconBase, title: str,
+        icon: str | QIcon | FluentIconBase,
+        title: str,
         content: str,
-        key_label: str = "键",
-        value_label: str = "值",
-        key_placeholder: str = "输入键",
-        value_placeholder: str = "输入值",
+        key_label: str = '键',
+        value_label: str = '值',
+        key_placeholder: str = '输入键',
+        value_placeholder: str = '输入值',
         parent: QWidget | None = None,
     ) -> None:
         """初始化字典编辑卡片
@@ -198,7 +197,7 @@ class DictEditCard(ExpandGroupSettingCard):
                 self._add_dict_item(key, value)
         else:
             # 如果字典为空，添加一个空项
-            self._add_dict_item("", "")
+            self._add_dict_item('', '')
 
         # 更新按钮状态
         self._update_button_states()
@@ -230,7 +229,7 @@ class DictEditCard(ExpandGroupSettingCard):
     def _on_add_item(self) -> None:
         """添加按钮点击事件"""
         # 添加一个新的空项
-        self._add_dict_item("", "")
+        self._add_dict_item('', '')
         # 更新按钮状态
         self._update_button_states()
         # 保存到配置
@@ -249,7 +248,7 @@ class DictEditCard(ExpandGroupSettingCard):
 
             # 如果删除后没有项了，添加一个空项
             if not self.dict_items:
-                self._add_dict_item("", "")
+                self._add_dict_item('', '')
 
             # 更新按钮状态
             self._update_button_states()

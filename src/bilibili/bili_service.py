@@ -47,7 +47,7 @@ class BiliService(QObject):
         if not self.run_task or not self.room_obj:
             return
         if self.room_obj.get_status() == live.LiveDanmaku.STATUS_CLOSED:
-            logger.warning("检测到直播间连接已关闭，正在尝试重新连接...")
+            logger.warning('检测到直播间连接已关闭，正在尝试重新连接...')
             self.run_task.cancel()
             self.room_obj = live.LiveDanmaku(
                 cfg.roomId.value,
@@ -55,7 +55,7 @@ class BiliService(QObject):
             )
             self.add_event_listener()
             self.run_task = asyncio.create_task(self.room_obj.connect())
-            logger.info("已重新创建直播间连接任务")
+            logger.info('已重新创建直播间连接任务')
 
     def add_event_listener(self) -> None:
         @self.room_obj.on(EventType.DANMU_MSG)
@@ -78,12 +78,9 @@ class BiliService(QObject):
         @self.room_obj.on(EventType.SEND_GIFT)
         async def on_send_gift(event: dict[str, object]) -> None:
             gift_message = GiftMessage.parse(event)
-            if not cfg.freeGiftOn.value and gift_message.coin_type == "silver":
+            if not cfg.freeGiftOn.value and gift_message.coin_type == 'silver':
                 return
-            if (
-                gift_message.gift_price / 1000 * gift_message.gift_num
-                < cfg.giftThreshold.value
-            ):
+            if gift_message.gift_price / 1000 * gift_message.gift_num < cfg.giftThreshold.value:
                 return
             logger.info(gift_message)
 
@@ -129,22 +126,18 @@ class BiliService(QObject):
             await audio_player.play_bytes_async(audio)
 
     def load_credential(self) -> None:
-        with open(COOKIES_PATH, encoding="utf-8") as f:
+        with open(COOKIES_PATH, encoding='utf-8') as f:
             cookies = json.load(f)
 
-        for cookie in cookies["cookie_info"]["cookies"]:
-            if cookie["name"] == "bili_jct":
-                bili_jct = cookie["value"]
-            if cookie["name"] == "SESSDATA":
-                sessdata = cookie["value"]
-            if cookie["name"] == "DedeUserID":
-                dedeuserid = cookie["value"]
-        assert bili_jct and sessdata and dedeuserid, (
-            "cookies.json 中没有 bili_jct, SESSDATA, DedeUserID"
-        )
-        self.credential = Credential(
-            bili_jct=bili_jct, sessdata=sessdata, dedeuserid=dedeuserid
-        )
+        for cookie in cookies['cookie_info']['cookies']:
+            if cookie['name'] == 'bili_jct':
+                bili_jct = cookie['value']
+            if cookie['name'] == 'SESSDATA':
+                sessdata = cookie['value']
+            if cookie['name'] == 'DedeUserID':
+                dedeuserid = cookie['value']
+        assert bili_jct and sessdata and dedeuserid, 'cookies.json 中没有 bili_jct, SESSDATA, DedeUserID'
+        self.credential = Credential(bili_jct=bili_jct, sessdata=sessdata, dedeuserid=dedeuserid)
 
     async def run(self) -> None:
         self.load_credential()
@@ -161,7 +154,7 @@ class BiliService(QObject):
             self.status_check_timer.timeout.connect(self._check_room_status)
             self.status_check_timer.setInterval(1000)  # 每秒检查一次
             self.status_check_timer.start()
-            logger.info("状态检查定时器已启动")
+            logger.info('状态检查定时器已启动')
 
         # 启动礼物合并定时器（必须在 Qt 事件循环启动后）
         gift_merger.start()
@@ -174,7 +167,7 @@ class BiliService(QObject):
             self.status_check_timer.stop()
         gift_merger.stop()
         await gift_merger.clear_all()
-        logger.info("停止直播间监听")
+        logger.info('停止直播间监听')
 
     def is_logged_in(self) -> bool:
         return self.credential is not None

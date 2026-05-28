@@ -3,33 +3,33 @@ name = "kinoko7danmaku"
 version = "3.7.2"
 requires-python = ">=3.12"
 dependencies = [
-    "aiohttp>=3.12.14",
-    "bilibili-api-python>=17.3.0",
-    "edge-tts>=7.2.8",
-    "faker>=37.12.0",
-    "httpx[socks]>=0.28.1",
-    "loguru>=0.7.3",
-    "miniaudio>=1.71",
-    "mutagen>=1.47.0",
-    "pyaudio>=0.2.14",
-    "pydantic>=2.11.7",
-    "pydantic-settings>=2.11.0",
-    "pyside6>=6.10.0",
-    "pyside6-fluent-widgets[full]>=1.9.1",
-    "qasync>=0.28.0",
-    "qrcode>=8.2",
-    "requests>=2.34.2",
-    "sounddevice>=0.5.2",
-    "stream-gears>=0.2.4",
-    "tenacity>=9.1.2",
+  "aiohttp>=3.12.14",
+  "bilibili-api-python>=17.3.0",
+  "edge-tts>=7.2.8",
+  "faker>=37.12.0",
+  "httpx[socks]>=0.28.1",
+  "loguru>=0.7.3",
+  "miniaudio>=1.71",
+  "mutagen>=1.47.0",
+  "pyaudio>=0.2.14",
+  "pydantic>=2.11.7",
+  "pydantic-settings>=2.11.0",
+  "pyside6>=6.10.0",
+  "pyside6-fluent-widgets[full]>=1.9.1",
+  "qasync>=0.28.0",
+  "qrcode>=8.2",
+  "requests>=2.34.2",
+  "sounddevice>=0.5.2",
+  "stream-gears>=0.2.4",
+  "tenacity>=9.1.2",
 ]
 
 [dependency-groups]
 dev = [
-    "pre-commit>=4.3.0",
-    "pyinstaller>=6.16.0",
-    "pytest>=8.4.2",
-    "pytest-asyncio>=1.2.0",
+  "pre-commit>=4.3.0",
+  "pyinstaller>=6.16.0",
+  "pytest>=8.4.2",
+  "pytest-asyncio>=1.2.0",
 ]
 
 [tool.ruff]
@@ -39,9 +39,6 @@ fix = true
 unsafe-fixes = true
 show-fixes = true
 required-version = ">=0.15.0"
-
-[tool.ruff.lint.mccabe]
-max-complexity = 15
 
 [tool.ruff.lint]
 select = [
@@ -187,6 +184,9 @@ ignore = [
   "TRY301",
   "TRY400",
 ]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 15
 
 [tool.ruff.lint.flake8-pytest-style]
 parametrize-names-type = "list"

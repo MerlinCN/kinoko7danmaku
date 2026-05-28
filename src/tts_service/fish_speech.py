@@ -19,7 +19,7 @@ class FishSpeechService(TTSService):
         text: str,
         chunk_length: int = 200,
         seed: int = -1,
-        use_memory_cache: str = "off",
+        use_memory_cache: str = 'off',
         normalize: bool = True,
         streaming: bool = False,
         max_new_tokens: int = 1024,
@@ -56,22 +56,22 @@ class FishSpeechService(TTSService):
 
         # 准备请求数据
         data = {
-            "text": format_text,
-            "chunk_length": chunk_length,
-            "format": "wav",
-            "seed": seed,
-            "use_memory_cache": use_memory_cache,
-            "normalize": normalize,
-            "streaming": streaming,
-            "max_new_tokens": max_new_tokens,
-            "top_p": top_p,
-            "repetition_penalty": repetition_penalty,
-            "temperature": temperature,
+            'text': format_text,
+            'chunk_length': chunk_length,
+            'format': 'wav',
+            'seed': seed,
+            'use_memory_cache': use_memory_cache,
+            'normalize': normalize,
+            'streaming': streaming,
+            'max_new_tokens': max_new_tokens,
+            'top_p': top_p,
+            'repetition_penalty': repetition_penalty,
+            'temperature': temperature,
         }
 
         async with httpx.AsyncClient() as client:
             response = await client.post(self.api_url, json=data, timeout=300)
             response.raise_for_status()
-            logger.info(f"Fish Speech TTS 成功: {format_text}")
+            logger.info(f'Fish Speech TTS 成功: {format_text}')
 
         return response.content

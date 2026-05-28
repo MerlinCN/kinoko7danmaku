@@ -57,21 +57,23 @@ class PiperService(TTSService):
 
         # 准备请求数据, 过滤值为 None 或为空 的参数
         data = {
-            k: v for k, v in {
-                "text": text,
-                "voice": voice,
-                "speaker": speaker,
-                "speaker_id": speaker_id,
-                "length_scale": length_scale,
-                "noise_scale": noise_scale,
-                "noise_w_scale": noise_w_scale
-            }.items() if v
+            k: v
+            for k, v in {
+                'text': text,
+                'voice': voice,
+                'speaker': speaker,
+                'speaker_id': speaker_id,
+                'length_scale': length_scale,
+                'noise_scale': noise_scale,
+                'noise_w_scale': noise_w_scale,
+            }.items()
+            if v
         }
 
         async with httpx.AsyncClient() as client:
-            logger.debug(f"Piper 请求 data 为: {data}")
+            logger.debug(f'Piper 请求 data 为: {data}')
             response = await client.post(self.api_url, json=data, timeout=300)
             response.raise_for_status()
-            logger.info(f"Piper TTS 成功: {text}")
+            logger.info(f'Piper TTS 成功: {text}')
 
         return response.content

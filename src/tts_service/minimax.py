@@ -31,7 +31,7 @@ class MinimaxService(TTSService):
 
     def __init__(self) -> None:
         """初始化Minimax适配器"""
-        self.api_url = "https://api.minimax.io/v1/t2a_v2"
+        self.api_url = 'https://api.minimax.io/v1/t2a_v2'
         self._client: httpx.AsyncClient | None = None
 
     def _get_client(self) -> httpx.AsyncClient:
@@ -68,7 +68,7 @@ class MinimaxService(TTSService):
         if not response.content:
             return {}
         result = response.json()
-        base_resp_data = result.get("base_resp")
+        base_resp_data = result.get('base_resp')
         if base_resp_data:
             base_resp = BaseResp.model_validate(base_resp_data)
             if base_resp.status_code != 0:
@@ -123,12 +123,12 @@ class MinimaxService(TTSService):
         if pitch is None:
             pitch = cfg.minimaxPitch.value
         if not api_key:
-            raise ValueError("API Key is required")
+            raise ValueError('API Key is required')
         api_key = api_key.strip()  # 防呆设计，真的有人会加上空格或者回车
         alias_texts = []
         if cfg.aliasDict.value:
             for k, v in cfg.aliasDict.value.items():
-                alias_texts.append(f"{k}/{v}")
+                alias_texts.append(f'{k}/{v}')
 
         request = MinimaxTTSRequest(
             model=model,
@@ -139,36 +139,32 @@ class MinimaxService(TTSService):
                 vol=vol,
                 pitch=pitch,
             ),
-            pronunciation_dict={"tone": alias_texts},
+            pronunciation_dict={'tone': alias_texts},
             audio_setting=AudioSetting(
-                format="wav",  # 使用 WAV 格式，避免需要 ffmpeg 解码
+                format='wav',  # 使用 WAV 格式，避免需要 ffmpeg 解码
                 sample_rate=32000,
                 bitrate=128000,
                 channel=1,
             ),
         )
         headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json',
         }
 
-        logger.debug(f"Minimax TTS 请求开始: {text[:50]}...")
+        logger.debug(f'Minimax TTS 请求开始: {text[:50]}...')
 
         client = self._get_client()
-        logger.debug(f"发送 POST 请求到: {self.api_url}")
+        logger.debug(f'发送 POST 请求到: {self.api_url}')
 
-        response = await client.post(
-            self.api_url, json=request.model_dump(), headers=headers
-        )
-        logger.debug(f"收到响应，状态码: {response.status_code}")
+        response = await client.post(self.api_url, json=request.model_dump(), headers=headers)
+        logger.debug(f'收到响应，状态码: {response.status_code}')
 
         result = self._parse_response(response)
         tts_resp = MinimaxTTSResponse.model_validate(result)
 
         audio_bytes = bytes.fromhex(tts_resp.data.audio)
-        logger.info(
-            f"Minimax TTS 成功: {text[:50]}... (音频大小: {len(audio_bytes)} 字节)"
-        )
+        logger.info(f'Minimax TTS 成功: {text[:50]}... (音频大小: {len(audio_bytes)} 字节)')
 
         return audio_bytes
 
@@ -192,7 +188,7 @@ class MinimaxService(TTSService):
         if api_key is None:
             api_key = cfg.minimaxApiKey.value
         if not api_key:
-            raise ValueError("MiniMax API Key 未配置")
+            raise ValueError('MiniMax API Key 未配置')
         return await asyncio.to_thread(self._fetch_voice_list_sync, api_key.strip())
 
     def _fetch_voice_list_sync(self, api_key: str) -> VoiceListResponse:
@@ -204,12 +200,12 @@ class MinimaxService(TTSService):
         Returns:
             VoiceListResponse: 音色列表响应
         """
-        api_url = "https://api.minimax.io/v1/get_voice"
+        api_url = 'https://api.minimax.io/v1/get_voice'
         headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json',
         }
-        request_body = {"voice_type": "voice_cloning"}
+        request_body = {'voice_type': 'voice_cloning'}
         response = httpx.post(api_url, json=request_body, headers=headers, timeout=60.0)
         result = self._parse_response(response)
         return VoiceListResponse.model_validate(result)
@@ -238,38 +234,34 @@ class MinimaxService(TTSService):
         if api_key is None:
             api_key = cfg.minimaxApiKey.value
         if not api_key:
-            raise ValueError("MiniMax API Key 未配置")
+            raise ValueError('MiniMax API Key 未配置')
 
         api_key = api_key.strip()
-        api_url = "https://api.minimax.io/v1/files/upload"
+        api_url = 'https://api.minimax.io/v1/files/upload'
 
         headers = {
-            "Authorization": f"Bearer {api_key}",
+            'Authorization': f'Bearer {api_key}',
         }
 
         # 验证文件存在
 
         file = Path(file_path)
         if not await asyncio.to_thread(file.exists):
-            raise ValueError(f"文件不存在: {file_path}")
+            raise ValueError(f'文件不存在: {file_path}')
 
         # 使用 multipart/form-data 上传文件：文件用 files，普通字段用 data
-        f = await asyncio.to_thread(file.open, "rb")
+        f = await asyncio.to_thread(file.open, 'rb')
         try:
-            files = {"file": (file.name, f, "audio/*")}
-            data = {"purpose": purpose.value}
+            files = {'file': (file.name, f, 'audio/*')}
+            data = {'purpose': purpose.value}
             client = self._get_client()
-            response = await client.post(
-                api_url, files=files, data=data, headers=headers
-            )
+            response = await client.post(api_url, files=files, data=data, headers=headers)
         finally:
             f.close()
         result = self._parse_response(response)
         return FileUploadResponse.model_validate(result)
 
-    async def create_voice_clone(
-        self, request: VoiceCloneRequest, api_key: str | None = None
-    ) -> VoiceCloneResponse:
+    async def create_voice_clone(self, request: VoiceCloneRequest, api_key: str | None = None) -> VoiceCloneResponse:
         """创建音色克隆
 
         Args:
@@ -287,26 +279,22 @@ class MinimaxService(TTSService):
         if api_key is None:
             api_key = cfg.minimaxApiKey.value
         if not api_key:
-            raise ValueError("MiniMax API Key 未配置")
+            raise ValueError('MiniMax API Key 未配置')
 
         api_key = api_key.strip()
-        api_url = "https://api.minimax.io/v1/voice_clone"
+        api_url = 'https://api.minimax.io/v1/voice_clone'
 
         headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json',
         }
 
         client = self._get_client()
-        response = await client.post(
-            api_url, json=request.model_dump(exclude_none=True), headers=headers
-        )
+        response = await client.post(api_url, json=request.model_dump(exclude_none=True), headers=headers)
         result = self._parse_response(response)
         return VoiceCloneResponse.model_validate(result)
 
-    async def delete_voice_clone(
-        self, voice_id: str, api_key: str | None = None
-    ) -> bool:
+    async def delete_voice_clone(self, voice_id: str, api_key: str | None = None) -> bool:
         """删除音色克隆
 
         Args:
@@ -324,13 +312,13 @@ class MinimaxService(TTSService):
         if api_key is None:
             api_key = cfg.minimaxApiKey.value
         if not api_key:
-            raise ValueError("MiniMax API Key 未配置")
+            raise ValueError('MiniMax API Key 未配置')
 
         api_key = api_key.strip()
-        api_url = f"https://api.minimax.io/v1/voice_clone/{voice_id}"
+        api_url = f'https://api.minimax.io/v1/voice_clone/{voice_id}'
 
         headers = {
-            "Authorization": f"Bearer {api_key}",
+            'Authorization': f'Bearer {api_key}',
         }
 
         client = self._get_client()

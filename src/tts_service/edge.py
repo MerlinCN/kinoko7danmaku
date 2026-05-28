@@ -44,32 +44,21 @@ class EdgeService(TTSService):
         """
         # 获取参数，并格式化参数为字符串
         voice = cfg.edgeVoice.value
-        rate = f"{int((cfg.edgeRate.value - 1.0) * 100):+d}%"
-        volume = f"{int((cfg.edgeVolume.value - 1.0) * 100):+d}%"
-        pitch = f"{cfg.edgePitch.value:+d}Hz"
+        rate = f'{int((cfg.edgeRate.value - 1.0) * 100):+d}%'
+        volume = f'{int((cfg.edgeVolume.value - 1.0) * 100):+d}%'
+        pitch = f'{cfg.edgePitch.value:+d}Hz'
 
         # 发起请求
         audio_data = BytesIO()
-        communicate = edge_tts.Communicate(
-                text=text,
-                voice=voice,
-                rate=rate,
-                volume=volume,
-                pitch=pitch)
+        communicate = edge_tts.Communicate(text=text, voice=voice, rate=rate, volume=volume, pitch=pitch)
 
         async for chunk in communicate.stream():
-            if chunk["type"] == "audio":
-                audio_data.write(chunk["data"])
+            if chunk['type'] == 'audio':
+                audio_data.write(chunk['data'])
 
-        data = {
-            "text": text,
-            "voice": voice,
-            "rate": rate,
-            "volume": volume,
-            "pitch": pitch
-        }
+        data = {'text': text, 'voice': voice, 'rate': rate, 'volume': volume, 'pitch': pitch}
 
-        logger.debug(f"Edge 请求 data 为: {data}")
-        logger.info(f"Edge TTS 成功: {text}")
+        logger.debug(f'Edge 请求 data 为: {data}')
+        logger.info(f'Edge TTS 成功: {text}')
 
         return audio_data.getvalue()

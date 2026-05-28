@@ -37,94 +37,94 @@ from .player import audio_player
 class ConfigGroup(StrEnum):
     """配置分组名称"""
 
-    BILI_SERVICE = "BiliService"
-    TTS_SERVICE = "TTSService"
-    MINIMAX_SERVICE = "MinimaxService"
-    FISH_SPEECH_SERVICE = "FishSpeechService"
-    GPT_SOVITS_SERVICE = "GptSovitsService"
-    PIPER_SERVICE = "PiperService"
-    EDGE_SERVICE = "EdgeService"
-    PLAYER = "Player"
+    BILI_SERVICE = 'BiliService'
+    TTS_SERVICE = 'TTSService'
+    MINIMAX_SERVICE = 'MinimaxService'
+    FISH_SPEECH_SERVICE = 'FishSpeechService'
+    GPT_SOVITS_SERVICE = 'GptSovitsService'
+    PIPER_SERVICE = 'PiperService'
+    EDGE_SERVICE = 'EdgeService'
+    PLAYER = 'Player'
 
 
 class ConfigKey(StrEnum):
     """配置项名称"""
 
     # B站直播服务
-    ROOM_ID = "RoomId"
-    GIFT_THRESHOLD = "GiftThreshold"
-    FREE_GIFT_ON = "FreeGiftOn"
-    NORMAL_DANMAKU_ON = "NormalDanmakuOn"
-    GUARD_ON = "GuardOn"
-    SUPER_CHAT_ON = "SuperChatOn"
-    SUPER_CHAT_THRESHOLD = "SuperChatThreshold"
-    WELCOME_ON = "WelcomeOn"
-    DEBUG = "Debug"
-    GIFT_ON_TEXT = "GiftOnText"
-    DANMAKU_ON_TEXT = "DanmakuOnText"
-    GUARD_ON_TEXT = "GuardOnText"
-    SUPER_CHAT_ON_TEXT = "SuperChatOnText"
-    GIFT_MERGE_ON = "GiftMergeOn"
-    GIFT_MERGE_WINDOW = "GiftMergeWindow"
-    GIFT_MERGE_WINDOW_INITIAL = "GiftMergeWindowInitial"
-    GIFT_MERGE_WINDOW_INCREMENT = "GiftMergeWindowIncrement"
+    ROOM_ID = 'RoomId'
+    GIFT_THRESHOLD = 'GiftThreshold'
+    FREE_GIFT_ON = 'FreeGiftOn'
+    NORMAL_DANMAKU_ON = 'NormalDanmakuOn'
+    GUARD_ON = 'GuardOn'
+    SUPER_CHAT_ON = 'SuperChatOn'
+    SUPER_CHAT_THRESHOLD = 'SuperChatThreshold'
+    WELCOME_ON = 'WelcomeOn'
+    DEBUG = 'Debug'
+    GIFT_ON_TEXT = 'GiftOnText'
+    DANMAKU_ON_TEXT = 'DanmakuOnText'
+    GUARD_ON_TEXT = 'GuardOnText'
+    SUPER_CHAT_ON_TEXT = 'SuperChatOnText'
+    GIFT_MERGE_ON = 'GiftMergeOn'
+    GIFT_MERGE_WINDOW = 'GiftMergeWindow'
+    GIFT_MERGE_WINDOW_INITIAL = 'GiftMergeWindowInitial'
+    GIFT_MERGE_WINDOW_INCREMENT = 'GiftMergeWindowIncrement'
 
     # TTS 服务通用
-    ACTIVE_TTS = "ActiveTTS"
+    ACTIVE_TTS = 'ActiveTTS'
 
     # Minimax 服务
-    MINIMAX_API_URL = "ApiUrl"
-    MINIMAX_API_KEY = "ApiKey"
-    MINIMAX_MODEL = "Model"
-    MINIMAX_VOICE_ID = "VoiceId"
-    MINIMAX_SPEED = "Speed"
-    MINIMAX_VOL = "Vol"
-    MINIMAX_PITCH = "Pitch"
+    MINIMAX_API_URL = 'ApiUrl'
+    MINIMAX_API_KEY = 'ApiKey'
+    MINIMAX_MODEL = 'Model'
+    MINIMAX_VOICE_ID = 'VoiceId'
+    MINIMAX_SPEED = 'Speed'
+    MINIMAX_VOL = 'Vol'
+    MINIMAX_PITCH = 'Pitch'
 
     # Fish Speech 服务
-    FISH_SPEECH_API_URL = "ApiUrl"
+    FISH_SPEECH_API_URL = 'ApiUrl'
 
     # GPT-SoVITS 服务
-    GPT_SOVITS_API_URL = "ApiUrl"
-    GPT_SOVITS_SOVITS_MODEL = "SovitsModel"
-    GPT_SOVITS_GPT_MODEL = "GptModel"
-    GPT_SOVITS_TEXT_LANG = "TextLang"
-    GPT_SOVITS_REF_AUDIO_PATH = "RefAudioPath"
-    GPT_SOVITS_REF_TEXT = "RefText"
-    GPT_SOVITS_REF_TEXT_LANG = "RefTextLang"
-    GPT_SOVITS_TOP_K = "TopK"
-    GPT_SOVITS_TOP_P = "TopP"
-    GPT_SOVITS_TEMPERATURE = "Temperature"
-    GPT_SOVITS_TEXT_SPLIT_METHOD = "TextSplitMethod"
-    GPT_SOVITS_SPEED_FACTOR = "SpeedFactor"
-    GPT_SOVITS_REF_TEXT_FREE = "RefTextFree"
-    GPT_SOVITS_SAMPLE_STEPS = "SampleSteps"
-    GPT_SOVITS_SUPER_SAMPLING = "SuperSampling"
-    GPT_SOVITS_PAUSE_SECONDS = "PauseSeconds"
+    GPT_SOVITS_API_URL = 'ApiUrl'
+    GPT_SOVITS_SOVITS_MODEL = 'SovitsModel'
+    GPT_SOVITS_GPT_MODEL = 'GptModel'
+    GPT_SOVITS_TEXT_LANG = 'TextLang'
+    GPT_SOVITS_REF_AUDIO_PATH = 'RefAudioPath'
+    GPT_SOVITS_REF_TEXT = 'RefText'
+    GPT_SOVITS_REF_TEXT_LANG = 'RefTextLang'
+    GPT_SOVITS_TOP_K = 'TopK'
+    GPT_SOVITS_TOP_P = 'TopP'
+    GPT_SOVITS_TEMPERATURE = 'Temperature'
+    GPT_SOVITS_TEXT_SPLIT_METHOD = 'TextSplitMethod'
+    GPT_SOVITS_SPEED_FACTOR = 'SpeedFactor'
+    GPT_SOVITS_REF_TEXT_FREE = 'RefTextFree'
+    GPT_SOVITS_SAMPLE_STEPS = 'SampleSteps'
+    GPT_SOVITS_SUPER_SAMPLING = 'SuperSampling'
+    GPT_SOVITS_PAUSE_SECONDS = 'PauseSeconds'
 
     # Piper 服务
-    PIPER_API_URL = "ApiUrl"
-    PIPER_VOICE = "Voice"
-    PIPER_SPEAKER = "Speaker"
-    PIPER_SPEAKER_ID = "SpeakerId"
-    PIPER_LENGTH_SCALE = "LengthScale"
-    PIPER_NOISE_SCALE = "NoiseScale"
-    PIPER_NOISE_W_SCALE = "NoiseWScale"
+    PIPER_API_URL = 'ApiUrl'
+    PIPER_VOICE = 'Voice'
+    PIPER_SPEAKER = 'Speaker'
+    PIPER_SPEAKER_ID = 'SpeakerId'
+    PIPER_LENGTH_SCALE = 'LengthScale'
+    PIPER_NOISE_SCALE = 'NoiseScale'
+    PIPER_NOISE_W_SCALE = 'NoiseWScale'
 
     # Edge 服务
-    EDGE_VOICE = "Voice"
-    EDGE_RATE = "Rate"
-    EDGE_VOLUME = "Volume"
-    EDGE_PITCH = "Pitch"
+    EDGE_VOICE = 'Voice'
+    EDGE_RATE = 'Rate'
+    EDGE_VOLUME = 'Volume'
+    EDGE_PITCH = 'Pitch'
 
     # 播放器
-    PLAYER_DEVICE = "PlayerDevice"
+    PLAYER_DEVICE = 'PlayerDevice'
 
     # 别名字典
-    ALIAS_DICT = "AliasDict"
+    ALIAS_DICT = 'AliasDict'
 
     # 音色字典
-    VOICE_DICT = "VoiceDict"
+    VOICE_DICT = 'VoiceDict'
 
 
 class DictValidator(ConfigValidator):
@@ -231,18 +231,18 @@ class VoiceIdValidator(ConfigValidator):
         if self.validate(value):
             return value
         keys = list(self.voice_dict_config_item.value.keys())
-        return keys[0] if keys else ""
+        return keys[0] if keys else ''
 
 
 def get_voices(api_key: str) -> list[str]:
     """获取Minimax支持的音色列表"""
-    api_url = "https://api.minimax.io/v1/get_voice"
+    api_url = 'https://api.minimax.io/v1/get_voice'
     headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
+        'Authorization': f'Bearer {api_key}',
+        'Content-Type': 'application/json',
     }
     params = {
-        "voice_type": "all",
+        'voice_type': 'all',
     }
     try:
         response = httpx.post(api_url, headers=headers, json=params, verify=False)
@@ -250,9 +250,9 @@ def get_voices(api_key: str) -> list[str]:
         result = response.json()
     except httpx.HTTPStatusError:
         return [MINIMAX_ERROR_VOICE_ID]
-    if not result or "voice_cloning" not in result:
+    if not result or 'voice_cloning' not in result:
         return [MINIMAX_ERROR_VOICE_ID]
-    ret = [voice["voice_id"] for voice in result["voice_cloning"]]
+    ret = [voice['voice_id'] for voice in result['voice_cloning']]
     if not ret:
         return [MINIMAX_ERROR_VOICE_ID]
     return ret
@@ -348,7 +348,7 @@ class Config(QConfig):
     aliasDict = ConfigItem(
         group=ConfigGroup.BILI_SERVICE,
         name=ConfigKey.ALIAS_DICT,
-        default={"Merlin": "么林"},
+        default={'Merlin': '么林'},
         validator=DictValidator(),
     )
 
@@ -393,13 +393,13 @@ class Config(QConfig):
     minimaxApiKey = ConfigItem(
         group=ConfigGroup.MINIMAX_SERVICE,
         name=ConfigKey.MINIMAX_API_KEY,
-        default="",
+        default='',
     )
 
     voiceDict = ConfigItem(
         group=ConfigGroup.MINIMAX_SERVICE,
         name=ConfigKey.VOICE_DICT,
-        default={"kinoko7_v1": "kinoko7_v1"},
+        default={'kinoko7_v1': 'kinoko7_v1'},
         validator=DictValidator(),
     )
 
@@ -442,51 +442,51 @@ class Config(QConfig):
     fishSpeechApiUrl = ConfigItem(
         group=ConfigGroup.FISH_SPEECH_SERVICE,
         name=ConfigKey.FISH_SPEECH_API_URL,
-        default="http://localhost:8080/v1/tts",
+        default='http://localhost:8080/v1/tts',
     )
 
     # GPT-SoVITS TTS 服务配置
     gptSovitsApiUrl = ConfigItem(
         group=ConfigGroup.GPT_SOVITS_SERVICE,
         name=ConfigKey.GPT_SOVITS_API_URL,
-        default="http://localhost:19874",
+        default='http://localhost:19874',
     )
 
     gptSovitsSovitsModel = ConfigItem(
         group=ConfigGroup.GPT_SOVITS_SERVICE,
         name=ConfigKey.GPT_SOVITS_SOVITS_MODEL,
-        default="",
+        default='',
     )
 
     gptSovitsGptModel = ConfigItem(
         group=ConfigGroup.GPT_SOVITS_SERVICE,
         name=ConfigKey.GPT_SOVITS_GPT_MODEL,
-        default="",
+        default='',
     )
 
     gptSovitsTextLang = OptionsConfigItem(
         group=ConfigGroup.GPT_SOVITS_SERVICE,
         name=ConfigKey.GPT_SOVITS_TEXT_LANG,
-        default="auto",
+        default='auto',
         validator=OptionsValidator(GPT_SOVITS_LANGUAGES),
     )
 
     gptSovitsRefAudioPath = ConfigItem(
         group=ConfigGroup.GPT_SOVITS_SERVICE,
         name=ConfigKey.GPT_SOVITS_REF_AUDIO_PATH,
-        default="",
+        default='',
     )
 
     gptSovitsRefText = ConfigItem(
         group=ConfigGroup.GPT_SOVITS_SERVICE,
         name=ConfigKey.GPT_SOVITS_REF_TEXT,
-        default="",
+        default='',
     )
 
     gptSovitsRefTextLang = OptionsConfigItem(
         group=ConfigGroup.GPT_SOVITS_SERVICE,
         name=ConfigKey.GPT_SOVITS_REF_TEXT_LANG,
-        default="auto",
+        default='auto',
         validator=OptionsValidator(GPT_SOVITS_LANGUAGES),
     )
 
@@ -514,7 +514,7 @@ class Config(QConfig):
     gptSovitsTextSplitMethod = OptionsConfigItem(
         group=ConfigGroup.GPT_SOVITS_SERVICE,
         name=ConfigKey.GPT_SOVITS_TEXT_SPLIT_METHOD,
-        default="不切",
+        default='不切',
         validator=OptionsValidator(GPT_SOVITS_TEXT_SPLIT_METHODS),
     )
 
@@ -557,19 +557,19 @@ class Config(QConfig):
     piperApiUrl = ConfigItem(
         group=ConfigGroup.PIPER_SERVICE,
         name=ConfigKey.PIPER_API_URL,
-        default="http://localhost:5000",
+        default='http://localhost:5000',
     )
 
     piperVoice = ConfigItem(
         group=ConfigGroup.PIPER_SERVICE,
         name=ConfigKey.PIPER_VOICE,
-        default="",
+        default='',
     )
 
     piperSpeaker = ConfigItem(
         group=ConfigGroup.PIPER_SERVICE,
         name=ConfigKey.PIPER_SPEAKER,
-        default="",
+        default='',
     )
 
     piperSpeakerId = ConfigItem(
@@ -604,8 +604,8 @@ class Config(QConfig):
     edgeVoice = OptionsConfigItem(
         group=ConfigGroup.EDGE_SERVICE,
         name=ConfigKey.EDGE_VOICE,
-        default="zh-CN-XiaoxiaoNeural",
-        validator=OptionsValidator(EDGE_VOICES)
+        default='zh-CN-XiaoxiaoNeural',
+        validator=OptionsValidator(EDGE_VOICES),
     )
 
     edgeRate = RangeConfigItem(
@@ -647,21 +647,21 @@ def _migrate_voice_dict_to_minimax(config_path: Path) -> None:
     if not config_path.exists():
         return
     try:
-        raw = json.loads(config_path.read_text(encoding="utf-8"))
+        raw = json.loads(config_path.read_text(encoding='utf-8'))
     except (json.JSONDecodeError, OSError):
         return
-    bili = raw.get("BiliService", {})
-    if "VoiceDict" not in bili:
+    bili = raw.get('BiliService', {})
+    if 'VoiceDict' not in bili:
         return
-    minimax = raw.setdefault("MinimaxService", {})
-    minimax.setdefault("VoiceDict", bili.pop("VoiceDict"))
+    minimax = raw.setdefault('MinimaxService', {})
+    minimax.setdefault('VoiceDict', bili.pop('VoiceDict'))
     config_path.write_text(
         json.dumps(raw, ensure_ascii=False, indent=4),
-        encoding="utf-8",
+        encoding='utf-8',
     )
 
 
-_migrate_voice_dict_to_minimax(DATA_DIR / "config.json")
+_migrate_voice_dict_to_minimax(DATA_DIR / 'config.json')
 
 # 创建全局配置实例
 cfg = Config()
@@ -676,15 +676,15 @@ def _preload_voice_dict(config_path: Path) -> None:
     if not config_path.exists():
         return
     try:
-        raw = json.loads(config_path.read_text(encoding="utf-8"))
+        raw = json.loads(config_path.read_text(encoding='utf-8'))
     except (json.JSONDecodeError, OSError):
         return
-    saved = raw.get("MinimaxService", {}).get("VoiceDict")
+    saved = raw.get('MinimaxService', {}).get('VoiceDict')
     if isinstance(saved, dict):
         cfg.voiceDict.value = saved
 
 
-_preload_voice_dict(DATA_DIR / "config.json")
+_preload_voice_dict(DATA_DIR / 'config.json')
 
 # 加载配置文件
-qconfig.load(str(DATA_DIR / "config.json"), cfg)
+qconfig.load(str(DATA_DIR / 'config.json'), cfg)

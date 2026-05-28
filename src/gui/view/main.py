@@ -77,7 +77,7 @@ class MainInterface(QWidget):
         """设置界面"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(36, 36, 36, 36)
-        self.title_label = TitleLabel("登录", self)
+        self.title_label = TitleLabel('登录', self)
         layout.addWidget(self.title_label)
         # 创建 stacked widget 来切换登录/主界面
         self.stacked_widget = QStackedWidget()
@@ -110,14 +110,14 @@ class MainInterface(QWidget):
         """检查登录状态"""
         if bili_service.is_logged_in():
             self.stacked_widget.setCurrentWidget(self.home_panel)
-            self.title_label.setText("主页")
+            self.title_label.setText('主页')
         else:
             self.stacked_widget.setCurrentWidget(self.login_panel)
-            self.title_label.setText("登录")
+            self.title_label.setText('登录')
 
     def _on_login_success(self) -> None:
         """登录成功的回调"""
-        logger.info("登录成功，切换到主页面")
+        logger.info('登录成功，切换到主页面')
         self._check_login_status()
         # 刷新用户信息
         self.home_panel.user_info_card._load_user_info()
@@ -153,12 +153,12 @@ class MainWindow(FluentWindow):
     def _start_audio_worker(self) -> None:
         """启动音频播放队列"""
         audio_player.start_worker()
-        logger.info("应用启动，音频播放队列已启动")
+        logger.info('应用启动，音频播放队列已启动')
 
     def _init_ui(self) -> None:
         """初始化 UI"""
-        self.setWindowTitle("弹幕姬")
-        self.setWindowIcon(QIcon(str(get_resource_path("icon.ico"))))
+        self.setWindowTitle('弹幕姬')
+        self.setWindowIcon(QIcon(str(get_resource_path('icon.ico'))))
         self.resize(1200, 800)
 
         # 设置窗口居中
@@ -179,92 +179,86 @@ class MainWindow(FluentWindow):
         """设置界面"""
         # 创建主界面
         self.main_interface = MainInterface(self)
-        self.main_interface.setObjectName("mainInterface")
+        self.main_interface.setObjectName('mainInterface')
 
         # 创建音频测试界面
         self.audio_test_interface = AudioTestInterface(self)
-        self.audio_test_interface.setObjectName("audioTestInterface")
+        self.audio_test_interface.setObjectName('audioTestInterface')
 
         # 创建 MiniMax 音色相关界面
         self.minimax_interface = MinimaxHomeInterface(self)
-        self.minimax_interface.setObjectName("minimaxInterface")
+        self.minimax_interface.setObjectName('minimaxInterface')
 
         self.minimax_voice_list_interface = MinimaxVoiceListInterface(self)
-        self.minimax_voice_list_interface.setObjectName("minimaxVoiceListInterface")
+        self.minimax_voice_list_interface.setObjectName('minimaxVoiceListInterface')
 
         self.minimax_voice_clone_interface = MinimaxVoiceCloneInterface(self)
-        self.minimax_voice_clone_interface.setObjectName("minimaxVoiceCloneInterface")
+        self.minimax_voice_clone_interface.setObjectName('minimaxVoiceCloneInterface')
 
         # 创建设置界面
         self.settings_interface = SettingsInterface(self)
-        self.settings_interface.setObjectName("settingsInterface")
+        self.settings_interface.setObjectName('settingsInterface')
 
         # 添加主界面到导航栏
-        self.addSubInterface(
-            self.main_interface, FIF.HOME, "主页", NavigationItemPosition.TOP
-        )
+        self.addSubInterface(self.main_interface, FIF.HOME, '主页', NavigationItemPosition.TOP)
 
         # 添加音频测试界面到导航栏
-        self.addSubInterface(
-            self.audio_test_interface, FIF.MUSIC, "音频测试", NavigationItemPosition.TOP
-        )
+        self.addSubInterface(self.audio_test_interface, FIF.MUSIC, '音频测试', NavigationItemPosition.TOP)
 
         # 添加 MiniMax 父菜单和子菜单
         self.addSubInterface(
             self.minimax_interface,
             CustomIcon.MINIMAX,
-            "MiniMax",
+            'MiniMax',
             NavigationItemPosition.TOP,
         )
         self.addSubInterface(
             self.minimax_voice_list_interface,
             FIF.LIBRARY,
-            "音色列表",
+            '音色列表',
             parent=self.minimax_interface,
         )
         self.addSubInterface(
             self.minimax_voice_clone_interface,
             FIF.MICROPHONE,
-            "音色克隆",
+            '音色克隆',
             parent=self.minimax_interface,
         )
 
         # 启用 MiniMax 菜单的展开状态记忆
-        self.navigationInterface.widget("minimaxInterface").setRememberExpandState(True)
+        self.navigationInterface.widget('minimaxInterface').setRememberExpandState(True)
 
         self.navigationInterface.addItem(
-            routeKey="update",
+            routeKey='update',
             icon=FIF.UPDATE,
-            text="更新",
+            text='更新',
             onClick=lambda: self._on_update(is_force=True),
             selectable=False,
-            tooltip="更新",
+            tooltip='更新',
             position=NavigationItemPosition.BOTTOM,
         )
 
         self.navigationInterface.addItem(
-            routeKey="author_bilibili",
+            routeKey='author_bilibili',
             icon=CustomIcon.BILIBILI,
-            text="B站",
+            text='B站',
             onClick=lambda: QDesktopServices.openUrl(QUrl(AUTHOR_BILIBILI_URL)),
             selectable=False,
-            tooltip="B站",
+            tooltip='B站',
             position=NavigationItemPosition.BOTTOM,
         )
 
         self.navigationInterface.addItem(
-            routeKey="github",
+            routeKey='github',
             icon=FIF.GITHUB,
-            text="GitHub",
+            text='GitHub',
             onClick=lambda: QDesktopServices.openUrl(QUrl(GITHUB_URL)),
             selectable=False,
-            tooltip="GitHub",
+            tooltip='GitHub',
             position=NavigationItemPosition.BOTTOM,
         )
         # 添加设置界面到导航栏
-        self.addSubInterface(
-            self.settings_interface, FIF.SETTING, "设置", NavigationItemPosition.BOTTOM
-        )
+        self.addSubInterface(self.settings_interface, FIF.SETTING, '设置', NavigationItemPosition.BOTTOM)
 
     @asyncSlot()
     async def _on_update(self, is_force: bool = False) -> None:
@@ -275,10 +269,9 @@ class MainWindow(FluentWindow):
         if version_info:
             w = InfoBar.new(
                 icon=FIF.GITHUB,
-                title="版本检测",
+                title='版本检测',
                 content=(
-                    f"当前版本: v{UpdateChecker.get_current_version()}，"
-                    f"最新版本: {version_info.version}，是否下载？"
+                    f'当前版本: v{UpdateChecker.get_current_version()}，最新版本: {version_info.version}，是否下载？'
                 ),
                 orient=Qt.Horizontal,
                 isClosable=True,
@@ -287,15 +280,13 @@ class MainWindow(FluentWindow):
                 parent=self,
             )
             download_button = ToolButton(FIF.DOWNLOAD)
-            download_button.clicked.connect(
-                lambda: QDesktopServices.openUrl(QUrl(version_info.download_url))
-            )
+            download_button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(version_info.download_url)))
             w.addWidget(download_button)
         else:
             w = InfoBar.new(
                 icon=FIF.GITHUB,
-                title="版本检测",
-                content="没有发现新版本",
+                title='版本检测',
+                content='没有发现新版本',
                 orient=Qt.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.BOTTOM,
@@ -309,11 +300,11 @@ class MainWindow(FluentWindow):
         根据当前主题加载对应的 QSS 文件，应用到整个应用。
         """
         # 根据当前主题加载对应的 qss 文件
-        theme = "dark" if isDarkTheme() else "light"
-        qss_path = get_resource_path(f"qss/{theme}/main_window.qss")
+        theme = 'dark' if isDarkTheme() else 'light'
+        qss_path = get_resource_path(f'qss/{theme}/main_window.qss')
 
         if qss_path.exists():
-            self.setStyleSheet(qss_path.read_text(encoding="utf-8"))
+            self.setStyleSheet(qss_path.read_text(encoding='utf-8'))
 
     def _on_theme_changed(self) -> None:
         """主题改变时的回调"""
@@ -324,12 +315,12 @@ class MainWindow(FluentWindow):
         # 创建系统托盘图标
         self.system_tray_icon = QSystemTrayIcon(self)
         self.system_tray_icon.setIcon(self.windowIcon())
-        self.system_tray_icon.setToolTip("弹幕姬")
+        self.system_tray_icon.setToolTip('弹幕姬')
 
         # 创建托盘菜单
         self.tray_menu = SystemTrayMenu(parent=self)
-        self.show_action = Action(FIF.VIEW, "显示主窗口", triggered=self._show_window)
-        self.quit_action = Action(FIF.CLOSE, "退出", triggered=self.close)
+        self.show_action = Action(FIF.VIEW, '显示主窗口', triggered=self._show_window)
+        self.quit_action = Action(FIF.CLOSE, '退出', triggered=self.close)
 
         self.tray_menu.addAction(self.show_action)
         self.tray_menu.addSeparator()
@@ -384,7 +375,7 @@ class MainWindow(FluentWindow):
         self.system_tray_icon.hide()
 
         # 停止音频播放队列
-        logger.info("应用退出，正在停止音频播放队列")
+        logger.info('应用退出，正在停止音频播放队列')
         await audio_player.stop_worker()
 
         # run_forever() 返回后（QApplication.quit() 被调用后）

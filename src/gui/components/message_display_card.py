@@ -34,12 +34,12 @@ class MessageDisplayCard(CardWidget):
         self.main_layout.setSpacing(12)
 
         # 标题
-        self.title_label = SubtitleLabel("消息记录")
+        self.title_label = SubtitleLabel('消息记录')
         self.main_layout.addWidget(self.title_label)
 
         # 创建消息标签（固定 5 行）
         for _i in range(self.max_lines):
-            label = BodyLabel("")
+            label = BodyLabel('')
             label.setWordWrap(True)  # 允许换行
             label.setAlignment(Qt.AlignmentFlag.AlignLeft)
             self.message_labels.append(label)
@@ -52,9 +52,7 @@ class MessageDisplayCard(CardWidget):
             message: 消息内容
         """
         # 添加到队列（自动移除最旧的消息）
-        self.messages.append(
-            f"[{datetime.now(tz=UTC).astimezone().strftime('%Y-%m-%d %H:%M:%S')}]:{message}"
-        )
+        self.messages.append(f'[{datetime.now(tz=UTC).astimezone().strftime("%Y-%m-%d %H:%M:%S")}]:{message}')
 
         # 更新显示
         self._update_display()
@@ -71,4 +69,4 @@ class MessageDisplayCard(CardWidget):
             if i < len(self.messages):
                 label.setText(self.messages[i])
             else:
-                label.setText("")  # 清空未使用的标签
+                label.setText('')  # 清空未使用的标签

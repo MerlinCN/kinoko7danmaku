@@ -23,11 +23,11 @@ class AliasDictCard(DictEditCard):
         super().__init__(
             config_item=cfg.aliasDict,
             icon=FIF.BOOK_SHELF,
-            title="别名字典",
-            content="设置弹幕中的别名替换规则",
-            key_label="原词",
-            value_label="替换为",
-            key_placeholder="输入原词",
-            value_placeholder="输入替换词",
+            title='别名字典',
+            content='设置弹幕中的别名替换规则',
+            key_label='原词',
+            value_label='替换为',
+            key_placeholder='输入原词',
+            value_placeholder='输入替换词',
             parent=parent,
         )

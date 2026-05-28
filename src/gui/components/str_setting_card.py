@@ -1,6 +1,5 @@
 """字符串输入设置卡片"""
 
-
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QWidget
@@ -33,7 +32,7 @@ class StrSettingCard(SettingCard):
         title: str,
         content: str | None = None,
         parent: QWidget | None = None,
-        placeholder: str = "",
+        placeholder: str = '',
         refreshable: bool = False,
     ) -> None:
         """初始化字符串输入设置卡片

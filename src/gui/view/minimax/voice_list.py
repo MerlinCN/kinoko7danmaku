@@ -74,12 +74,12 @@ class VoiceCard(CardWidget):
 
         # 音色 ID（小字）
         self.idLabel = CaptionLabel(self.voice_id, self)
-        self.idLabel.setTextColor("#606060", "#d2d2d2")
+        self.idLabel.setTextColor('#606060', '#d2d2d2')
 
         # 复制按钮
         self.copyButton = ToolButton(FIF.COPY, self)
         self.copyButton.setFixedSize(32, 32)
-        self.copyButton.setToolTip("复制音色 ID")
+        self.copyButton.setToolTip('复制音色 ID')
         self.copyButton.clicked.connect(self._on_copy_clicked)
 
         # 布局
@@ -104,8 +104,8 @@ class VoiceCard(CardWidget):
 
         # 显示成功提示
         InfoBar.success(
-            title="复制成功",
-            content=f"已复制音色 ID: {self.voice_id}",
+            title='复制成功',
+            content=f'已复制音色 ID: {self.voice_id}',
             orient=Qt.Orientation.Horizontal,
             isClosable=True,
             position=InfoBarPosition.TOP,
@@ -131,9 +131,9 @@ class VoiceCard(CardWidget):
         """
         self._is_selected = selected
         if selected:
-            self.setStyleSheet("VoiceCard { border: 2px solid rgb(0, 120, 212); }")
+            self.setStyleSheet('VoiceCard { border: 2px solid rgb(0, 120, 212); }')
         else:
-            self.setStyleSheet("")
+            self.setStyleSheet('')
 
 
 class MinimaxVoiceListInterface(QWidget):
@@ -159,26 +159,26 @@ class MinimaxVoiceListInterface(QWidget):
 
         # 临时配置项（仅用于 UI 组件，不保存到配置文件）
         self._temp_model_config = OptionsConfigItem(
-            group="VoiceListTemp",
-            name="TempModel",
+            group='VoiceListTemp',
+            name='TempModel',
             default=MINIMAX_MODELS[0],
             validator=OptionsValidator(MINIMAX_MODELS),
         )
         self._temp_speed_config = RangeConfigItem(
-            group="VoiceListTemp",
-            name="TempSpeed",
+            group='VoiceListTemp',
+            name='TempSpeed',
             default=1.0,
             validator=RangeValidator(0.5, 2.0),
         )
         self._temp_vol_config = RangeConfigItem(
-            group="VoiceListTemp",
-            name="TempVol",
+            group='VoiceListTemp',
+            name='TempVol',
             default=1.0,
             validator=RangeValidator(0.0, 2.0),
         )
         self._temp_pitch_config = RangeConfigItem(
-            group="VoiceListTemp",
-            name="TempPitch",
+            group='VoiceListTemp',
+            name='TempPitch',
             default=0,
             validator=RangeValidator(-12, 12),
         )
@@ -196,7 +196,7 @@ class MinimaxVoiceListInterface(QWidget):
         main_layout.setSpacing(20)
 
         # 标题
-        self.title_label = TitleLabel("音色列表")
+        self.title_label = TitleLabel('音色列表')
         main_layout.addWidget(self.title_label)
 
         # 内容区：水平分栏
@@ -210,7 +210,7 @@ class MinimaxVoiceListInterface(QWidget):
         left_layout.setSpacing(12)
 
         # 左侧标题
-        left_title = SubtitleLabel("可用音色【点击选中】")
+        left_title = SubtitleLabel('可用音色【点击选中】')
         left_layout.addWidget(left_title)
 
         # 滚动区域
@@ -239,12 +239,12 @@ class MinimaxVoiceListInterface(QWidget):
         test_card_layout.setContentsMargins(20, 20, 20, 20)
         test_card_layout.setSpacing(12)
 
-        test_title = SubtitleLabel("音色测试")
+        test_title = SubtitleLabel('音色测试')
         test_card_layout.addWidget(test_title)
 
         # 文本输入框
         self.text_edit = TextEdit()
-        self.text_edit.setPlaceholderText("输入测试文本...")
+        self.text_edit.setPlaceholderText('输入测试文本...')
         self.text_edit.setMinimumHeight(120)
         test_card_layout.addWidget(self.text_edit)
 
@@ -264,15 +264,15 @@ class MinimaxVoiceListInterface(QWidget):
         param_card_layout.setContentsMargins(20, 20, 20, 20)
         param_card_layout.setSpacing(8)  # 减少间距，因为卡片自带内边距
 
-        param_title = SubtitleLabel("音色参数")
+        param_title = SubtitleLabel('音色参数')
         param_card_layout.addWidget(param_title)
 
         # 模型选择卡片
         self.model_card = ComboBoxSettingCard(
             configItem=self._temp_model_config,
             icon=FIF.ROBOT,
-            title="模型",
-            content="设置 TTS 模型",
+            title='模型',
+            content='设置 TTS 模型',
             texts=MINIMAX_MODELS,
             parent=self.param_card,
         )
@@ -283,8 +283,8 @@ class MinimaxVoiceListInterface(QWidget):
         self.speed_card = FloatRangeSettingCard(
             configItem=self._temp_speed_config,
             icon=FIF.SPEED_OFF,
-            title="语速",
-            content="调整语音播放速度（0.5-2.0）",
+            title='语速',
+            content='调整语音播放速度（0.5-2.0）',
             step=0.1,
             decimals=1,
             parent=self.param_card,
@@ -296,8 +296,8 @@ class MinimaxVoiceListInterface(QWidget):
         self.vol_card = FloatRangeSettingCard(
             configItem=self._temp_vol_config,
             icon=FIF.VOLUME,
-            title="音量",
-            content="调整语音音量（0.0-2.0）",
+            title='音量',
+            content='调整语音音量（0.0-2.0）',
             step=0.1,
             decimals=1,
             parent=self.param_card,
@@ -309,8 +309,8 @@ class MinimaxVoiceListInterface(QWidget):
         self.pitch_card = FloatRangeSettingCard(
             configItem=self._temp_pitch_config,
             icon=FIF.MUSIC,
-            title="音调",
-            content="调整语音音调（-12-12）",
+            title='音调',
+            content='调整语音音调（-12-12）',
             step=1,
             decimals=0,
             parent=self.param_card,
@@ -341,11 +341,11 @@ class MinimaxVoiceListInterface(QWidget):
         """异步加载音色列表"""
         # 检查 API Key
         if not cfg.minimaxApiKey.value:
-            self._show_empty_state("请先在设置中配置 MiniMax API Key")
+            self._show_empty_state('请先在设置中配置 MiniMax API Key')
             return
 
         # 显示加载状态
-        state_tooltip = StateToolTip("正在加载", "加载音色列表中...", self.window())
+        state_tooltip = StateToolTip('正在加载', '加载音色列表中...', self.window())
         state_tooltip.move(state_tooltip.getSuitablePos())
         state_tooltip.show()
 
@@ -354,21 +354,21 @@ class MinimaxVoiceListInterface(QWidget):
             self._voices = response.voice_cloning
             self._update_voice_list()
             state_tooltip.setState(True)
-            state_tooltip.setTitle("加载成功")
+            state_tooltip.setTitle('加载成功')
             self._is_loaded = True
-            logger.info(f"成功加载 {len(self._voices)} 个音色")
+            logger.info(f'成功加载 {len(self._voices)} 个音色')
         except ValueError as e:
-            logger.error(f"加载音色列表失败: {e}")
+            logger.error(f'加载音色列表失败: {e}')
             state_tooltip.setState(False)
-            state_tooltip.setTitle("加载失败")
+            state_tooltip.setTitle('加载失败')
             state_tooltip.setContent(str(e))
-            self._show_empty_state(f"加载失败: {e}")
+            self._show_empty_state(f'加载失败: {e}')
         except Exception as e:
-            logger.exception(f"加载音色列表失败: {e}")
+            logger.exception(f'加载音色列表失败: {e}')
             state_tooltip.setState(False)
-            state_tooltip.setTitle("加载失败")
-            state_tooltip.setContent("网络请求失败，请检查网络连接")
-            self._show_empty_state("加载失败，请检查网络连接和 API Key 是否正确")
+            state_tooltip.setTitle('加载失败')
+            state_tooltip.setContent('网络请求失败，请检查网络连接')
+            self._show_empty_state('加载失败，请检查网络连接和 API Key 是否正确')
 
     def _update_voice_list(self) -> None:
         """更新音色列表显示"""
@@ -424,7 +424,7 @@ class MinimaxVoiceListInterface(QWidget):
         self._current_voice_id = voice_id
         if voice_id in self._voice_cards:
             self._voice_cards[voice_id].set_selected(True)
-            logger.debug(f"选中音色: {voice_id}")
+            logger.debug(f'选中音色: {voice_id}')
 
     def _on_model_changed(self, model: str) -> None:
         """模型变化事件
@@ -433,7 +433,7 @@ class MinimaxVoiceListInterface(QWidget):
             model: 模型名称
         """
         self._temp_model = model
-        logger.debug(f"模型切换: {model}")
+        logger.debug(f'模型切换: {model}')
 
     def _on_speed_changed(self, speed: float) -> None:
         """语速变化事件
@@ -465,8 +465,8 @@ class MinimaxVoiceListInterface(QWidget):
         # 检查是否选中音色
         if not self._current_voice_id:
             InfoBar.warning(
-                title="未选择音色",
-                content="请先从列表中选择一个音色",
+                title='未选择音色',
+                content='请先从列表中选择一个音色',
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
@@ -479,8 +479,8 @@ class MinimaxVoiceListInterface(QWidget):
         text = self.text_edit.toPlainText().strip()
         if not text:
             InfoBar.warning(
-                title="文本为空",
-                content="请输入要测试的文本",
+                title='文本为空',
+                content='请输入要测试的文本',
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
@@ -511,8 +511,8 @@ class MinimaxVoiceListInterface(QWidget):
             await audio_player.play_bytes_async(audio_bytes)
 
             InfoBar.success(
-                title="播放成功",
-                content="",
+                title='播放成功',
+                content='',
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
                 position=InfoBarPosition.TOP,
@@ -520,9 +520,9 @@ class MinimaxVoiceListInterface(QWidget):
                 parent=self,
             )
         except Exception as e:
-            logger.exception(f"播放失败: {e}")
+            logger.exception(f'播放失败: {e}')
             InfoBar.error(
-                title="播放失败",
+                title='播放失败',
                 content=str(e),
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,

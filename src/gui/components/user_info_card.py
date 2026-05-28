@@ -48,15 +48,15 @@ class UserInfoCard(CardWidget):
         info_layout = QVBoxLayout()
 
         # 用户名
-        self.name_label = BodyLabel("用户名: 加载中...")
+        self.name_label = BodyLabel('用户名: 加载中...')
         info_layout.addWidget(self.name_label)
 
         # 房间号
-        self.uid_label = BodyLabel("UID: 加载中...")
+        self.uid_label = BodyLabel('UID: 加载中...')
         info_layout.addWidget(self.uid_label)
 
         # 粉丝数
-        self.follower_label = BodyLabel("粉丝数: 加载中...")
+        self.follower_label = BodyLabel('粉丝数: 加载中...')
         info_layout.addWidget(self.follower_label)
 
         self.main_layout.addLayout(info_layout, 1)
@@ -66,13 +66,13 @@ class UserInfoCard(CardWidget):
         button_layout.setSpacing(8)
 
         # 刷新按钮
-        self.refresh_btn = PushButton("刷新")
+        self.refresh_btn = PushButton('刷新')
         self.refresh_btn.setFixedWidth(80)
         self.refresh_btn.clicked.connect(self._load_user_info)
         button_layout.addWidget(self.refresh_btn)
 
         # 退出登录按钮
-        self.logout_btn = PushButton("退出登录")
+        self.logout_btn = PushButton('退出登录')
         self.logout_btn.setFixedWidth(80)
         self.logout_btn.clicked.connect(self._on_logout)
         button_layout.addWidget(self.logout_btn)
@@ -92,8 +92,8 @@ class UserInfoCard(CardWidget):
             self._update_ui()
 
         except Exception as e:
-            logger.error(f"加载用户信息失败: {e}")
-            self.name_label.setText(f"加载失败: {e!s}")
+            logger.error(f'加载用户信息失败: {e}')
+            self.name_label.setText(f'加载失败: {e!s}')
 
     def _update_ui(self) -> None:
         """更新 UI"""
@@ -101,18 +101,18 @@ class UserInfoCard(CardWidget):
             return
 
         # 更新用户名
-        uname = self.user_info.get("name", "未知用户")
-        self.name_label.setText(f"用户名: {uname}")
+        uname = self.user_info.get('name', '未知用户')
+        self.name_label.setText(f'用户名: {uname}')
 
         # 获取UID
-        uid = self.user_info.get("mid", 0)
-        self.uid_label.setText(f"UID: {uid}")
+        uid = self.user_info.get('mid', 0)
+        self.uid_label.setText(f'UID: {uid}')
 
         # 更新粉丝数
-        follower = self.user_info.get("follower", 0)
-        self.follower_label.setText(f"粉丝数: {follower:,}")
+        follower = self.user_info.get('follower', 0)
+        self.follower_label.setText(f'粉丝数: {follower:,}')
         # 加载头像
-        face_url = self.user_info.get("face", "")
+        face_url = self.user_info.get('face', '')
         if face_url:
             self._load_avatar(face_url)
 
@@ -128,7 +128,7 @@ class UserInfoCard(CardWidget):
                         pixmap.loadFromData(data)
                         self.avatar_label.setImage(pixmap)
         except Exception as e:
-            logger.warning(f"加载头像失败: {e}")
+            logger.warning(f'加载头像失败: {e}')
 
     @asyncSlot()
     async def _on_logout(self) -> None:

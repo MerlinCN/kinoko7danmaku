@@ -28,20 +28,20 @@ class StreamPlayer:
         all_devices: list[dict] = sd.query_devices()  # type: ignore
         # 如果没有输出设备就报错
         if len(all_devices) == 0:
-            raise RuntimeError("没有找到输出设备")
+            raise RuntimeError('没有找到输出设备')
         default_output_index: int = sd.default.device[1]  # type: ignore
 
         default_output_device: dict = all_devices[default_output_index]  # type: ignore
 
         choices = []
 
-        default_api: str = sd.query_hostapis()[default_output_device["hostapi"]]["name"]  # type: ignore
+        default_api: str = sd.query_hostapis()[default_output_device['hostapi']]['name']  # type: ignore
         # 遍历所有设备，只添加纯输出设备
         for idx, device in enumerate(all_devices):
-            if device["max_output_channels"] <= 0:
+            if device['max_output_channels'] <= 0:
                 continue
-            name = device["name"]
-            api_name: str = sd.query_hostapis()[device["hostapi"]]["name"]  # type: ignore
+            name = device['name']
+            api_name: str = sd.query_hostapis()[device['hostapi']]['name']  # type: ignore
             if default_api not in api_name:
                 continue
             choices.append(OutputDevice(index=idx, name=name))  # (显示名称, 实际索引)
@@ -54,7 +54,7 @@ class StreamPlayer:
             if device_name in device.name:
                 self.set_output_device(device.index)
                 return
-        logger.error(f"未找到设备: {device_name}")
+        logger.error(f'未找到设备: {device_name}')
 
     def set_output_device(self, device_index: int) -> bool | None:
         """设置输出设备"""
@@ -62,14 +62,14 @@ class StreamPlayer:
             if device_index == -1:
                 device_index = sd.default.device[1]  # type: ignore
             device_info: dict = sd.query_devices(device_index)  # type: ignore
-            if int(device_info["max_output_channels"]) > 0:  # type: ignore
-                logger.info(f"已设置输出设备: {device_info['name']}")
+            if int(device_info['max_output_channels']) > 0:  # type: ignore
+                logger.info(f'已设置输出设备: {device_info["name"]}')
                 self.device_index = device_index
             else:
-                logger.error(f"设备 {device_index} 不支持音频输出")
+                logger.error(f'设备 {device_index} 不支持音频输出')
                 return False
         except Exception as e:
-            logger.exception(f"设置设备失败: {e}")
+            logger.exception(f'设置设备失败: {e}')
             return False
         else:
             return True
@@ -84,7 +84,7 @@ class StreamPlayer:
         try:
             decoded_file = miniaudio.decode(audio_bytes)
         except miniaudio.DecodeError as e:
-            logger.error(f"音频解码失败: {e}")
+            logger.error(f'音频解码失败: {e}')
             return
 
         sample_width = decoded_file.sample_width
@@ -114,7 +114,7 @@ class StreamPlayer:
     async def _play_worker(self) -> None:
         """后台任务：从队列中取出音频并播放"""
         if self.audio_queue is None:
-            logger.error("音频队列未初始化")
+            logger.error('音频队列未初始化')
             return
 
         while self.is_running:
@@ -125,10 +125,10 @@ class StreamPlayer:
                 await asyncio.to_thread(self.play_bytes, audio_bytes)
                 self.audio_queue.task_done()
             except asyncio.CancelledError:
-                logger.info("音频播放队列任务已取消")
+                logger.info('音频播放队列任务已取消')
                 break
             except Exception as e:
-                logger.exception(f"播放音频时出错: {e}")
+                logger.exception(f'播放音频时出错: {e}')
 
     def start_worker(self) -> None:
         """启动音频播放队列处理任务"""
@@ -137,7 +137,7 @@ class StreamPlayer:
             self.audio_queue = asyncio.Queue()
             self.is_running = True
             self.worker_task = asyncio.create_task(self._play_worker())
-            logger.info("音频播放队列已启动")
+            logger.info('音频播放队列已启动')
 
     async def stop_worker(self) -> None:
         """停止音频播放队列处理任务"""
@@ -158,7 +158,7 @@ class StreamPlayer:
                     except asyncio.QueueEmpty:
                         break
                 self.audio_queue = None
-            logger.info("音频播放队列已停止")
+            logger.info('音频播放队列已停止')
 
     async def play_bytes_async(self, audio_bytes: bytes) -> None:
         """异步方式播放音频（添加到队列）
@@ -167,7 +167,7 @@ class StreamPlayer:
             audio_bytes: WAV 格式的音频字节流
         """
         if self.audio_queue is None:
-            logger.error("音频队列未初始化，请先调用 start_worker()")
+            logger.error('音频队列未初始化，请先调用 start_worker()')
             return
         await self.audio_queue.put(audio_bytes)
 

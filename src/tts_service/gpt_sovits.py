@@ -22,7 +22,7 @@ class GradioClient:
     """
 
     def __init__(self, base_url: str, ssl_verify: bool = False, timeout: int = 300) -> None:
-        self.base_url = base_url if base_url.endswith("/") else (base_url + "/")
+        self.base_url = base_url if base_url.endswith('/') else (base_url + '/')
         self.ssl_verify = ssl_verify
         self.timeout = aiohttp.ClientTimeout(total=timeout)
         self._session: aiohttp.ClientSession | None = None
@@ -31,25 +31,21 @@ class GradioClient:
     async def ensure(self) -> None:
         if self._session is None:
             connector = aiohttp.TCPConnector(ssl=self.ssl_verify)
-            self._session = aiohttp.ClientSession(
-                timeout=self.timeout, connector=connector
-            )
+            self._session = aiohttp.ClientSession(timeout=self.timeout, connector=connector)
             await self._load_config()
 
     async def _load_config(self) -> None:
         assert self._session is not None
-        url = self.base_url + "config"
+        url = self.base_url + 'config'
         async with self._session.get(url) as resp:
             resp.raise_for_status()
             cfg = await resp.json()
-        deps = cfg.get("dependencies") or []
+        deps = cfg.get('dependencies') or []
         # Build api_name -> fn_index map
         for i, dep in enumerate(deps):
-            api_name = (dep or {}).get("api_name")
+            api_name = (dep or {}).get('api_name')
             if api_name:
-                self._fn_map[str(api_name).strip().lstrip("/")] = int(
-                    (dep or {}).get("id", i)
-                )
+                self._fn_map[str(api_name).strip().lstrip('/')] = int((dep or {}).get('id', i))
 
     async def close(self) -> None:
         if self._session is not None:
@@ -62,14 +58,14 @@ class GradioClient:
 
     async def _upload_file(self, file_path: str) -> str:
         assert self._session is not None
-        url = self.base_url + "upload"
+        url = self.base_url + 'upload'
         data = aiohttp.FormData()
         file_content = await asyncio.to_thread(pathlib.Path(file_path).read_bytes)
         data.add_field(
-            "files",
+            'files',
             file_content,
-            filename=file_path.split("/")[-1],
-            content_type="application/octet-stream",
+            filename=file_path.split('/')[-1],
+            content_type='application/octet-stream',
         )
         async with self._session.post(url, data=data) as resp:
             resp.raise_for_status()
@@ -80,23 +76,16 @@ class GradioClient:
     async def _process_inputs(self, args: list[Any]) -> list[Any]:
         processed: list[Any] = []
         for a in args:
-            if (
-                isinstance(a, dict)
-                and a.get("meta", {}).get("_type") == "gradio.FileData"
-            ):
-                p = a.get("path")
-                if p and not (
-                    str(p).startswith("http://") or str(p).startswith("https://")
-                ):
+            if isinstance(a, dict) and a.get('meta', {}).get('_type') == 'gradio.FileData':
+                p = a.get('path')
+                if p and not (str(p).startswith('http://') or str(p).startswith('https://')):
                     # local path -> upload
                     uploaded = await self._upload_file(p)
-                    processed.append(
-                        {
-                            "path": uploaded,
-                            "orig_name": a.get("orig_name") or (str(p).split("/")[-1]),
-                            "meta": {"_type": "gradio.FileData"},
-                        }
-                    )
+                    processed.append({
+                        'path': uploaded,
+                        'orig_name': a.get('orig_name') or (str(p).split('/')[-1]),
+                        'meta': {'_type': 'gradio.FileData'},
+                    })
                 else:
                     processed.append(a)
             else:
@@ -106,23 +95,23 @@ class GradioClient:
     async def predict(self, api_name: str, *args: Any) -> Any:
         await self.ensure()
         assert self._session is not None
-        fn = self._fn_map.get(api_name.strip().lstrip("/"))
+        fn = self._fn_map.get(api_name.strip().lstrip('/'))
         if fn is None:
             raise RuntimeError(f"API '{api_name}' not found in gradio config")
-        url = self.base_url + "api/predict/"
+        url = self.base_url + 'api/predict/'
         data = {
-            "data": await self._process_inputs(list(args)),
-            "fn_index": fn,
-            "session_hash": str(int(time.time() * 1000)),
+            'data': await self._process_inputs(list(args)),
+            'fn_index': fn,
+            'session_hash': str(int(time.time() * 1000)),
         }
         async with self._session.post(url, json=data, timeout=30) as resp:
             text = await resp.text()
             if resp.status != 200:
-                raise RuntimeError(f"Gradio predict failed: {resp.status} {text[:200]}")
+                raise RuntimeError(f'Gradio predict failed: {resp.status} {text[:200]}')
             j = await resp.json()
-            if j.get("error"):
-                raise RuntimeError(f"Gradio API error: {j.get('error')}")
-            return j.get("data")
+            if j.get('error'):
+                raise RuntimeError(f'Gradio API error: {j.get("error")}')
+            return j.get('data')
 
 
 class GPTSovitsService(TTSService):
@@ -137,16 +126,14 @@ class GPTSovitsService(TTSService):
     async def init(self) -> None:
         await self.client.ensure()
         result = await self.client.predict(
-            "/change_sovits_weights",
+            '/change_sovits_weights',
             cfg.gptSovitsSovitsModel.value,
             cfg.gptSovitsTextLang.value,
             cfg.gptSovitsTextLang.value,
         )
-        logger.info(f"Changed SoVITS weights: {result}")
-        result = await self.client.predict(
-            "/change_gpt_weights", cfg.gptSovitsGptModel.value
-        )
-        logger.info(f"Changed GPT weights: {result}")
+        logger.info(f'Changed SoVITS weights: {result}')
+        result = await self.client.predict('/change_gpt_weights', cfg.gptSovitsGptModel.value)
+        logger.info(f'Changed GPT weights: {result}')
 
     @retry(stop=stop_after_attempt(3))
     async def text_to_speech(
@@ -217,14 +204,14 @@ class GPTSovitsService(TTSService):
             pause_seconds = cfg.gptSovitsPauseSeconds.value
 
         ref_audio_dict = {
-            "path": ref_audio_path,
-            "orig_name": ref_audio_path.split("/")[-1],
-            "meta": {"_type": "gradio.FileData"},
+            'path': ref_audio_path,
+            'orig_name': ref_audio_path.split('/')[-1],
+            'meta': {'_type': 'gradio.FileData'},
         }
         is_freeze = False  # 是否冻结模型
         inp_refs = None  # 输入的参考音频
         data = await self.client.predict(
-            "/get_tts_wav",
+            '/get_tts_wav',
             ref_audio_dict,
             ref_text,
             ref_text_lang,
@@ -244,7 +231,7 @@ class GPTSovitsService(TTSService):
         )
 
         # 读取返回的音频文件
-        audio_path = data[0].get("url")
+        audio_path = data[0].get('url')
         async with httpx.AsyncClient() as client:
             response = await client.get(audio_path)
             response.raise_for_status()

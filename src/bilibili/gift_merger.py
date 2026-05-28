@@ -23,16 +23,12 @@ class UserGiftGroup(BaseModel):
     窗口时间会随着礼物数量的增加而递增，直到达到最大窗口时间。
     """
 
-    user_name: str = Field(description="用户名")
-    gift_name: str = Field(description="礼物名称")
-    total_num: int = Field(description="累计礼物数量")
-    first_time: float = Field(
-        default_factory=time, description="第一次收到礼物的时间戳"
-    )
-    last_update_time: float = Field(
-        default_factory=time, description="最后一次更新的时间戳"
-    )
-    current_window: float = Field(description="当前窗口时间（秒）")
+    user_name: str = Field(description='用户名')
+    gift_name: str = Field(description='礼物名称')
+    total_num: int = Field(description='累计礼物数量')
+    first_time: float = Field(default_factory=time, description='第一次收到礼物的时间戳')
+    last_update_time: float = Field(default_factory=time, description='最后一次更新的时间戳')
+    current_window: float = Field(description='当前窗口时间（秒）')
 
 
 class GiftMerger(QObject):
@@ -71,13 +67,13 @@ class GiftMerger(QObject):
         """
         if not self.check_timer.isActive():
             self.check_timer.start(1000)
-            logger.info("礼物检查定时器已启动")
+            logger.info('礼物检查定时器已启动')
 
     def stop(self) -> None:
         """停止定时器"""
         if self.check_timer.isActive():
             self.check_timer.stop()
-            logger.info("礼物检查定时器已停止")
+            logger.info('礼物检查定时器已停止')
 
     async def add_gift(self, gift_message: GiftMessage) -> None:
         """添加礼物到合并队列
@@ -113,8 +109,8 @@ class GiftMerger(QObject):
                 current_window=initial_window,
             )
             logger.debug(
-                f"创建新单用户礼物组: {gift_message.user_name} - {gift_message.gift_name} "
-                f"x{gift_message.gift_num}，初始窗口时间: {initial_window}s"
+                f'创建新单用户礼物组: {gift_message.user_name} - {gift_message.gift_name} '
+                f'x{gift_message.gift_num}，初始窗口时间: {initial_window}s'
             )
         else:
             # 累加数量并递增窗口时间
@@ -125,13 +121,11 @@ class GiftMerger(QObject):
             # 递增窗口时间，但不超过最大窗口时间
             max_window = cfg.giftMergeWindow.value
             increment = cfg.giftMergeWindowIncrement.value
-            user_gift_group.current_window = min(
-                user_gift_group.current_window + increment, max_window
-            )
+            user_gift_group.current_window = min(user_gift_group.current_window + increment, max_window)
 
             logger.debug(
-                f"累加礼物到单用户礼物组 {user_key}，当前总数: {user_gift_group.total_num}，"
-                f"当前窗口时间: {user_gift_group.current_window}s"
+                f'累加礼物到单用户礼物组 {user_key}，当前总数: {user_gift_group.total_num}，'
+                f'当前窗口时间: {user_gift_group.current_window}s'
             )
 
     @asyncSlot()
@@ -151,9 +145,7 @@ class GiftMerger(QObject):
             # 使用该礼物组的当前窗口时间（动态递增的）
             time_since_last_update = current_time - user_gift_group.last_update_time
             if time_since_last_update >= user_gift_group.current_window:
-                logger.debug(
-                    f"单用户礼物组 {user_key} 窗口期结束（窗口时间: {user_gift_group.current_window}s），处理"
-                )
+                logger.debug(f'单用户礼物组 {user_key} 窗口期结束（窗口时间: {user_gift_group.current_window}s），处理')
                 user_keys_to_process.append(user_key)
 
         # 处理收集到的单用户礼物组
@@ -174,8 +166,7 @@ class GiftMerger(QObject):
         user_gift_group = self.user_gift_groups.pop(user_key)
 
         logger.info(
-            f"处理单用户礼物组: {user_gift_group.user_name} - {user_gift_group.gift_name} "
-            f"x{user_gift_group.total_num}"
+            f'处理单用户礼物组: {user_gift_group.user_name} - {user_gift_group.gift_name} x{user_gift_group.total_num}'
         )
 
         # 创建合并后的 GiftMessage 并直接播报
@@ -215,7 +206,7 @@ class GiftMerger(QObject):
         通常在停止监听或重新连接时调用。
         """
         self.user_gift_groups.clear()
-        logger.info("清空所有礼物组")
+        logger.info('清空所有礼物组')
 
 
 # 创建全局礼物合并管理器实例

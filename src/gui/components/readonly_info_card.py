@@ -13,7 +13,7 @@ from qfluentwidgets import (
     SettingCard,
 )
 
-EMPTY_TEXT = "（未设置）"
+EMPTY_TEXT = '（未设置）'
 
 
 def default_formatter(value: Any) -> str:
@@ -26,7 +26,7 @@ def default_formatter(value: Any) -> str:
         str: 用于展示的文本
     """
     if isinstance(value, bool):
-        return "开" if value else "关"
+        return '开' if value else '关'
     if value is None or not value:
         return EMPTY_TEXT
     return str(value)
@@ -44,8 +44,8 @@ def mask_secret(value: str) -> str:
     if not value:
         return EMPTY_TEXT
     if len(value) < 8:
-        return "***"
-    return f"{value[:4]}***{value[-4:]}"
+        return '***'
+    return f'{value[:4]}***{value[-4:]}'
 
 
 class ReadOnlyInfoCard(SettingCard):
@@ -82,9 +82,7 @@ class ReadOnlyInfoCard(SettingCard):
 
         self.valueLabel = BodyLabel(self)
         self.valueLabel.setEnabled(False)
-        self.valueLabel.setAlignment(
-            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-        )
+        self.valueLabel.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
 
         self.hBoxLayout.addWidget(self.valueLabel, 0, Qt.AlignmentFlag.AlignRight)
         self.hBoxLayout.addSpacing(16)

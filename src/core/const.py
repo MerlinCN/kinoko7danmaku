@@ -17,9 +17,9 @@ def get_resource_dir() -> Path:
     Returns:
         资源目录路径
     """
-    if getattr(sys, "frozen", False):
-        return Path(sys._MEIPASS) / "resource"  # type: ignore
-    return Path(__file__).resolve().parent.parent.parent / "resource"
+    if getattr(sys, 'frozen', False):
+        return Path(sys._MEIPASS) / 'resource'  # type: ignore
+    return Path(__file__).resolve().parent.parent.parent / 'resource'
 
 
 # 资源目录
@@ -35,8 +35,8 @@ def get_data_dir() -> Path:
     Returns:
         数据目录路径
     """
-    user_data_dir = Path.home() / ".kinoko7danmaku"
-    legacy_data_dir = Path("data")
+    user_data_dir = Path.home() / '.kinoko7danmaku'
+    legacy_data_dir = Path('data')
 
     # 如果旧目录存在且用户目录不存在，进行迁移
     if legacy_data_dir.exists() and not user_data_dir.exists():
@@ -58,76 +58,68 @@ DATA_DIR = get_data_dir()
 
 # 支持的 TTS 服务配置
 SUPPORTED_SERVICES = {
-    ServiceType.MINIMAX: ServiceDetail(name=ServiceType.MINIMAX, description="MiniMax"),
-    ServiceType.GPT_SOVITS: ServiceDetail(
-        name=ServiceType.GPT_SOVITS, description="GPT-SoVITS"
-    ),
-    ServiceType.FISH_SPEECH: ServiceDetail(
-        name=ServiceType.FISH_SPEECH, description="Fish Speech"
-    ),
-    ServiceType.PIPER: ServiceDetail(
-        name=ServiceType.PIPER, description="Piper"
-    ),
-    ServiceType.EDGE: ServiceDetail(
-        name=ServiceType.EDGE, description="Edge"
-    )
+    ServiceType.MINIMAX: ServiceDetail(name=ServiceType.MINIMAX, description='MiniMax'),
+    ServiceType.GPT_SOVITS: ServiceDetail(name=ServiceType.GPT_SOVITS, description='GPT-SoVITS'),
+    ServiceType.FISH_SPEECH: ServiceDetail(name=ServiceType.FISH_SPEECH, description='Fish Speech'),
+    ServiceType.PIPER: ServiceDetail(name=ServiceType.PIPER, description='Piper'),
+    ServiceType.EDGE: ServiceDetail(name=ServiceType.EDGE, description='Edge'),
 }
 
 # MiniMax 支持的模型列表
 MINIMAX_MODELS = [
-    "speech-2.8-hd",
-    "speech-2.8-turbo",
-    "speech-2.6-hd",
-    "speech-2.6-turbo",
-    "speech-02-hd",
-    "speech-02-turbo",
-    "speech-01-hd",
-    "speech-01-turbo",
+    'speech-2.8-hd',
+    'speech-2.8-turbo',
+    'speech-2.6-hd',
+    'speech-2.6-turbo',
+    'speech-02-hd',
+    'speech-02-turbo',
+    'speech-01-hd',
+    'speech-01-turbo',
 ]
 
 # GPT-SoVITS 语言选项
 GPT_SOVITS_LANGUAGES = [
-    "auto",
-    "Chinese",
-    "English",
-    "Japanese",
-    "Korean",
-    "Cantonese",
-    "Multilingual Mixed",
+    'auto',
+    'Chinese',
+    'English',
+    'Japanese',
+    'Korean',
+    'Cantonese',
+    'Multilingual Mixed',
 ]
 
 # GPT-SoVITS 文本切分方式
 GPT_SOVITS_TEXT_SPLIT_METHODS = [
-    "不切",
-    "凑四句一切",
-    "凑50字一切",
-    "按中文句号。切",
-    "按英文句号.切",
-    "按标点符号切",
+    '不切',
+    '凑四句一切',
+    '凑50字一切',
+    '按中文句号。切',
+    '按英文句号.切',
+    '按标点符号切',
 ]
 
-MINIMAX_ERROR_VOICE_ID = "未获取到音色列表，请检查API 密钥，然后刷新"
+MINIMAX_ERROR_VOICE_ID = '未获取到音色列表，请检查API 密钥，然后刷新'
 
 # Edge TTS 语音选项
 EDGE_VOICES = [
-    "zh-CN-XiaoxiaoNeural",
-    "zh-CN-XiaoyiNeural",
-    "zh-CN-YunjianNeural",
-    "zh-CN-YunxiNeural",
-    "zh-CN-YunxiaNeural",
-    "zh-CN-YunyangNeural",
-    "zh-CN-liaoning-XiaobeiNeural",
-    "zh-CN-shaanxi-XiaoniNeural",
-    "zh-HK-HiuGaaiNeural",
-    "zh-HK-HiuMaanNeural",
-    "zh-HK-WanLungNeural",
-    "zh-TW-HsiaoChenNeural",
-    "zh-TW-HsiaoYuNeural",
-    "zh-TW-YunJheNeural",
+    'zh-CN-XiaoxiaoNeural',
+    'zh-CN-XiaoyiNeural',
+    'zh-CN-YunjianNeural',
+    'zh-CN-YunxiNeural',
+    'zh-CN-YunxiaNeural',
+    'zh-CN-YunyangNeural',
+    'zh-CN-liaoning-XiaobeiNeural',
+    'zh-CN-shaanxi-XiaoniNeural',
+    'zh-HK-HiuGaaiNeural',
+    'zh-HK-HiuMaanNeural',
+    'zh-HK-WanLungNeural',
+    'zh-TW-HsiaoChenNeural',
+    'zh-TW-HsiaoYuNeural',
+    'zh-TW-YunJheNeural',
 ]
 
-COOKIES_PATH = DATA_DIR / "cookies.json"
+COOKIES_PATH = DATA_DIR / 'cookies.json'
 
-GITHUB_URL = "https://github.com/MerlinCN/kinoko7danmaku"
+GITHUB_URL = 'https://github.com/MerlinCN/kinoko7danmaku'
 
-AUTHOR_BILIBILI_URL = "https://space.bilibili.com/103049147"
+AUTHOR_BILIBILI_URL = 'https://space.bilibili.com/103049147'

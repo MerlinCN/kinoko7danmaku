@@ -70,10 +70,10 @@ class UploadedFileCard(CardWidget):
 
         # 文件详情（大小 + 时长）
         size_mb = self.file_size / 1024 / 1024
-        duration_str = f"{self.duration:.1f}秒"
-        details_text = f"{size_mb:.2f}MB · {duration_str}"
+        duration_str = f'{self.duration:.1f}秒'
+        details_text = f'{size_mb:.2f}MB · {duration_str}'
         details_label = CaptionLabel(details_text)
-        details_label.setTextColor("#606060", "#d2d2d2")
+        details_label.setTextColor('#606060', '#d2d2d2')
         info_layout.addWidget(details_label)
 
         layout.addLayout(info_layout)
@@ -82,7 +82,7 @@ class UploadedFileCard(CardWidget):
         # 右侧：删除按钮
         delete_button = ToolButton(FIF.DELETE)
         delete_button.setFixedSize(28, 28)
-        delete_button.setToolTip("删除")
+        delete_button.setToolTip('删除')
         delete_button.clicked.connect(lambda: self.deleteClicked.emit(self.file_id))
         layout.addWidget(delete_button)
 
@@ -133,7 +133,7 @@ class AudioUploadWidget(CardWidget):
 
         # 上传按钮
         button_layout = QHBoxLayout()
-        self.upload_button = PrimaryPushButton(FIF.FOLDER, "选择音频文件")
+        self.upload_button = PrimaryPushButton(FIF.FOLDER, '选择音频文件')
         self.upload_button.clicked.connect(self._on_upload_button_clicked)
         button_layout.addWidget(self.upload_button)
         button_layout.addStretch()
@@ -143,17 +143,17 @@ class AudioUploadWidget(CardWidget):
         if self._tip_text is None:
             # 默认提示文本
             if self._min_duration == 0:
-                tip_text = f"支持 mp3/m4a/wav 格式，最长{self._max_duration:.0f}秒，最大{self._max_size_mb:.0f}MB"
+                tip_text = f'支持 mp3/m4a/wav 格式，最长{self._max_duration:.0f}秒，最大{self._max_size_mb:.0f}MB'
             else:
                 tip_text = (
-                    f"支持 mp3/m4a/wav 格式，{self._min_duration:.0f}秒"
-                    f"-{self._max_duration / 60:.0f}分钟，最大{self._max_size_mb:.0f}MB"
+                    f'支持 mp3/m4a/wav 格式，{self._min_duration:.0f}秒'
+                    f'-{self._max_duration / 60:.0f}分钟，最大{self._max_size_mb:.0f}MB'
                 )
         else:
             tip_text = self._tip_text
 
         tip_label = CaptionLabel(tip_text)
-        tip_label.setTextColor("#606060", "#d2d2d2")
+        tip_label.setTextColor('#606060', '#d2d2d2')
         layout.addWidget(tip_label)
 
         # 已上传文件列表容器
@@ -168,9 +168,9 @@ class AudioUploadWidget(CardWidget):
         """上传按钮点击事件"""
         file_path, _ = QFileDialog.getOpenFileName(
             self,
-            "选择音频文件",
-            "",
-            "音频文件 (*.mp3 *.m4a *.wav);;所有文件 (*)",
+            '选择音频文件',
+            '',
+            '音频文件 (*.mp3 *.m4a *.wav);;所有文件 (*)',
         )
 
         if file_path:
@@ -189,9 +189,9 @@ class AudioUploadWidget(CardWidget):
         file = Path(file_path)
 
         # 检查格式
-        allowed_extensions = {".mp3", ".m4a", ".wav"}
+        allowed_extensions = {'.mp3', '.m4a', '.wav'}
         if file.suffix.lower() not in allowed_extensions:
-            return False, f"不支持的格式：{file.suffix}，仅支持 mp3/m4a/wav", 0.0
+            return False, f'不支持的格式：{file.suffix}，仅支持 mp3/m4a/wav', 0.0
 
         # 检查大小
         max_size = self._max_size_mb * 1024 * 1024
@@ -200,7 +200,7 @@ class AudioUploadWidget(CardWidget):
             size_mb = file_size / 1024 / 1024
             return (
                 False,
-                f"文件过大：{size_mb:.2f}MB，最大支持 {self._max_size_mb:.0f}MB",
+                f'文件过大：{size_mb:.2f}MB，最大支持 {self._max_size_mb:.0f}MB',
                 0.0,
             )
 
@@ -208,33 +208,31 @@ class AudioUploadWidget(CardWidget):
         try:
             audio = MutagenFile(file_path)
             if audio is None or audio.info is None:
-                return False, "无法读取音频信息", 0.0
+                return False, '无法读取音频信息', 0.0
 
             duration = audio.info.length
 
             if self._min_duration > 0 and duration < self._min_duration:
                 return (
                     False,
-                    f"音频时长过短：{duration:.1f}秒，需要至少 {self._min_duration:.0f}秒",
+                    f'音频时长过短：{duration:.1f}秒，需要至少 {self._min_duration:.0f}秒',
                     0.0,
                 )
             if duration > self._max_duration:
                 max_display = (
-                    f"{self._max_duration / 60:.0f}分钟"
-                    if self._max_duration >= 60
-                    else f"{self._max_duration:.0f}秒"
+                    f'{self._max_duration / 60:.0f}分钟' if self._max_duration >= 60 else f'{self._max_duration:.0f}秒'
                 )
                 return (
                     False,
-                    f"音频时长过长：{duration:.1f}秒，最多支持 {max_display}",
+                    f'音频时长过长：{duration:.1f}秒，最多支持 {max_display}',
                     0.0,
                 )
 
         except Exception as e:
-            logger.exception(f"检查音频时长失败: {e}")
-            return False, f"读取音频信息失败：{e}", 0.0
+            logger.exception(f'检查音频时长失败: {e}')
+            return False, f'读取音频信息失败：{e}', 0.0
 
-        return True, "", duration
+        return True, '', duration
 
     @asyncSlot()
     async def _upload_file(self, file_path: str) -> None:
@@ -251,7 +249,7 @@ class AudioUploadWidget(CardWidget):
         is_valid, error_msg, duration = self._validate_audio_file(file_path)
         if not is_valid:
             InfoBar.warning(
-                title="文件验证失败",
+                title='文件验证失败',
                 content=error_msg,
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,
@@ -265,9 +263,7 @@ class AudioUploadWidget(CardWidget):
         self.upload_button.setEnabled(False)
 
         # 显示上传状态
-        state_tooltip = StateToolTip(
-            "上传中", f"正在上传 {Path(file_path).name}...", self.window()
-        )
+        state_tooltip = StateToolTip('上传中', f'正在上传 {Path(file_path).name}...', self.window())
         state_tooltip.move(state_tooltip.getSuitablePos())
         state_tooltip.show()
 
@@ -286,28 +282,24 @@ class AudioUploadWidget(CardWidget):
             self.fileUploaded.emit(response, duration)
 
             state_tooltip.setState(True)
-            state_tooltip.setTitle("上传成功")
-            logger.info(
-                f"文件上传成功: {response.file.filename} (file_id: {response.file.file_id})"
-            )
+            state_tooltip.setTitle('上传成功')
+            logger.info(f'文件上传成功: {response.file.filename} (file_id: {response.file.file_id})')
 
         except ValueError as e:
-            logger.error(f"上传失败: {e}")
+            logger.error(f'上传失败: {e}')
             state_tooltip.setState(False)
-            state_tooltip.setTitle("上传失败")
+            state_tooltip.setTitle('上传失败')
             state_tooltip.setContent(str(e))
         except Exception as e:
-            logger.exception(f"上传失败: {e}")
+            logger.exception(f'上传失败: {e}')
             state_tooltip.setState(False)
-            state_tooltip.setTitle("上传失败")
-            state_tooltip.setContent("网络请求失败，请检查网络连接")
+            state_tooltip.setTitle('上传失败')
+            state_tooltip.setContent('网络请求失败，请检查网络连接')
         finally:
             self._is_uploading = False
             self.upload_button.setEnabled(True)
 
-    def _add_uploaded_file_card(
-        self, file_response: FileUploadResponse, duration: float
-    ) -> None:
+    def _add_uploaded_file_card(self, file_response: FileUploadResponse, duration: float) -> None:
         """添加已上传文件卡片
 
         Args:
@@ -332,9 +324,7 @@ class AudioUploadWidget(CardWidget):
             file_id: 文件ID
         """
         # 从列表中移除
-        self._uploaded_files = [
-            f for f in self._uploaded_files if f.file.file_id != file_id
-        ]
+        self._uploaded_files = [f for f in self._uploaded_files if f.file.file_id != file_id]
         self._uploaded_durations.pop(file_id, None)
 
         # 从 UI 中移除
@@ -346,8 +336,8 @@ class AudioUploadWidget(CardWidget):
                 break
 
         InfoBar.success(
-            title="删除成功",
-            content="已删除文件",
+            title='删除成功',
+            content='已删除文件',
             orient=Qt.Orientation.Horizontal,
             isClosable=True,
             position=InfoBarPosition.TOP,

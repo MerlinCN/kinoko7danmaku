@@ -22,9 +22,9 @@ class MinimaxHomeInterface(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(36, 36, 36, 36)
 
-        title = TitleLabel("MiniMax TTS")
+        title = TitleLabel('MiniMax TTS')
         layout.addWidget(title)
 
-        placeholder = SubtitleLabel("欢迎使用 MiniMax TTS 服务")
+        placeholder = SubtitleLabel('欢迎使用 MiniMax TTS 服务')
         placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(placeholder, 1, Qt.AlignmentFlag.AlignCenter)

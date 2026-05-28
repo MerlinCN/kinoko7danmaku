@@ -14,14 +14,14 @@ from core.const import RESOURCE_DIR
 class CustomIcon(FluentIconBase, Enum):
     """项目自定义图标，跟随主题在黑/白两种 SVG 之间切换"""
 
-    BILIBILI = "bilibili"
-    MINIMAX = "minimax"
-    YUAN = "yuan"
-    MERGE = "merge"
-    KEY = "key"
-    FORMAT_QUOTE = "format_quote"
-    THERMOSTAT = "thermostat"
-    STAIRS = "stairs"
+    BILIBILI = 'bilibili'
+    MINIMAX = 'minimax'
+    YUAN = 'yuan'
+    MERGE = 'merge'
+    KEY = 'key'
+    FORMAT_QUOTE = 'format_quote'
+    THERMOSTAT = 'thermostat'
+    STAIRS = 'stairs'
 
     def path(self, theme: Theme = Theme.AUTO) -> str:
         """根据主题返回对应颜色版本的 SVG 路径
@@ -32,4 +32,4 @@ class CustomIcon(FluentIconBase, Enum):
         Returns:
             str: SVG 文件的绝对路径
         """
-        return str(RESOURCE_DIR / "icons" / f"{self.value}_{getIconColor(theme)}.svg")
+        return str(RESOURCE_DIR / 'icons' / f'{self.value}_{getIconColor(theme)}.svg')

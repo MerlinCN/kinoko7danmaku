@@ -1,6 +1,5 @@
 """整数输入设置卡片"""
 
-
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIcon, QIntValidator
 from PySide6.QtWidgets import QWidget
@@ -22,7 +21,7 @@ class IntSettingCard(SettingCard):
         title: str,
         content: str | None = None,
         parent: QWidget | None = None,
-        placeholder: str = "",
+        placeholder: str = '',
     ) -> None:
         """初始化整数输入设置卡片
 

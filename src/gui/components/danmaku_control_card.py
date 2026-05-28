@@ -41,12 +41,12 @@ class DanmakuControlCard(CardWidget):
 
         # 标题
         title_layout = QHBoxLayout()
-        self.title_label = SubtitleLabel("弹幕监听")
+        self.title_label = SubtitleLabel('弹幕监听')
         title_layout.addWidget(self.title_label)
         title_layout.addStretch()
 
         # 状态指示器
-        self.status_label = BodyLabel("状态: 已断开 ⭕")
+        self.status_label = BodyLabel('状态: 已断开 ⭕')
         title_layout.addWidget(self.status_label)
 
         self.main_layout.addLayout(title_layout)
@@ -55,12 +55,12 @@ class DanmakuControlCard(CardWidget):
         button_layout = QHBoxLayout()
         button_layout.setSpacing(8)
 
-        self.start_btn = PushButton("启动监听")
+        self.start_btn = PushButton('启动监听')
         self.start_btn.setFixedWidth(100)
         self.start_btn.clicked.connect(self._on_start_listening)
         button_layout.addWidget(self.start_btn)
 
-        self.stop_btn = PushButton("停止监听")
+        self.stop_btn = PushButton('停止监听')
         self.stop_btn.setFixedWidth(100)
         self.stop_btn.setEnabled(False)
         self.stop_btn.clicked.connect(self._on_stop_listening)
@@ -90,13 +90,13 @@ class DanmakuControlCard(CardWidget):
     def _update_status(self, is_connected: bool) -> None:
         """更新连接状态"""
         if is_connected:
-            self.status_label.setText("状态: 已连接 🟢")
-            self.status_label.setStyleSheet("color: #52cc00;")
+            self.status_label.setText('状态: 已连接 🟢')
+            self.status_label.setStyleSheet('color: #52cc00;')
             self.start_btn.setEnabled(False)
             self.stop_btn.setEnabled(True)
         else:
-            self.status_label.setText("状态: 已断开 ⭕")
-            self.status_label.setStyleSheet("color: #999999;")
+            self.status_label.setText('状态: 已断开 ⭕')
+            self.status_label.setStyleSheet('color: #999999;')
             self.start_btn.setEnabled(True)
             self.stop_btn.setEnabled(False)
 

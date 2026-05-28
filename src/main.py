@@ -21,33 +21,31 @@ def main() -> None:
     """主函数"""
 
     # 创建日志目录
-    log_dir = DATA_DIR / "logs"
+    log_dir = DATA_DIR / 'logs'
     log_dir.mkdir(exist_ok=True)
 
     # 添加文件处理器
     logger.add(
-        sink=str(log_dir / "{time:YYYY-MM-DD_HH}.log"),
-        rotation="1 hour",  # 每小时轮转一次
-        retention="30 days",  # 保留 30 天的日志
-        level="INFO",  # 只记录 INFO 及以上级别
-        encoding="utf-8",  # UTF-8 编码
-        format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
+        sink=str(log_dir / '{time:YYYY-MM-DD_HH}.log'),
+        rotation='1 hour',  # 每小时轮转一次
+        retention='30 days',  # 保留 30 天的日志
+        level='INFO',  # 只记录 INFO 及以上级别
+        encoding='utf-8',  # UTF-8 编码
+        format='{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}',
         enqueue=True,  # 异步写入,避免阻塞
-        compression="zip",  # 压缩旧日志文件
+        compression='zip',  # 压缩旧日志文件
     )
 
     # 启用高 DPI 支持（Qt6 默认启用，这里只设置缩放策略）
-    QApplication.setHighDpiScaleFactorRoundingPolicy(
-        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
-    )
+    QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
 
     # 创建应用（使用 qasync 的 QApplication）
     app = QApplication(sys.argv)
-    app.setApplicationName("弹幕姬")
-    app.setOrganizationName("弹幕姬")
+    app.setApplicationName('弹幕姬')
+    app.setOrganizationName('弹幕姬')
 
     # 设置应用图标（任务栏图标）
-    icon_path = Path.cwd() / "resource" / "icon.ico"
+    icon_path = Path.cwd() / 'resource' / 'icon.ico'
     if icon_path.exists():
         app.setWindowIcon(QIcon(str(icon_path)))
 
@@ -66,6 +64,6 @@ def main() -> None:
         loop.run_forever()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     multiprocessing.freeze_support()
     main()

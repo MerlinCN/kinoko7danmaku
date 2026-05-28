@@ -1,6 +1,5 @@
 """浮点数范围设置卡片"""
 
-
 from PySide6.QtCore import Signal
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QWidget
@@ -58,9 +57,7 @@ class FloatRangeSettingCard(RangeSettingCard):
         # 阻止信号触发，避免在设置范围时触发 valueChanged
         self.slider.blockSignals(blocked=True)
         # 将浮点数范围转换为整数范围
-        self.slider.setRange(
-            int(min_val * self._internal_step), int(max_val * self._internal_step)
-        )
+        self.slider.setRange(int(min_val * self._internal_step), int(max_val * self._internal_step))
         self.slider.setSingleStep(1)  # 内部步长始终为 1
         self.slider.setValue(int(self.configItem.value * self._internal_step))
 
@@ -75,7 +72,7 @@ class FloatRangeSettingCard(RangeSettingCard):
         Args:
             value: 要显示的浮点数值
         """
-        self.valueLabel.setText(f"{value:.{self.decimals}f}")
+        self.valueLabel.setText(f'{value:.{self.decimals}f}')
         self.valueLabel.adjustSize()
 
     def setValue(self, value: float) -> None:

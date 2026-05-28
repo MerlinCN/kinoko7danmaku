@@ -26,9 +26,9 @@ class VersionInfo(NamedTuple):
 class UpdateChecker:
     """GitHub 更新检查器"""
 
-    GITHUB_REPO = "MerlinCN/kinoko7danmaku"
-    API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
-    CACHE_FILE = DATA_DIR / "update_cache.json"
+    GITHUB_REPO = 'MerlinCN/kinoko7danmaku'
+    API_URL = f'https://api.github.com/repos/{GITHUB_REPO}/releases/latest'
+    CACHE_FILE = DATA_DIR / 'update_cache.json'
     CHECK_INTERVAL = 3600 * 1  # 1 小时检查一次
 
     @staticmethod
@@ -51,11 +51,11 @@ class UpdateChecker:
             版本号元组 (major, minor, patch)
         """
         # 移除 'v' 前缀
-        version_str = version_str.lstrip("v")
+        version_str = version_str.lstrip('v')
         # 提取数字部分
-        match = re.match(r"(\d+)\.(\d+)\.(\d+)", version_str)
+        match = re.match(r'(\d+)\.(\d+)\.(\d+)', version_str)
         if not match:
-            raise ValueError(f"无效的版本号格式: {version_str}")
+            raise ValueError(f'无效的版本号格式: {version_str}')
         return int(match.group(1)), int(match.group(2)), int(match.group(3))
 
     @staticmethod
@@ -91,10 +91,10 @@ class UpdateChecker:
             return {}
 
         try:
-            with open(UpdateChecker.CACHE_FILE, encoding="utf-8") as f:
+            with open(UpdateChecker.CACHE_FILE, encoding='utf-8') as f:
                 return json.load(f)
         except Exception as e:
-            logger.warning(f"读取更新缓存失败: {e}")
+            logger.warning(f'读取更新缓存失败: {e}')
             return {}
 
     @staticmethod
@@ -115,15 +115,15 @@ class UpdateChecker:
         try:
             UpdateChecker.CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
             cache_data = {
-                "etag": etag,
-                "last_check_time": last_check_time,
-                "latest_version": latest_version,
-                "release_info": release_info,
+                'etag': etag,
+                'last_check_time': last_check_time,
+                'latest_version': latest_version,
+                'release_info': release_info,
             }
-            with open(UpdateChecker.CACHE_FILE, "w", encoding="utf-8") as f:
+            with open(UpdateChecker.CACHE_FILE, 'w', encoding='utf-8') as f:
                 json.dump(cache_data, f, indent=4, ensure_ascii=False)
         except Exception as e:
-            logger.warning(f"保存更新缓存失败: {e}")
+            logger.warning(f'保存更新缓存失败: {e}')
 
     @staticmethod
     def _check_version_from_cache(
@@ -142,22 +142,20 @@ class UpdateChecker:
             如果有新版本，返回 VersionInfo；否则返回 None
         """
         if not cached_latest_version:
-            logger.info(f"当前已是最新版本: {current_version}")
+            logger.info(f'当前已是最新版本: {current_version}')
             return None
 
         if UpdateChecker.compare_versions(cached_latest_version, current_version) > 0:
-            logger.info(
-                f"发现新版本: {cached_latest_version} (当前版本: {current_version})（来自缓存）"
-            )
+            logger.info(f'发现新版本: {cached_latest_version} (当前版本: {current_version})（来自缓存）')
             if cached_release_info:
                 return VersionInfo(
                     version=cached_latest_version,
-                    download_url=cached_release_info.get("download_url", ""),
-                    release_notes=cached_release_info.get("release_notes", ""),
-                    release_url=cached_release_info.get("release_url", ""),
+                    download_url=cached_release_info.get('download_url', ''),
+                    release_notes=cached_release_info.get('release_notes', ''),
+                    release_url=cached_release_info.get('release_url', ''),
                 )
         else:
-            logger.info(f"当前已是最新版本: {current_version}")
+            logger.info(f'当前已是最新版本: {current_version}')
 
         return None
 
@@ -176,43 +174,34 @@ class UpdateChecker:
 
         # 加载缓存
         cache = UpdateChecker._load_cache()
-        last_check_time = cache.get("last_check_time", 0)
-        etag = cache.get("etag")
-        cached_latest_version = cache.get("latest_version")
-        cached_release_info = cache.get("release_info")
+        last_check_time = cache.get('last_check_time', 0)
+        etag = cache.get('etag')
+        cached_latest_version = cache.get('latest_version')
+        cached_release_info = cache.get('release_info')
 
         # 检查是否需要 API 请求（距离上次检查时间）
-        should_skip_api = (
-            not force
-            and (current_time - last_check_time) < UpdateChecker.CHECK_INTERVAL
-        )
+        should_skip_api = not force and (current_time - last_check_time) < UpdateChecker.CHECK_INTERVAL
 
         if should_skip_api:
-            logger.info(
-                f"距离上次检查不足 {UpdateChecker.CHECK_INTERVAL / 3600:.1f} 小时，跳过 API 请求"
-            )
+            logger.info(f'距离上次检查不足 {UpdateChecker.CHECK_INTERVAL / 3600:.1f} 小时，跳过 API 请求')
             # 即使跳过 API 请求，也要检查缓存中的版本
-            return UpdateChecker._check_version_from_cache(
-                current_version, cached_latest_version, cached_release_info
-            )
+            return UpdateChecker._check_version_from_cache(current_version, cached_latest_version, cached_release_info)
 
         # 发起 API 请求
         try:
-            headers = {"If-None-Match": etag} if etag else {}
+            headers = {'If-None-Match': etag} if etag else {}
             response = httpx.get(UpdateChecker.API_URL, headers=headers, timeout=10.0)
 
             # 403 限流：返回缓存
             if response.status_code == 403:
-                logger.warning("GitHub API 限流，使用缓存数据")
+                logger.warning('GitHub API 限流，使用缓存数据')
                 return UpdateChecker._check_version_from_cache(
                     current_version, cached_latest_version, cached_release_info
                 )
 
             # 304 未修改：更新检查时间，返回缓存
             if response.status_code == 304:
-                UpdateChecker._save_cache(
-                    etag, current_time, cached_latest_version, cached_release_info
-                )
+                UpdateChecker._save_cache(etag, current_time, cached_latest_version, cached_release_info)
                 return UpdateChecker._check_version_from_cache(
                     current_version, cached_latest_version, cached_release_info
                 )
@@ -222,54 +211,42 @@ class UpdateChecker:
 
             # 解析新版本数据
             data = response.json()
-            latest_version = data.get("tag_name", "")
+            latest_version = data.get('tag_name', '')
             if not latest_version:
-                logger.warning("GitHub API 返回的版本号为空")
+                logger.warning('GitHub API 返回的版本号为空')
                 return None
 
             # 保存到缓存
-            new_etag = response.headers.get("etag", etag)
+            new_etag = response.headers.get('etag', etag)
             release_info = {
-                "download_url": data.get("html_url", ""),
-                "release_notes": data.get("body", ""),
-                "release_url": data.get("html_url", ""),
+                'download_url': data.get('html_url', ''),
+                'release_notes': data.get('body', ''),
+                'release_url': data.get('html_url', ''),
             }
-            UpdateChecker._save_cache(
-                new_etag, current_time, latest_version, release_info
-            )
+            UpdateChecker._save_cache(new_etag, current_time, latest_version, release_info)
 
             # 比较版本
             if UpdateChecker.compare_versions(latest_version, current_version) <= 0:
-                logger.info(f"当前已是最新版本: {current_version}")
+                logger.info(f'当前已是最新版本: {current_version}')
                 return None
 
-            logger.info(f"发现新版本: {latest_version} (当前版本: {current_version})")
+            logger.info(f'发现新版本: {latest_version} (当前版本: {current_version})')
             return VersionInfo(
                 version=latest_version,
-                download_url=release_info["download_url"],
-                release_notes=release_info["release_notes"],
-                release_url=release_info["release_url"],
+                download_url=release_info['download_url'],
+                release_notes=release_info['release_notes'],
+                release_url=release_info['release_url'],
             )
 
         except httpx.TimeoutException:
-            logger.warning("检查更新超时，使用缓存数据")
-            return UpdateChecker._check_version_from_cache(
-                current_version, cached_latest_version, cached_release_info
-            )
+            logger.warning('检查更新超时，使用缓存数据')
+            return UpdateChecker._check_version_from_cache(current_version, cached_latest_version, cached_release_info)
         except httpx.HTTPStatusError as e:
-            logger.warning(
-                f"检查更新时 HTTP 错误: {e.response.status_code}，使用缓存数据"
-            )
-            return UpdateChecker._check_version_from_cache(
-                current_version, cached_latest_version, cached_release_info
-            )
+            logger.warning(f'检查更新时 HTTP 错误: {e.response.status_code}，使用缓存数据')
+            return UpdateChecker._check_version_from_cache(current_version, cached_latest_version, cached_release_info)
         except httpx.HTTPError as e:
-            logger.warning(f"检查更新时网络错误: {e}，使用缓存数据")
-            return UpdateChecker._check_version_from_cache(
-                current_version, cached_latest_version, cached_release_info
-            )
+            logger.warning(f'检查更新时网络错误: {e}，使用缓存数据')
+            return UpdateChecker._check_version_from_cache(current_version, cached_latest_version, cached_release_info)
         except Exception as e:
-            logger.warning(f"检查更新时发生错误: {e}，使用缓存数据")
-            return UpdateChecker._check_version_from_cache(
-                current_version, cached_latest_version, cached_release_info
-            )
+            logger.warning(f'检查更新时发生错误: {e}，使用缓存数据')
+            return UpdateChecker._check_version_from_cache(current_version, cached_latest_version, cached_release_info)

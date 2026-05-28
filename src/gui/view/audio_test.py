@@ -36,11 +36,11 @@ def _format_voice(voice_id: str) -> str:
         str: 用于展示的文本
     """
     if not voice_id:
-        return "（未设置）"
+        return '（未设置）'
     voice_dict = cfg.voiceDict.value
     name = voice_dict.get(voice_id)
     if name and name != voice_id:
-        return f"{name}（{voice_id}）"
+        return f'{name}（{voice_id}）'
     return voice_id
 
 
@@ -63,7 +63,7 @@ class AudioTestInterface(ScrollArea):
     def _init_ui(self) -> None:
         """初始化 UI 组件"""
         # 标题
-        self.title_label = TitleLabel("音频测试", self)
+        self.title_label = TitleLabel('音频测试', self)
 
         # 测试卡片
         self.test_card = CardWidget(self.scrollWidget)
@@ -72,7 +72,7 @@ class AudioTestInterface(ScrollArea):
         card_layout.setSpacing(12)
 
         self.text_edit = TextEdit()
-        self.text_edit.setPlaceholderText("请输入要测试的文本...")
+        self.text_edit.setPlaceholderText('请输入要测试的文本...')
         self.text_edit.setMinimumHeight(200)
         card_layout.addWidget(self.text_edit)
 
@@ -93,13 +93,13 @@ class AudioTestInterface(ScrollArea):
 
     def _build_minimax_group(self) -> SettingCardGroup:
         """构建 Minimax 当前参数分组"""
-        group = SettingCardGroup("Minimax 当前参数", self.scrollWidget)
+        group = SettingCardGroup('Minimax 当前参数', self.scrollWidget)
         group.addSettingCard(
             ReadOnlyInfoCard(
                 configItem=cfg.minimaxApiKey,
                 icon=FIF.EDIT,
-                title="API Key",
-                content="调用 Minimax TTS 时使用的 API 密钥",
+                title='API Key',
+                content='调用 Minimax TTS 时使用的 API 密钥',
                 mask=True,
                 parent=group,
             )
@@ -107,8 +107,8 @@ class AudioTestInterface(ScrollArea):
         self.minimaxVoiceCard = ReadOnlyInfoCard(
             configItem=cfg.minimaxVoiceId,
             icon=FIF.MICROPHONE,
-            title="音色",
-            content="当前使用的 Minimax 音色",
+            title='音色',
+            content='当前使用的 Minimax 音色',
             formatter=_format_voice,
             parent=group,
         )
@@ -117,8 +117,8 @@ class AudioTestInterface(ScrollArea):
             ReadOnlyInfoCard(
                 configItem=cfg.minimaxModel,
                 icon=FIF.ROBOT,
-                title="模型",
-                content="当前使用的 Minimax 模型",
+                title='模型',
+                content='当前使用的 Minimax 模型',
                 parent=group,
             )
         )
@@ -126,8 +126,8 @@ class AudioTestInterface(ScrollArea):
             ReadOnlyInfoCard(
                 configItem=cfg.minimaxSpeed,
                 icon=FIF.SPEED_OFF,
-                title="语速",
-                content="当前的语音播放速度",
+                title='语速',
+                content='当前的语音播放速度',
                 parent=group,
             )
         )
@@ -135,8 +135,8 @@ class AudioTestInterface(ScrollArea):
             ReadOnlyInfoCard(
                 configItem=cfg.minimaxVol,
                 icon=FIF.VOLUME,
-                title="音量",
-                content="当前的语音音量",
+                title='音量',
+                content='当前的语音音量',
                 parent=group,
             )
         )
@@ -144,8 +144,8 @@ class AudioTestInterface(ScrollArea):
             ReadOnlyInfoCard(
                 configItem=cfg.minimaxPitch,
                 icon=FIF.MUSIC,
-                title="音调",
-                content="当前的语音音调",
+                title='音调',
+                content='当前的语音音调',
                 parent=group,
             )
         )
@@ -153,13 +153,13 @@ class AudioTestInterface(ScrollArea):
 
     def _build_fish_speech_group(self) -> SettingCardGroup:
         """构建 Fish Speech 当前参数分组"""
-        group = SettingCardGroup("Fish Speech 当前参数", self.scrollWidget)
+        group = SettingCardGroup('Fish Speech 当前参数', self.scrollWidget)
         group.addSettingCard(
             ReadOnlyInfoCard(
                 configItem=cfg.fishSpeechApiUrl,
                 icon=FIF.LINK,
-                title="API 地址",
-                content="Fish Speech TTS 服务的 API 地址",
+                title='API 地址',
+                content='Fish Speech TTS 服务的 API 地址',
                 parent=group,
             )
         )
@@ -167,13 +167,13 @@ class AudioTestInterface(ScrollArea):
 
     def _build_gpt_sovits_group(self) -> SettingCardGroup:
         """构建 GPT-SoVITS 当前参数分组（仅核心 6 项）"""
-        group = SettingCardGroup("GPT-SoVITS 当前参数", self.scrollWidget)
+        group = SettingCardGroup('GPT-SoVITS 当前参数', self.scrollWidget)
         group.addSettingCard(
             ReadOnlyInfoCard(
                 configItem=cfg.gptSovitsApiUrl,
                 icon=FIF.LINK,
-                title="API 地址",
-                content="GPT-SoVITS TTS 服务的 API 地址",
+                title='API 地址',
+                content='GPT-SoVITS TTS 服务的 API 地址',
                 parent=group,
             )
         )
@@ -181,8 +181,8 @@ class AudioTestInterface(ScrollArea):
             ReadOnlyInfoCard(
                 configItem=cfg.gptSovitsRefAudioPath,
                 icon=FIF.MUSIC,
-                title="参考音频路径",
-                content="当前使用的参考音频文件",
+                title='参考音频路径',
+                content='当前使用的参考音频文件',
                 parent=group,
             )
         )
@@ -190,8 +190,8 @@ class AudioTestInterface(ScrollArea):
             ReadOnlyInfoCard(
                 configItem=cfg.gptSovitsRefText,
                 icon=FIF.EDIT,
-                title="参考文本",
-                content="参考音频对应的文本内容",
+                title='参考文本',
+                content='参考音频对应的文本内容',
                 parent=group,
             )
         )
@@ -199,8 +199,8 @@ class AudioTestInterface(ScrollArea):
             ReadOnlyInfoCard(
                 configItem=cfg.gptSovitsTopK,
                 icon=FIF.TAG,
-                title="Top K",
-                content="采样时的 Top K 值",
+                title='Top K',
+                content='采样时的 Top K 值',
                 parent=group,
             )
         )
@@ -208,8 +208,8 @@ class AudioTestInterface(ScrollArea):
             ReadOnlyInfoCard(
                 configItem=cfg.gptSovitsTopP,
                 icon=FIF.TAG,
-                title="Top P",
-                content="采样时的 Top P 值",
+                title='Top P',
+                content='采样时的 Top P 值',
                 parent=group,
             )
         )
@@ -217,8 +217,8 @@ class AudioTestInterface(ScrollArea):
             ReadOnlyInfoCard(
                 configItem=cfg.gptSovitsTemperature,
                 icon=FIF.CARE_RIGHT_SOLID,
-                title="采样温度",
-                content="当前的采样温度",
+                title='采样温度',
+                content='当前的采样温度',
                 parent=group,
             )
         )
@@ -240,8 +240,8 @@ class AudioTestInterface(ScrollArea):
         self.setWidget(self.scrollWidget)
         self.setWidgetResizable(True)
 
-        self.scrollWidget.setObjectName("scrollWidget")
-        self.title_label.setObjectName("titleLabel")
+        self.scrollWidget.setObjectName('scrollWidget')
+        self.title_label.setObjectName('titleLabel')
 
     def _connect_signals(self) -> None:
         """连接信号"""
@@ -275,9 +275,9 @@ class AudioTestInterface(ScrollArea):
             audio = await tts_service.text_to_speech(text)
             await audio_player.play_bytes_async(audio)
         except Exception as e:
-            logger.exception(f"音频测试失败: {e}")
+            logger.exception(f'音频测试失败: {e}')
             InfoBar.error(
-                title="测试失败",
+                title='测试失败',
                 content=str(e),
                 orient=Qt.Orientation.Horizontal,
                 isClosable=True,

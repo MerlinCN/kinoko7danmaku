@@ -34,16 +34,16 @@ def get_tts_service() -> FishSpeechService | GPTSovitsService | MinimaxService |
         _default_tts_service = EdgeService()
 
     else:
-        raise ValueError(f"Invalid TTS service: {model_type}")
+        raise ValueError(f'Invalid TTS service: {model_type}')
     return _default_tts_service
 
 
 __all__ = [
-    "EdgeService",
-    "FishSpeechService",
-    "GPTSovitsService",
-    "MinimaxService",
-    "PiperService",
-    "TTSService",
-    "get_tts_service",
+    'EdgeService',
+    'FishSpeechService',
+    'GPTSovitsService',
+    'MinimaxService',
+    'PiperService',
+    'TTSService',
+    'get_tts_service',
 ]
