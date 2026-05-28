@@ -12,6 +12,7 @@ class ServiceType(str, Enum):
     GPT_SOVITS = "gpt_sovits"
     MINIMAX = "minimax"
     PIPER = "piper"
+    EDGE = "edge"
 
 
 class ServiceDetail(BaseModel):
