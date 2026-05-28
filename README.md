@@ -2,6 +2,8 @@
 
 <div align="center">
 
+<img src="https://socialify.git.ci/MerlinCN/kinoko7danmaku/image?description=1&forks=1&issues=1&language=1&name=1&owner=1&stargazers=1&theme=Light" alt="kinoko7danmaku" width="640" height="320" />
+
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python)](https://www.python.org/)
 [![Build and Release](https://github.com/MerlinCN/kinoko7danmaku/actions/workflows/pyinstaller.yml/badge.svg)](https://github.com/MerlinCN/kinoko7danmaku/actions/workflows/pyinstaller.yml)
@@ -74,6 +76,25 @@ uv run src/main.py
 - **文本模板** — 各类消息的播报文案
 
 配置自动保存至 `~/.kinoko7danmaku/config.json`。
+
+## 支持与贡献
+
+觉得好用可以给项目点个 Star，或者去 [爱发电](https://afdian.net/a/MerlinCN) 投喂我。
+
+有意见或建议欢迎提交 Issues 和 Pull Requests。
+
+感谢以下贡献者：
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/zjp-shadow">
+        <img src="https://avatars.githubusercontent.com/zjp-shadow?v=4" width="80px;" alt="shadow"/><br />
+        <sub><b>shadow</b></sub>
+      </a>
+    </td>
+  </tr>
+</table>
 
 ## 许可证
 
