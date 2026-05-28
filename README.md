@@ -1,5 +1,3 @@
-# Kinoko7Danmaku
-
 <div align="center">
 
 <img src="https://socialify.git.ci/MerlinCN/kinoko7danmaku/image?description=1&forks=1&issues=1&language=1&name=1&owner=1&stargazers=1&theme=Light" alt="kinoko7danmaku" width="640" height="320" />
