@@ -1,6 +1,9 @@
 # Pre-commit hooks configuration
 # See https://pre-commit.com for more information
 
+ci:
+  skip: [tombi-lint, tombi-format]
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
