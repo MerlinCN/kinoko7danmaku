@@ -22,7 +22,7 @@ attrs==25.4.0
     # via aiohttp
 beautifulsoup4==4.14.3
     # via bilibili-api-python
-bilibili-api-python==17.4.1
+bilibili-api-python @ git+https://github.com/MerlinCN/bilibili-api.git@2190b725bd25e0e539cb8dfecd36bd75b8bacca7
     # via kinoko7danmaku
 brotli==1.2.0
     # via bilibili-api-python
