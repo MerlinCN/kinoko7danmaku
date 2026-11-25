@@ -69,7 +69,7 @@ class LoginPanel(QWidget):
         self.main_layout.addLayout(button_layout)
 
         # 状态标签
-        self.status_label = BodyLabel('登录状态: 未登录 ❌')
+        self.status_label = BodyLabel('登录状态: 未登录')
         self.status_label.setAlignment(Qt.AlignCenter)
         self.main_layout.addWidget(self.status_label)
 
@@ -117,7 +117,7 @@ class LoginPanel(QWidget):
         self.qr_label.setImage(pixmap)
         self.qr_label.setScaledSize(QSize(280, 280))
 
-        self.status_label.setText('登录状态: 等待扫描 ⏳')
+        self.status_label.setText('登录状态: 等待扫描')
 
         # 使用 QTimer 定时轮询（不阻塞界面）
         self._start_polling_timer()
@@ -214,11 +214,11 @@ class LoginPanel(QWidget):
             self._qr_data = None
             if self._login_timer is not None:
                 self._login_timer.stop()
-            self.status_label.setText('登录状态: 二维码已过期 ❌')
+            self.status_label.setText('登录状态: 二维码已过期')
 
         elif code == 86090:  # 已扫描未确认
             logger.info('二维码已扫描，等待确认')
-            self.status_label.setText('登录状态: 已扫描，请确认 📱')
+            self.status_label.setText('登录状态: 已扫描，请确认')
 
         elif code == 86039:  # 未扫描
             logger.debug('等待扫描...')
@@ -228,7 +228,7 @@ class LoginPanel(QWidget):
 
     def _on_login_success(self) -> None:
         """登录成功"""
-        self.status_label.setText('登录状态: 已登录 ✅')
+        self.status_label.setText('登录状态: 已登录')
         self.qr_label.setText('')
         self.qr_label.setPixmap(QPixmap())
         bili_service.load_credential()

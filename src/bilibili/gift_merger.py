@@ -5,7 +5,7 @@
 
 from time import time
 
-from PySide6.QtCore import QObject, QTimer, Signal
+from PySide6.QtCore import QObject, QTimer
 from loguru import logger
 from pydantic import BaseModel, Field
 from qasync import asyncSlot
@@ -40,12 +40,7 @@ class GiftMerger(QObject):
     Attributes:
         user_gift_groups: 单用户礼物组字典，key 为 (用户名, 礼物名称)
         check_timer: 定时器，每秒检查一次所有礼物组
-
-    Signals:
-        merged_gift_received(str): 发送合并后的文本到 GUI
     """
-
-    merged_gift_received = Signal(str)
 
     def __init__(self) -> None:
         """初始化礼物合并管理器
@@ -190,9 +185,6 @@ class GiftMerger(QObject):
             gift_name=gift_message.gift_name,
             gift_num=gift_message.gift_num,
         )
-
-        # 发射信号到 GUI
-        self.merged_gift_received.emit(display_text)
 
         # 发送 TTS
         tts_service = get_tts_service()

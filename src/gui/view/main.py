@@ -4,7 +4,7 @@ import asyncio
 
 from pathlib import Path
 
-from PySide6.QtCore import QEvent, QTimer, QUrl, Qt
+from PySide6.QtCore import QEvent, QTimer, QUrl, Qt, Signal
 from PySide6.QtGui import QCloseEvent, QDesktopServices, QIcon
 from PySide6.QtWidgets import (
     QApplication,
@@ -67,16 +67,18 @@ class MainInterface(QWidget):
     包含登录面板和主页面板的切换。
     """
 
+    open_settings = Signal()
+    open_audio_test = Signal()
+
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
         self._setup_ui()
-        self._connect_bili_signals()
         self._check_login_status()
 
     def _setup_ui(self) -> None:
         """设置界面"""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(36, 36, 36, 36)
+        layout.setContentsMargins(24, 24, 24, 24)
         self.title_label = TitleLabel('登录', self)
         layout.addWidget(self.title_label)
         # 创建 stacked widget 来切换登录/主界面
@@ -88,7 +90,9 @@ class MainInterface(QWidget):
 
         # 创建主页面板
         self.home_panel = HomePanel()
-        self.home_panel.user_info_card.logout_btn.clicked.connect(self._on_logout)
+        self.home_panel.logout_requested.connect(self._on_logout)
+        self.home_panel.open_settings.connect(self.open_settings.emit)
+        self.home_panel.open_audio_test.connect(self.open_audio_test.emit)
 
         # 将面板添加到 stacked widget
         self.stacked_widget.addWidget(self.login_panel)
@@ -96,31 +100,22 @@ class MainInterface(QWidget):
 
         layout.addWidget(self.stacked_widget)
 
-    def _connect_bili_signals(self) -> None:
-        """连接 B 站服务的信号到消息显示卡片"""
-        message_card = self.home_panel.message_display_card
-
-        # 连接各种消息信号到消息显示卡片
-        bili_service.danmaku_received.connect(message_card.add_message)
-        bili_service.gift_received.connect(message_card.add_message)
-        bili_service.guard_received.connect(message_card.add_message)
-        bili_service.superchat_received.connect(message_card.add_message)
-
     def _check_login_status(self) -> None:
         """检查登录状态"""
-        if bili_service.is_logged_in():
+        logged_in = bili_service.is_logged_in()
+        if logged_in:
             self.stacked_widget.setCurrentWidget(self.home_panel)
-            self.title_label.setText('主页')
+            self.title_label.setVisible(False)
+            self.home_panel.refresh()
         else:
             self.stacked_widget.setCurrentWidget(self.login_panel)
             self.title_label.setText('登录')
+            self.title_label.setVisible(True)
 
     def _on_login_success(self) -> None:
         """登录成功的回调"""
         logger.info('登录成功，切换到主页面')
         self._check_login_status()
-        # 刷新用户信息
-        self.home_panel.user_info_card._load_user_info()
 
     @asyncSlot()
     async def _on_logout(self) -> None:
@@ -129,7 +124,7 @@ class MainInterface(QWidget):
 
         # 切换回登录界面
         self.login_panel._load_qr_code()
-        self.stacked_widget.setCurrentWidget(self.login_panel)
+        self._check_login_status()
 
 
 class MainWindow(FluentWindow):
@@ -199,6 +194,10 @@ class MainWindow(FluentWindow):
         self.settings_interface = SettingsInterface(self)
         self.settings_interface.setObjectName('settingsInterface')
 
+        # 主页快捷入口
+        self.main_interface.open_settings.connect(self._open_settings_page)
+        self.main_interface.open_audio_test.connect(self._open_audio_test_page)
+
         # 添加主界面到导航栏
         self.addSubInterface(self.main_interface, FIF.HOME, '主页', NavigationItemPosition.TOP)
 
@@ -259,6 +258,14 @@ class MainWindow(FluentWindow):
         )
         # 添加设置界面到导航栏
         self.addSubInterface(self.settings_interface, FIF.SETTING, '设置', NavigationItemPosition.BOTTOM)
+
+    def _open_settings_page(self) -> None:
+        """打开设置页"""
+        self.switchTo(self.settings_interface)
+
+    def _open_audio_test_page(self) -> None:
+        """打开音频测试页"""
+        self.switchTo(self.audio_test_interface)
 
     @asyncSlot()
     async def _on_update(self, is_force: bool = False) -> None:

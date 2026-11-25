@@ -48,6 +48,18 @@ class StreamPlayer:
 
         return choices
 
+    def get_current_output_device(self) -> OutputDevice | None:
+        """获取当前输出设备
+
+        Returns:
+            OutputDevice | None: 当前设备，查询失败时返回 None
+        """
+        try:
+            device_info: dict = sd.query_devices(self.device_index)  # type: ignore
+        except Exception:
+            return None
+        return OutputDevice(index=self.device_index, name=device_info['name'])
+
     def set_output_device_by_name(self, device_name: str) -> None:
         """根据设备名称设置输出设备"""
         for device in self.get_output_devices():
