@@ -1,10 +1,8 @@
 """直播间信息头部卡片"""
 
-import aiohttp
-
-from PySide6.QtCore import QTimer, QUrl, Qt, Signal
-from PySide6.QtGui import QDesktopServices, QPixmap
-from PySide6.QtWidgets import QHBoxLayout, QToolButton, QVBoxLayout, QWidget
+from PySide6.QtCore import QPoint, QTimer, QUrl, Qt
+from PySide6.QtGui import QDesktopServices
+from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 from bilibili_api import live
 from loguru import logger
 from qasync import asyncSlot
@@ -14,6 +12,7 @@ from qfluentwidgets import (
     BodyLabel,
     CaptionLabel,
     CardWidget,
+    MenuAnimationType,
     PrimaryPushButton,
     PushButton,
     RoundMenu,
@@ -26,6 +25,7 @@ from qfluentwidgets import (
 
 from bilibili import bili_service
 from core.qconfig import cfg
+from gui.components.avatar import load_avatar_pixmap
 from gui.components.status_pill import StatusPill
 from models.bilibili import ConnectionState, RoomSummary
 
@@ -33,10 +33,8 @@ from models.bilibili import ConnectionState, RoomSummary
 class RoomHeaderCard(CardWidget):
     """直播间头部卡片
 
-    展示主播、直播间状态、账号信息与连接控制。
+    展示主播、直播间状态与连接控制。
     """
-
-    logout_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         """初始化直播间头部卡片
@@ -46,7 +44,7 @@ class RoomHeaderCard(CardWidget):
         """
         super().__init__(parent)
         self._meta_text = f'房间 {cfg.roomId.value} · 在线 -- · --'
-        self._account_text = '登录账号: --'
+        self._room_loaded = False
 
         self._init_ui()
         self._connect_signals()
@@ -109,7 +107,6 @@ class RoomHeaderCard(CardWidget):
         action_layout.addWidget(self.stop_btn)
 
         self.more_btn = TransparentToolButton(FIF.MORE, self)
-        self.more_btn.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         action_layout.addWidget(self.more_btn)
 
         layout.addLayout(action_layout)
@@ -118,18 +115,25 @@ class RoomHeaderCard(CardWidget):
 
     def _init_menu(self) -> None:
         """初始化更多操作菜单"""
-        menu = RoundMenu(parent=self)
-        menu.addAction(Action(FIF.SYNC, '刷新房间信息', triggered=self._on_refresh_room_action))
-        menu.addAction(Action(FIF.PEOPLE, '刷新账号信息', triggered=self._on_refresh_self_action))
-        menu.addSeparator()
-        menu.addAction(Action(FIF.CLOSE, '退出登录', triggered=self._on_logout_action))
-        self.more_btn.setMenu(menu)
+        self.menu = RoundMenu(parent=self)
+        self.menu.addAction(Action(FIF.SYNC, '刷新房间信息', triggered=self._on_refresh_room_action))
 
     def _connect_signals(self) -> None:
         """连接按钮信号"""
         self.open_btn.clicked.connect(self._open_room)
         self.start_btn.clicked.connect(self._on_start_clicked)
         self.stop_btn.clicked.connect(self._on_stop_clicked)
+        self.more_btn.clicked.connect(self._show_menu)
+
+    def _show_menu(self, _checked: bool = False) -> None:
+        """在按钮下方右对齐展示更多操作菜单"""
+        self.menu.view.setMinimumWidth(160)
+        self.menu.view.adjustSize()
+        self.menu.adjustSize()
+
+        x = -self.menu.width() + self.menu.layout().contentsMargins().right() + self.more_btn.width()
+        pos = self.more_btn.mapToGlobal(QPoint(x, self.more_btn.height()))
+        self.menu.exec(pos, aniType=MenuAnimationType.DROP_DOWN)
 
     def _start_timer(self) -> None:
         """启动房间信息定时刷新"""
@@ -140,19 +144,19 @@ class RoomHeaderCard(CardWidget):
         self.refresh()
 
     def refresh(self) -> None:
-        """刷新房间与账号信息"""
+        """刷新房间信息"""
         self._refresh_room_info()
-        self._refresh_self_info()
 
     @asyncSlot()
     async def _refresh_room_info(self) -> None:
         """刷新直播间信息"""
         room_id = cfg.roomId.value
-        self._meta_text = f'房间 {room_id} · 在线 -- · --'
-        self._update_meta()
+        if not self._room_loaded:
+            self._meta_text = f'房间 {room_id} · 在线 -- · --'
+            self._update_meta()
 
         if not bili_service.credential:
-            self._apply_placeholder(room_id)
+            self._reset_room_info(room_id)
             return
 
         try:
@@ -160,30 +164,22 @@ class RoomHeaderCard(CardWidget):
             data = await room.get_room_info()
             summary = RoomSummary.from_api(data)
         except Exception as e:
-            logger.warning(f'获取直播间信息失败: {e}')
-            self._apply_placeholder(room_id)
+            logger.warning(f'获取直播间信息失败: {e!r}')
+            if not self._room_loaded:
+                self._apply_placeholder(room_id)
             return
 
+        self._room_loaded = True
         self._apply_room(summary)
 
-    @asyncSlot()
-    async def _refresh_self_info(self) -> None:
-        """刷新登录账号信息"""
-        if not bili_service.credential:
-            self._account_text = '登录账号: --'
-            self._update_meta()
-            return
+    def _reset_room_info(self, room_id: int) -> None:
+        """重置为未加载状态
 
-        try:
-            info = await bili_service.get_self_info()
-        except Exception as e:
-            logger.warning(f'获取账号信息失败: {e}')
-            self._account_text = '登录账号: 获取失败'
-            self._update_meta()
-            return
-
-        self._account_text = f'登录账号: {info.uname} (UID {info.mid})'
-        self._update_meta()
+        Args:
+            room_id: 房间号
+        """
+        self._room_loaded = False
+        self._apply_placeholder(room_id)
 
     def _apply_room(self, summary: RoomSummary) -> None:
         """应用直播间信息
@@ -207,6 +203,7 @@ class RoomHeaderCard(CardWidget):
         Args:
             room_id: 房间号
         """
+        self.anchor_label.setText('加载中...')
         self.room_title_label.setText('获取直播间信息失败')
         self.room_title_label.setToolTip('')
         self.live_pill.set_status('未知', '#8a8a8a')
@@ -215,7 +212,7 @@ class RoomHeaderCard(CardWidget):
 
     def _update_meta(self) -> None:
         """更新概要信息标签"""
-        self.meta_label.setText(f'{self._meta_text} · {self._account_text}')
+        self.meta_label.setText(self._meta_text)
 
     @asyncSlot(str)
     async def _load_avatar(self, url: str) -> None:
@@ -224,19 +221,9 @@ class RoomHeaderCard(CardWidget):
         Args:
             url: 头像 URL
         """
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url) as resp:
-                    if resp.status != 200:
-                        return
-                    data = await resp.read()
-        except Exception as e:
-            logger.warning(f'加载直播间头像失败: {e}')
-            return
-
-        pixmap = QPixmap()
-        pixmap.loadFromData(data)
-        self.avatar_widget.setImage(pixmap)
+        pixmap = await load_avatar_pixmap(url)
+        if pixmap is not None:
+            self.avatar_widget.setImage(pixmap)
 
     @asyncSlot()
     async def _on_start_clicked(self) -> None:
@@ -268,16 +255,9 @@ class RoomHeaderCard(CardWidget):
 
     def _on_room_id_changed(self, _value: object) -> None:
         """房间号变化"""
+        self._reset_room_info(cfg.roomId.value)
         self._refresh_room_info()
 
     def _on_refresh_room_action(self, _checked: bool = False) -> None:
         """菜单：刷新房间信息"""
         self._refresh_room_info()
-
-    def _on_refresh_self_action(self, _checked: bool = False) -> None:
-        """菜单：刷新账号信息"""
-        self._refresh_self_info()
-
-    def _on_logout_action(self, _checked: bool = False) -> None:
-        """菜单：退出登录"""
-        self.logout_requested.emit()

@@ -1,7 +1,7 @@
 """会话统计卡片组件"""
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import QColor, QIcon
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 from qfluentwidgets import CaptionLabel, CardWidget, IconWidget, TitleLabel
 from qfluentwidgets import FluentIcon as FIF
@@ -44,7 +44,7 @@ class StatCard(CardWidget):
 
         title_label = CaptionLabel(title, self)
         self.value_label = TitleLabel('0', self)
-        self.value_label.setStyleSheet(f'color: {color};')
+        self.value_label.setTextColor(QColor(color), QColor(color))
 
         info_layout.addWidget(title_label)
         info_layout.addWidget(self.value_label)

@@ -2,10 +2,12 @@
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QSplitter, QVBoxLayout, QWidget
+from qfluentwidgets import SingleDirectionScrollArea
 
 from bilibili import bili_service
 from models.bilibili import LiveMessage, SessionStats
 
+from .account_card import AccountCard
 from .audio_output_card import AudioOutputCard
 from .broadcast_toggle_card import BroadcastToggleCard
 from .message_feed import MessageFeed
@@ -55,21 +57,30 @@ class HomePanel(QWidget):
         self.message_feed.setMinimumWidth(460)
 
         side_panel = QWidget(self.splitter)
-        side_panel.setMinimumWidth(300)
+        side_panel.setMinimumWidth(360)
         side_layout = QVBoxLayout(side_panel)
         side_layout.setContentsMargins(0, 0, 0, 0)
         side_layout.setSpacing(12)
 
+        self.account_card = AccountCard(side_panel)
         self.tts_card = TtsSummaryCard(side_panel)
         self.toggle_card = BroadcastToggleCard(side_panel)
         self.audio_card = AudioOutputCard(side_panel)
+        side_layout.addWidget(self.account_card)
         side_layout.addWidget(self.tts_card)
         side_layout.addWidget(self.toggle_card)
         side_layout.addWidget(self.audio_card)
         side_layout.addStretch(1)
 
+        self.side_scroll = SingleDirectionScrollArea(self.splitter, orient=Qt.Orientation.Vertical)
+        self.side_scroll.setWidgetResizable(True)
+        self.side_scroll.setMinimumWidth(360)
+        self.side_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.side_scroll.enableTransparentBackground()
+        self.side_scroll.setWidget(side_panel)
+
         self.splitter.addWidget(self.message_feed)
-        self.splitter.addWidget(side_panel)
+        self.splitter.addWidget(self.side_scroll)
         self.splitter.setStretchFactor(0, 2)
         self.splitter.setStretchFactor(1, 1)
 
@@ -81,7 +92,7 @@ class HomePanel(QWidget):
         bili_service.stats_changed.connect(self._on_stats_changed)
         bili_service.session_started.connect(self.message_feed.clear_messages)
 
-        self.room_header_card.logout_requested.connect(self.logout_requested.emit)
+        self.account_card.logout_requested.connect(self.logout_requested.emit)
         self.tts_card.open_settings.connect(self.open_settings.emit)
         self.audio_card.open_settings.connect(self.open_settings.emit)
         self.audio_card.open_audio_test.connect(self.open_audio_test.emit)
@@ -89,6 +100,7 @@ class HomePanel(QWidget):
     def refresh(self) -> None:
         """刷新页面数据"""
         self.room_header_card.refresh()
+        self.account_card.refresh()
         self.tts_card.refresh()
         self.audio_card.refresh()
         self.stats_row.update_stats(bili_service.stats)

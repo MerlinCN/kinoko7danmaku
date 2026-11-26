@@ -1,6 +1,8 @@
 import asyncio
 import json
 
+import stream_gears
+
 from PySide6.QtCore import QObject, QTimer, Signal
 from bilibili_api import Credential, live, user
 from loguru import logger
@@ -186,6 +188,25 @@ class BiliService(QObject):
             audio = await tts_service.text_to_speech(display_text)
             await audio_player.play_bytes_async(audio)
 
+    async def restore_credential(self) -> bool:
+        """从本地 cookies 恢复登录状态
+
+        Returns:
+            是否成功恢复登录状态
+        """
+        if not COOKIES_PATH.exists():
+            return False
+
+        try:
+            await asyncio.to_thread(stream_gears.login_by_cookies, str(COOKIES_PATH), proxy=None)
+        except RuntimeError as e:
+            logger.warning(f'本地登录信息已失效: {e!r}')
+            COOKIES_PATH.unlink()
+            return False
+
+        self.load_credential()
+        return True
+
     def load_credential(self) -> None:
         with open(COOKIES_PATH, encoding='utf-8') as f:
             cookies = json.load(f)
@@ -233,9 +254,6 @@ class BiliService(QObject):
         gift_merger.stop()
         await gift_merger.clear_all()
         logger.info('停止直播间监听')
-
-    def is_logged_in(self) -> bool:
-        return self.credential is not None
 
     async def logout(self) -> None:
         await self.stop()

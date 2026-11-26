@@ -3,8 +3,9 @@
 from collections import deque
 from datetime import UTC, datetime
 
-from PySide6.QtCore import QTimer, Qt
-from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor, QPaintEvent, QPainter
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 from qfluentwidgets import (
     BodyLabel,
     CaptionLabel,
@@ -17,6 +18,7 @@ from qfluentwidgets import (
 from qfluentwidgets import (
     FluentIcon as FIF,
 )
+from qfluentwidgets.common.font import getFont
 
 from models.bilibili import LiveMessage, LiveMessageType
 
@@ -28,6 +30,42 @@ _BADGE_STYLES: dict[LiveMessageType, tuple[str, str]] = {
     LiveMessageType.GUARD: ('舰长', '#8b5cf6'),
     LiveMessageType.SUPER_CHAT: ('SC', '#b8860b'),
 }
+
+
+class MessageBadge(QLabel):
+    """消息类型徽标
+
+    背景由自绘完成，颜色不随主题变化，也不会被 qfluentwidgets 的样式重算覆盖。
+    """
+
+    def __init__(self, text: str, color: str, parent: QWidget | None = None) -> None:
+        """初始化徽标
+
+        Args:
+            text: 徽标文字
+            color: 背景颜色（十六进制）
+            parent: 父组件
+        """
+        super().__init__(text, parent)
+        self._badge_color = QColor(color)
+        self.setFont(getFont(12))
+        self.setStyleSheet('color: #ffffff; background: transparent;')
+        self.setFixedSize(40, 20)
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+    def paintEvent(self, event: QPaintEvent) -> None:
+        """绘制圆角背景与文字
+
+        Args:
+            event: 绘制事件
+        """
+        painter = QPainter(self)
+        painter.setRenderHints(QPainter.RenderHint.Antialiasing)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(self._badge_color)
+        painter.drawRoundedRect(self.rect(), 4, 4)
+        painter.end()
+        super().paintEvent(event)
 
 
 class MessageRow(QWidget):
@@ -47,10 +85,7 @@ class MessageRow(QWidget):
         layout.setSpacing(8)
 
         badge_text, badge_color = _BADGE_STYLES[message.type]
-        badge = BodyLabel(badge_text, self)
-        badge.setFixedWidth(40)
-        badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        badge.setStyleSheet(f'color: white; background: {badge_color}; border-radius: 4px;')
+        badge = MessageBadge(badge_text, badge_color, self)
 
         time_label = CaptionLabel(
             datetime.fromtimestamp(message.timestamp, tz=UTC).astimezone().strftime('%H:%M:%S'), self
@@ -132,7 +167,7 @@ class MessageFeed(CardWidget):
 
         self._container = QWidget()
         self.rows_layout = QVBoxLayout(self._container)
-        self.rows_layout.setContentsMargins(0, 0, 0, 0)
+        self.rows_layout.setContentsMargins(0, 6, 0, 6)
         self.rows_layout.setSpacing(6)
 
         self.empty_label = BodyLabel('暂无消息', self._container)
@@ -141,6 +176,7 @@ class MessageFeed(CardWidget):
         self.rows_layout.addStretch(1)
 
         self.scroll_area.setWidget(self._container)
+        self.scroll_area.verticalScrollBar().rangeChanged.connect(self._on_scroll_range_changed)
         self.main_layout.addWidget(self.scroll_area, 1)
 
     def add_message(self, message: LiveMessage) -> None:
@@ -155,7 +191,7 @@ class MessageFeed(CardWidget):
 
         self._append_row(message)
         if not self._paused:
-            QTimer.singleShot(0, self._scroll_to_bottom)
+            self._scroll_to_bottom()
 
     def clear_messages(self) -> None:
         """清空所有消息"""
@@ -225,6 +261,20 @@ class MessageFeed(CardWidget):
         self.pause_btn.setToolTip('恢复自动滚动' if checked else '暂停自动滚动')
         if not checked:
             self._scroll_to_bottom()
+
+    def _on_scroll_range_changed(self, _minimum: int, maximum: int) -> None:
+        """内容高度变化时保持贴底
+
+        消息行插入后布局尚未更新，此时读取的滚动范围是旧值，
+        因此贴底动作放在滚动范围变化之后执行。
+
+        Args:
+            _minimum: 滚动范围下限
+            maximum: 滚动范围上限
+        """
+        if self._paused:
+            return
+        self.scroll_area.verticalScrollBar().setValue(maximum)
 
     def _scroll_to_bottom(self) -> None:
         """滚动到底部"""

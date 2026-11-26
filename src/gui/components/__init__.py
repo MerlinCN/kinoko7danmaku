@@ -1,3 +1,4 @@
+from .account_card import AccountCard
 from .alias_dict_card import AliasDictCard
 from .audio_output_card import AudioOutputCard
 from .audio_upload_widget import AudioUploadWidget, UploadedFileCard
@@ -17,6 +18,7 @@ from .str_setting_card import StrSettingCard
 from .tts_summary_card import TtsSummaryCard
 
 __all__ = [
+    'AccountCard',
     'AliasDictCard',
     'AudioOutputCard',
     'AudioUploadWidget',

@@ -1,6 +1,7 @@
 """状态指示组件"""
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QWidget
 from qfluentwidgets import BodyLabel
 
@@ -58,4 +59,4 @@ class StatusPill(QWidget):
         """
         self._dot.setStyleSheet(f'background-color: {color}; border-radius: 4px;')
         self._text.setText(text)
-        self._text.setStyleSheet(f'color: {color};')
+        self._text.setTextColor(QColor(color), QColor(color))

@@ -18,13 +18,14 @@ from loguru import logger
 from qasync import asyncSlot
 from qfluentwidgets import (
     Action,
+    BodyLabel,
     FluentWindow,
+    ImageLabel,
     IndeterminateProgressRing,
     InfoBar,
     InfoBarPosition,
     NavigationItemPosition,
     SystemTrayMenu,
-    TitleLabel,
     ToolButton,
     isDarkTheme,
     qconfig,
@@ -61,10 +62,44 @@ def get_resource_path(relative_path: str) -> Path:
     return RESOURCE_DIR / relative_path
 
 
+class StartupPanel(QWidget):
+    """启动加载面板
+
+    应用启动后在检查登录状态期间展示，避免出现空白界面。
+    """
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        """初始化启动加载面板
+
+        Args:
+            parent: 父组件
+        """
+        super().__init__(parent=parent)
+        layout = QVBoxLayout(self)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.setSpacing(20)
+
+        self.icon_label = ImageLabel(self)
+        self.icon_label.setImage(QIcon(str(get_resource_path('icon.ico'))).pixmap(72, 72))
+        self.icon_label.setFixedSize(72, 72)
+        layout.addWidget(self.icon_label, 0, Qt.AlignmentFlag.AlignHCenter)
+
+        self.ring = IndeterminateProgressRing(self)
+        self.ring.setFixedSize(32, 32)
+        self.ring.setStrokeWidth(3)
+        layout.addWidget(self.ring, 0, Qt.AlignmentFlag.AlignHCenter)
+
+        self.hint_label = BodyLabel('正在检查登录状态', self)
+        self.hint_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.hint_label)
+
+        self.ring.start()
+
+
 class MainInterface(QWidget):
     """主界面
 
-    包含登录面板和主页面板的切换。
+    包含启动加载、扫码登录与直播控制台三个页面，按登录状态切换。
     """
 
     open_settings = Signal()
@@ -73,58 +108,59 @@ class MainInterface(QWidget):
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent=parent)
         self._setup_ui()
-        self._check_login_status()
 
     def _setup_ui(self) -> None:
         """设置界面"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(24, 24, 24, 24)
-        self.title_label = TitleLabel('登录', self)
-        layout.addWidget(self.title_label)
-        # 创建 stacked widget 来切换登录/主界面
-        self.stacked_widget = QStackedWidget()
 
-        # 创建登录面板
-        self.login_panel = LoginPanel()
+        self.stacked_widget = QStackedWidget(self)
+        layout.addWidget(self.stacked_widget)
+
+        self.startup_panel = StartupPanel(self.stacked_widget)
+
+        self.login_panel = LoginPanel(self.stacked_widget)
         self.login_panel.login_success.connect(self._on_login_success)
 
-        # 创建主页面板
-        self.home_panel = HomePanel()
+        self.home_panel = HomePanel(self.stacked_widget)
         self.home_panel.logout_requested.connect(self._on_logout)
         self.home_panel.open_settings.connect(self.open_settings.emit)
         self.home_panel.open_audio_test.connect(self.open_audio_test.emit)
 
-        # 将面板添加到 stacked widget
+        self.stacked_widget.addWidget(self.startup_panel)
         self.stacked_widget.addWidget(self.login_panel)
         self.stacked_widget.addWidget(self.home_panel)
 
-        layout.addWidget(self.stacked_widget)
+    @asyncSlot()
+    async def start(self) -> None:
+        """启动时恢复登录状态，未登录则获取登录二维码"""
+        restored = await bili_service.restore_credential()
+        self.startup_panel.ring.stop()
 
-    def _check_login_status(self) -> None:
-        """检查登录状态"""
-        logged_in = bili_service.is_logged_in()
-        if logged_in:
-            self.stacked_widget.setCurrentWidget(self.home_panel)
-            self.title_label.setVisible(False)
-            self.home_panel.refresh()
-        else:
-            self.stacked_widget.setCurrentWidget(self.login_panel)
-            self.title_label.setText('登录')
-            self.title_label.setVisible(True)
+        if restored:
+            self._show_home()
+            return
+
+        self.stacked_widget.setCurrentWidget(self.login_panel)
+        await self.login_panel.load_qr_code()
+
+    def _show_home(self) -> None:
+        """切换到直播控制台"""
+        self.stacked_widget.setCurrentWidget(self.home_panel)
+        self.home_panel.refresh()
 
     def _on_login_success(self) -> None:
         """登录成功的回调"""
         logger.info('登录成功，切换到主页面')
-        self._check_login_status()
+        self._show_home()
 
     @asyncSlot()
     async def _on_logout(self) -> None:
         """退出登录的回调"""
         await bili_service.logout()
 
-        # 切换回登录界面
-        self.login_panel._load_qr_code()
-        self._check_login_status()
+        self.stacked_widget.setCurrentWidget(self.login_panel)
+        await self.login_panel.load_qr_code()
 
 
 class MainWindow(FluentWindow):
@@ -143,6 +179,7 @@ class MainWindow(FluentWindow):
         self._connect_signals()
         # 延迟启动音频播放队列（等待事件循环运行）
         QTimer.singleShot(0, self._start_audio_worker)
+        QTimer.singleShot(0, self.main_interface.start)
         QTimer.singleShot(0, self._on_update)
 
     def _start_audio_worker(self) -> None:
