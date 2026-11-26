@@ -40,6 +40,94 @@ class EventType(StrEnum):
     SUPER_CHAT_MESSAGE = 'SUPER_CHAT_MESSAGE'  # 醒目留言
 
 
+class LiveMessageType(StrEnum):
+    """界面消息类型"""
+
+    DANMAKU = 'danmaku'
+    GIFT = 'gift'
+    GUARD = 'guard'
+    SUPER_CHAT = 'super_chat'
+
+
+class ConnectionState(StrEnum):
+    """直播间连接状态"""
+
+    DISCONNECTED = 'disconnected'
+    CONNECTING = 'connecting'
+    CONNECTED = 'connected'
+    ERROR = 'error'
+
+
+class LiveMessage(BaseModel):
+    """用于界面展示的直播消息"""
+
+    type: LiveMessageType = Field(..., description='消息类型')
+    text: str = Field(..., description='展示文本')
+    timestamp: int = Field(default_factory=lambda: int(time.time()), description='接收时的 UNIX 时间戳')
+
+
+class SessionStats(BaseModel):
+    """本次连接的会话统计"""
+
+    danmaku: int = Field(default=0, description='弹幕数量')
+    gift: int = Field(default=0, description='礼物数量')
+    guard: int = Field(default=0, description='舰长数量')
+    super_chat: int = Field(default=0, description='醒目留言数量')
+
+
+class SelfInfo(BaseModel):
+    """登录账号信息"""
+
+    mid: int = Field(default=0, description='用户 UID')
+    uname: str = Field(default='', description='用户名')
+    face: str = Field(default='', description='头像 URL')
+
+
+class RoomSummary(BaseModel):
+    """直播间概要信息"""
+
+    room_id: int = Field(..., description='真实房间号')
+    title: str = Field(default='', description='直播间标题')
+    uname: str = Field(default='', description='主播用户名')
+    face: str = Field(default='', description='主播头像 URL')
+    live_status: int = Field(default=0, description='开播状态：0 未开播，1 直播中，2 轮播')
+    online: int = Field(default=0, description='在线人气')
+    area_name: str = Field(default='', description='直播分区')
+
+    @classmethod
+    def from_api(cls, data: dict[str, Any]) -> 'RoomSummary':
+        """从直播间信息接口响应构造
+
+        Args:
+            data: LiveRoom.get_room_info() 的原始响应
+
+        Returns:
+            RoomSummary: 直播间概要
+        """
+        room = data['room_info']
+        anchor = data['anchor_info']['base_info']
+        watched = data.get('watched_show') or {}
+        return cls(
+            room_id=int(room['room_id']),
+            title=room['title'],
+            uname=anchor['uname'],
+            face=anchor['face'],
+            live_status=int(room['live_status']),
+            online=int(watched.get('num') or 0),
+            area_name=room['area_name'],
+        )
+
+    @property
+    def live_text(self) -> str:
+        """开播状态文案"""
+        return {1: '直播中', 2: '轮播中'}.get(self.live_status, '未开播')
+
+    @property
+    def live_color(self) -> str:
+        """开播状态颜色"""
+        return {1: '#e04f5f', 2: '#d99100'}.get(self.live_status, '#8a8a8a')
+
+
 class DanmuMessage(BaseModel):
     room_id: int = Field(default=0, description='房间 ID')
     user_mid: int = Field(default=0, description='用户 ID')

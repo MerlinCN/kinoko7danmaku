@@ -1,24 +1,30 @@
 """音频测试界面"""
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QShowEvent
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 from loguru import logger
 from qasync import asyncSlot
 from qfluentwidgets import (
+    CaptionLabel,
     CardWidget,
     ExpandLayout,
+    IconWidget,
     InfoBar,
     InfoBarPosition,
+    PrimaryPushButton,
+    PushButton,
     ScrollArea,
     SettingCardGroup,
+    SubtitleLabel,
     TextEdit,
     TitleLabel,
-    ToolButton,
 )
 from qfluentwidgets import (
     FluentIcon as FIF,
 )
 
+from core.const import SUPPORTED_SERVICES
 from core.player import audio_player
 from core.qconfig import cfg
 from gui.components import ReadOnlyInfoCard
@@ -44,13 +50,118 @@ def _format_voice(voice_id: str) -> str:
     return voice_id
 
 
-class AudioTestInterface(ScrollArea):
-    """音频测试界面
+class AudioDeviceCard(CardWidget):
+    """当前输出设备卡片
 
-    用于测试 TTS 语音合成功能，并展示当前 TTS 服务使用的参数。
+    展示音频实际播放到的设备，并提供跳转到设置更换设备的入口。
+    """
+
+    open_settings = Signal()
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        """初始化输出设备卡片
+
+        Args:
+            parent: 父组件
+        """
+        super().__init__(parent)
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(20, 16, 20, 16)
+        layout.setSpacing(16)
+
+        icon_widget = IconWidget(FIF.SPEAKERS, self)
+        icon_widget.setFixedSize(32, 32)
+        layout.addWidget(icon_widget, 0, Qt.AlignmentFlag.AlignVCenter)
+
+        info_layout = QVBoxLayout()
+        info_layout.setSpacing(2)
+        self.device_label = SubtitleLabel('--', self)
+        self.detail_label = CaptionLabel('设备索引 --', self)
+        info_layout.addWidget(self.device_label)
+        info_layout.addWidget(self.detail_label)
+        layout.addLayout(info_layout, 1)
+
+        self.switch_btn = PushButton('更换设备', self)
+        self.switch_btn.setIcon(FIF.SETTING)
+        self.switch_btn.clicked.connect(self.open_settings.emit)
+        layout.addWidget(self.switch_btn, 0, Qt.AlignmentFlag.AlignVCenter)
+
+        self.setFixedHeight(76)
+        self.refresh()
+
+    def refresh(self) -> None:
+        """刷新当前输出设备"""
+        device = audio_player.get_current_output_device()
+        if device is None:
+            self.device_label.setText('未检测到输出设备')
+            self.detail_label.setText('请检查系统音频设备')
+            return
+
+        self.device_label.setText(device.name)
+        details = [f'设备索引 {device.index}']
+        if device.sample_rate:
+            details.append(f'{device.sample_rate} Hz')
+        if device.channels:
+            details.append(f'{device.channels} 声道')
+        self.detail_label.setText(' · '.join(details))
+
+
+class TtsTestCard(CardWidget):
+    """语音合成测试卡片
+
+    输入文本后使用当前 TTS 服务合成并播放。
     """
 
     def __init__(self, parent: QWidget | None = None) -> None:
+        """初始化语音合成测试卡片
+
+        Args:
+            parent: 父组件
+        """
+        super().__init__(parent)
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 16, 20, 16)
+        layout.setSpacing(12)
+
+        header_layout = QHBoxLayout()
+        header_layout.addWidget(SubtitleLabel('语音合成测试', self))
+        header_layout.addStretch()
+        self.service_label = CaptionLabel('', self)
+        header_layout.addWidget(self.service_label, 0, Qt.AlignmentFlag.AlignVCenter)
+        layout.addLayout(header_layout)
+
+        self.text_edit = TextEdit(self)
+        self.text_edit.setPlaceholderText('输入要合成的文本…')
+        self.text_edit.setFixedHeight(140)
+        layout.addWidget(self.text_edit)
+
+        footer_layout = QHBoxLayout()
+        footer_layout.addWidget(CaptionLabel('使用当前服务与参数合成，并播放到上方输出设备', self))
+        footer_layout.addStretch()
+
+        self.test_btn = PrimaryPushButton('合成并播放', self)
+        self.test_btn.setIcon(FIF.PLAY)
+        footer_layout.addWidget(self.test_btn)
+        layout.addLayout(footer_layout)
+
+        # ExpandLayout 按 widget.height() 摆放，不会读 sizeHint
+        self.setFixedHeight(layout.sizeHint().height())
+
+
+class AudioTestInterface(ScrollArea):
+    """音频测试界面
+
+    展示当前输出设备与 TTS 参数，并提供合成播放测试。
+    """
+
+    open_settings = Signal()
+
+    def __init__(self, parent: QWidget | None = None) -> None:
+        """初始化音频测试界面
+
+        Args:
+            parent: 父组件
+        """
         super().__init__(parent=parent)
         self.scrollWidget = QWidget()
         self.expandLayout = ExpandLayout(self.scrollWidget)
@@ -65,26 +176,12 @@ class AudioTestInterface(ScrollArea):
         # 标题
         self.title_label = TitleLabel('音频测试', self)
 
-        # 测试卡片
-        self.test_card = CardWidget(self.scrollWidget)
-        card_layout = QVBoxLayout(self.test_card)
-        card_layout.setContentsMargins(20, 20, 20, 20)
-        card_layout.setSpacing(12)
+        # 输出设备
+        self.device_card = AudioDeviceCard(self.scrollWidget)
+        self.device_card.open_settings.connect(self.open_settings.emit)
 
-        self.text_edit = TextEdit()
-        self.text_edit.setPlaceholderText('请输入要测试的文本...')
-        self.text_edit.setMinimumHeight(200)
-        card_layout.addWidget(self.text_edit)
-
-        button_layout = QHBoxLayout()
-        button_layout.addStretch()
-        self.test_button = ToolButton(FIF.PLAY)
-        button_layout.addWidget(self.test_button)
-        card_layout.addLayout(button_layout)
-
-        # ExpandLayout 按 widget.height() 摆放，不会读 sizeHint，
-        # 必须主动把测试卡撑到内容需要的高度。
-        self.test_card.setFixedHeight(card_layout.sizeHint().height())
+        # 语音合成测试
+        self.test_card = TtsTestCard(self.scrollWidget)
 
         # 参数展示分组
         self.minimaxGroup = self._build_minimax_group()
@@ -228,8 +325,9 @@ class AudioTestInterface(ScrollArea):
         """初始化布局"""
         self.title_label.move(36, 30)
 
-        self.expandLayout.setSpacing(28)
+        self.expandLayout.setSpacing(24)
         self.expandLayout.setContentsMargins(36, 10, 36, 10)
+        self.expandLayout.addWidget(self.device_card)
         self.expandLayout.addWidget(self.test_card)
         self.expandLayout.addWidget(self.minimaxGroup)
         self.expandLayout.addWidget(self.fishSpeechGroup)
@@ -245,9 +343,10 @@ class AudioTestInterface(ScrollArea):
 
     def _connect_signals(self) -> None:
         """连接信号"""
-        self.test_button.clicked.connect(self._on_test_button_clicked)
+        self.test_card.test_btn.clicked.connect(self._on_test_button_clicked)
         cfg.activeTTS.valueChanged.connect(self._on_active_tts_changed)
         cfg.voiceDict.valueChanged.connect(self._refresh_voice_display)
+        cfg.playerDevice.valueChanged.connect(self.device_card.refresh)
 
     def _on_active_tts_changed(self, *_: object) -> None:
         """根据当前激活的 TTS 服务切换参数分组的可见性"""
@@ -255,6 +354,9 @@ class AudioTestInterface(ScrollArea):
         self.minimaxGroup.setVisible(active == ServiceType.MINIMAX)
         self.fishSpeechGroup.setVisible(active == ServiceType.FISH_SPEECH)
         self.gptSovitsGroup.setVisible(active == ServiceType.GPT_SOVITS)
+
+        service = ServiceType(active)
+        self.test_card.service_label.setText(f'当前服务 · {SUPPORTED_SERVICES[service].description}')
 
     def _refresh_voice_display(self, *_: object) -> None:
         """voiceDict 变更时，重新格式化音色显示文本
@@ -266,10 +368,19 @@ class AudioTestInterface(ScrollArea):
     @asyncSlot()
     async def _on_test_button_clicked(self) -> None:
         """测试按钮点击事件"""
-        text = self.text_edit.toPlainText()
-        # 去除首尾空格后如果为空直接返回
-        if not text.strip():
+        text = self.test_card.text_edit.toPlainText().strip()
+        if not text:
+            InfoBar.warning(
+                title='请输入文本',
+                content='需要输入要合成的文本后才能测试',
+                orient=Qt.Orientation.Horizontal,
+                isClosable=True,
+                position=InfoBarPosition.TOP,
+                duration=2000,
+                parent=self,
+            )
             return
+
         try:
             tts_service = get_tts_service()
             audio = await tts_service.text_to_speech(text)
@@ -285,3 +396,8 @@ class AudioTestInterface(ScrollArea):
                 duration=3000,
                 parent=self,
             )
+
+    def showEvent(self, event: QShowEvent) -> None:
+        """页面显示时刷新输出设备"""
+        super().showEvent(event)
+        self.device_card.refresh()

@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QTimer, Qt, Signal
-from PySide6.QtGui import QGuiApplication, QMouseEvent, QShowEvent
+from PySide6.QtGui import QColor, QFont, QGuiApplication, QMouseEvent, QPaintEvent, QPainter, QPen, QShowEvent
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 from loguru import logger
 from qasync import asyncSlot
@@ -15,23 +15,27 @@ from qfluentwidgets import (
     FlowLayout,
     InfoBar,
     InfoBarPosition,
+    LineEdit,
     OptionsConfigItem,
     OptionsValidator,
+    PushButton,
     RangeConfigItem,
     RangeValidator,
     ScrollArea,
     StateToolTip,
     SubtitleLabel,
     TextEdit,
-    TitleLabel,
     ToolButton,
 )
 from qfluentwidgets import FluentIcon as FIF
+from qfluentwidgets.common.font import getFont
+from qfluentwidgets.common.style_sheet import setCustomStyleSheet
 
 from core.const import MINIMAX_MODELS
 from core.player import audio_player
 from core.qconfig import cfg
 from gui.components import FloatRangeSettingCard
+from gui.components.minimax_kit import ACCENT, HeroCard, accent_button_qss
 from tts_service.minimax import MinimaxService
 
 if TYPE_CHECKING:
@@ -39,7 +43,10 @@ if TYPE_CHECKING:
 
 
 class VoiceCard(CardWidget):
-    """音色卡片"""
+    """音色卡片
+
+    展示音色名称与 ID，点击选中，选中后以强调色描边标记。
+    """
 
     voiceSelected = Signal(str)  # 选择音色时发出音色 ID
 
@@ -61,6 +68,10 @@ class VoiceCard(CardWidget):
         self.voice_name = voice_name or voice_id
         self._is_selected = False
 
+        self.setFixedHeight(76)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setToolTip(self.voice_id)
+
         self._init_ui()
 
     def _init_ui(self) -> None:
@@ -69,12 +80,14 @@ class VoiceCard(CardWidget):
         self.vBoxLayout = QVBoxLayout()
 
         # 音色名称
-        self.titleLabel = BodyLabel(self.voice_name, self)
-        self.titleLabel.setFont(self.titleLabel.font())
+        self.titleLabel = BodyLabel('', self)
+        self.titleLabel.setFont(getFont(15, QFont.Weight.DemiBold))
+        self.titleLabel.setText(self._elide(self.voice_name))
 
         # 音色 ID（小字）
-        self.idLabel = CaptionLabel(self.voice_id, self)
+        self.idLabel = CaptionLabel('', self)
         self.idLabel.setTextColor('#606060', '#d2d2d2')
+        self.idLabel.setText(self._elide(self.voice_id))
 
         # 复制按钮
         self.copyButton = ToolButton(FIF.COPY, self)
@@ -83,26 +96,35 @@ class VoiceCard(CardWidget):
         self.copyButton.clicked.connect(self._on_copy_clicked)
 
         # 布局
-        self.setFixedHeight(73)
-        self.hBoxLayout.setContentsMargins(20, 11, 11, 11)
-        self.hBoxLayout.setSpacing(15)
+        self.hBoxLayout.setContentsMargins(18, 10, 10, 10)
+        self.hBoxLayout.setSpacing(12)
 
         self.vBoxLayout.setContentsMargins(0, 0, 0, 0)
-        self.vBoxLayout.setSpacing(0)
+        self.vBoxLayout.setSpacing(2)
         self.vBoxLayout.addWidget(self.titleLabel, 0, Qt.AlignmentFlag.AlignVCenter)
         self.vBoxLayout.addWidget(self.idLabel, 0, Qt.AlignmentFlag.AlignVCenter)
         self.vBoxLayout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
-        self.hBoxLayout.addLayout(self.vBoxLayout)
-        self.hBoxLayout.addStretch(1)
+        self.hBoxLayout.addLayout(self.vBoxLayout, 1)
         self.hBoxLayout.addWidget(self.copyButton, 0, Qt.AlignmentFlag.AlignRight)
+
+    def _elide(self, text: str) -> str:
+        """按卡片可用宽度省略过长的文本
+
+        Args:
+            text: 原始文本
+
+        Returns:
+            str: 省略后的文本
+        """
+        metrics = self.titleLabel.fontMetrics()
+        return metrics.elidedText(text, Qt.TextElideMode.ElideRight, 188)
 
     def _on_copy_clicked(self) -> None:
         """复制按钮点击事件"""
         clipboard = QGuiApplication.clipboard()
         clipboard.setText(self.voice_id)
 
-        # 显示成功提示
         InfoBar.success(
             title='复制成功',
             content=f'已复制音色 ID: {self.voice_id}',
@@ -130,14 +152,40 @@ class VoiceCard(CardWidget):
             selected: 是否选中
         """
         self._is_selected = selected
-        if selected:
-            self.setStyleSheet('VoiceCard { border: 2px solid rgb(0, 120, 212); }')
-        else:
-            self.setStyleSheet('')
+        self.update()
+
+    def paintEvent(self, event: QPaintEvent) -> None:
+        """绘制选中态的强调色描边与底色
+
+        Args:
+            event: 绘制事件
+        """
+        super().paintEvent(event)
+        if not self._is_selected:
+            return
+
+        painter = QPainter(self)
+        painter.setRenderHints(QPainter.RenderHint.Antialiasing)
+
+        tint = QColor(ACCENT)
+        tint.setAlpha(20)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(tint)
+        painter.drawRoundedRect(self.rect(), 6, 6)
+
+        pen = QPen(QColor(ACCENT))
+        pen.setWidth(2)
+        painter.setPen(pen)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawRoundedRect(self.rect().adjusted(1, 1, -1, -1), 6, 6)
+        painter.end()
 
 
 class MinimaxVoiceListInterface(QWidget):
-    """MiniMax 音色列表界面"""
+    """MiniMax 音色列表界面
+
+    左侧浏览与搜索音色，右侧试听并调整合成参数。
+    """
 
     def __init__(self, parent: QWidget | None = None) -> None:
         """初始化 MiniMax 音色列表界面
@@ -190,84 +238,116 @@ class MinimaxVoiceListInterface(QWidget):
 
     def _init_ui(self) -> None:
         """初始化界面布局"""
-        # 主容器布局
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(36, 36, 36, 36)
         main_layout.setSpacing(20)
 
-        # 标题
-        self.title_label = TitleLabel('音色列表')
-        main_layout.addWidget(self.title_label)
+        self.hero = HeroCard(
+            '音色库',
+            '音色列表',
+            '点击选中任意音色，试听满意后再应用为播报音色。',
+            self,
+        )
+        main_layout.addWidget(self.hero)
 
-        # 内容区：水平分栏
         content_layout = QHBoxLayout()
         content_layout.setSpacing(20)
 
-        # === 左侧面板：音色卡片网格 ===
-        left_panel = QWidget()
-        left_layout = QVBoxLayout(left_panel)
-        left_layout.setContentsMargins(0, 0, 0, 0)
-        left_layout.setSpacing(12)
+        content_layout.addWidget(self._build_voice_panel(), 3)
+        content_layout.addLayout(self._build_side_panel(), 2)
 
-        # 左侧标题
-        left_title = SubtitleLabel('可用音色【点击选中】')
-        left_layout.addWidget(left_title)
+        main_layout.addLayout(content_layout, 1)
 
-        # 滚动区域
-        self.scroll_area = ScrollArea()
+    def _build_voice_panel(self) -> QWidget:
+        """构建左侧音色面板
+
+        Returns:
+            左侧面板组件
+        """
+        panel = QWidget()
+        layout = QVBoxLayout(panel)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(12)
+
+        header_layout = QHBoxLayout()
+        header_layout.setSpacing(10)
+        header_layout.addWidget(SubtitleLabel('可用音色'))
+        self.count_label = CaptionLabel('', panel)
+        self.count_label.setTextColor(ACCENT, ACCENT)
+        header_layout.addWidget(self.count_label, 0, Qt.AlignmentFlag.AlignVCenter)
+        header_layout.addStretch()
+
+        self.search_edit = LineEdit(panel)
+        self.search_edit.setPlaceholderText('搜索音色名称或 ID')
+        self.search_edit.setClearButtonEnabled(True)
+        self.search_edit.setFixedWidth(220)
+        self.search_edit.textChanged.connect(self._on_search_changed)
+        header_layout.addWidget(self.search_edit)
+
+        self.refresh_btn = ToolButton(FIF.SYNC, panel)
+        self.refresh_btn.setToolTip('重新加载音色列表')
+        self.refresh_btn.clicked.connect(self._on_refresh_clicked)
+        header_layout.addWidget(self.refresh_btn)
+        layout.addLayout(header_layout)
+
+        self.scroll_area = ScrollArea(panel)
         self.scroll_area.setWidgetResizable(True)
 
-        # 音色卡片容器
         self.voice_container = QWidget()
-        self.voice_flow_layout = FlowLayout(self.voice_container, needAni=True)
+        self.voice_flow_layout = FlowLayout(self.voice_container, needAni=True, isTight=True)
         self.voice_flow_layout.setContentsMargins(0, 0, 0, 0)
         self.voice_flow_layout.setHorizontalSpacing(10)
         self.voice_flow_layout.setVerticalSpacing(10)
 
         self.scroll_area.setWidget(self.voice_container)
-        left_layout.addWidget(self.scroll_area)
+        layout.addWidget(self.scroll_area)
+        return panel
 
-        content_layout.addWidget(left_panel, 1)
+    def _build_side_panel(self) -> QVBoxLayout:
+        """构建右侧试听与参数面板
 
-        # === 右侧布局 ===
-        right_layout = QVBoxLayout()
-        right_layout.setSpacing(20)
+        Returns:
+            右侧布局
+        """
+        side_layout = QVBoxLayout()
+        side_layout.setSpacing(16)
 
-        # --- 测试卡片 ---
-        self.test_card = CardWidget()
-        test_card_layout = QVBoxLayout(self.test_card)
-        test_card_layout.setContentsMargins(20, 20, 20, 20)
-        test_card_layout.setSpacing(12)
+        # 试听卡片
+        self.test_card = CardWidget(self)
+        test_layout = QVBoxLayout(self.test_card)
+        test_layout.setContentsMargins(20, 16, 20, 16)
+        test_layout.setSpacing(12)
 
-        test_title = SubtitleLabel('音色测试')
-        test_card_layout.addWidget(test_title)
+        test_header = QHBoxLayout()
+        test_header.addWidget(SubtitleLabel('音色试听', self.test_card))
+        test_header.addStretch()
+        self.selected_label = CaptionLabel('未选择音色', self.test_card)
+        test_header.addWidget(self.selected_label, 0, Qt.AlignmentFlag.AlignVCenter)
+        test_layout.addLayout(test_header)
 
-        # 文本输入框
-        self.text_edit = TextEdit()
-        self.text_edit.setPlaceholderText('输入测试文本...')
-        self.text_edit.setMinimumHeight(120)
-        test_card_layout.addWidget(self.text_edit)
+        self.text_edit = TextEdit(self.test_card)
+        self.text_edit.setPlaceholderText('输入测试文本，听听这个音色的效果…')
+        self.text_edit.setFixedHeight(120)
+        test_layout.addWidget(self.text_edit)
 
-        # 播放按钮（右对齐）
         button_layout = QHBoxLayout()
         button_layout.addStretch()
-        self.play_button = ToolButton(FIF.PLAY)
+        self.play_button = PushButton('试听', self.test_card)
+        self.play_button.setIcon(FIF.PLAY)
+        setCustomStyleSheet(self.play_button, accent_button_qss(), accent_button_qss())
         self.play_button.clicked.connect(self._on_play_clicked)
         button_layout.addWidget(self.play_button)
-        test_card_layout.addLayout(button_layout)
+        test_layout.addLayout(button_layout)
 
-        right_layout.addWidget(self.test_card)
+        side_layout.addWidget(self.test_card)
 
-        # --- 参数卡片 ---
-        self.param_card = CardWidget()
-        param_card_layout = QVBoxLayout(self.param_card)
-        param_card_layout.setContentsMargins(20, 20, 20, 20)
-        param_card_layout.setSpacing(8)  # 减少间距，因为卡片自带内边距
+        # 参数卡片
+        self.param_card = CardWidget(self)
+        param_layout = QVBoxLayout(self.param_card)
+        param_layout.setContentsMargins(20, 16, 20, 16)
+        param_layout.setSpacing(8)
+        param_layout.addWidget(SubtitleLabel('音色参数', self.param_card))
 
-        param_title = SubtitleLabel('音色参数')
-        param_card_layout.addWidget(param_title)
-
-        # 模型选择卡片
         self.model_card = ComboBoxSettingCard(
             configItem=self._temp_model_config,
             icon=FIF.ROBOT,
@@ -277,9 +357,8 @@ class MinimaxVoiceListInterface(QWidget):
             parent=self.param_card,
         )
         self.model_card.comboBox.currentTextChanged.connect(self._on_model_changed)
-        param_card_layout.addWidget(self.model_card)
+        param_layout.addWidget(self.model_card)
 
-        # 语速滑块卡片
         self.speed_card = FloatRangeSettingCard(
             configItem=self._temp_speed_config,
             icon=FIF.SPEED_OFF,
@@ -290,9 +369,8 @@ class MinimaxVoiceListInterface(QWidget):
             parent=self.param_card,
         )
         self.speed_card.valueChanged.connect(self._on_speed_changed)
-        param_card_layout.addWidget(self.speed_card)
+        param_layout.addWidget(self.speed_card)
 
-        # 音量滑块卡片
         self.vol_card = FloatRangeSettingCard(
             configItem=self._temp_vol_config,
             icon=FIF.VOLUME,
@@ -303,9 +381,8 @@ class MinimaxVoiceListInterface(QWidget):
             parent=self.param_card,
         )
         self.vol_card.valueChanged.connect(self._on_vol_changed)
-        param_card_layout.addWidget(self.vol_card)
+        param_layout.addWidget(self.vol_card)
 
-        # 音调滑块卡片
         self.pitch_card = FloatRangeSettingCard(
             configItem=self._temp_pitch_config,
             icon=FIF.MUSIC,
@@ -316,14 +393,11 @@ class MinimaxVoiceListInterface(QWidget):
             parent=self.param_card,
         )
         self.pitch_card.valueChanged.connect(self._on_pitch_changed)
-        param_card_layout.addWidget(self.pitch_card)
+        param_layout.addWidget(self.pitch_card)
 
-        right_layout.addWidget(self.param_card)
-        right_layout.addStretch()
-
-        content_layout.addLayout(right_layout, 1)  # 右侧占 1 份
-
-        main_layout.addLayout(content_layout, 1)
+        side_layout.addWidget(self.param_card)
+        side_layout.addStretch(1)
+        return side_layout
 
     def showEvent(self, event: QShowEvent) -> None:
         """界面显示事件
@@ -332,19 +406,25 @@ class MinimaxVoiceListInterface(QWidget):
             event: 显示事件
         """
         super().showEvent(event)
-        # 首次显示时加载音色列表
         if not self._is_loaded:
             QTimer.singleShot(0, self._load_voice_list)
 
+    async def load_voice_list(self) -> None:
+        """异步加载音色列表"""
+        self._is_loaded = False
+        await self._fetch_voice_list()
+
     @asyncSlot()
     async def _load_voice_list(self) -> None:
-        """异步加载音色列表"""
-        # 检查 API Key
+        """首次显示时异步加载音色列表"""
+        await self._fetch_voice_list()
+
+    async def _fetch_voice_list(self) -> None:
+        """请求并渲染音色列表"""
         if not cfg.minimaxApiKey.value:
             self._show_empty_state('请先在设置中配置 MiniMax API Key')
             return
 
-        # 显示加载状态
         state_tooltip = StateToolTip('正在加载', '加载音色列表中...', self.window())
         state_tooltip.move(state_tooltip.getSuitablePos())
         state_tooltip.show()
@@ -372,22 +452,45 @@ class MinimaxVoiceListInterface(QWidget):
 
     def _update_voice_list(self) -> None:
         """更新音色列表显示"""
-        # 清空现有卡片
         for card in self._voice_cards.values():
             self.voice_flow_layout.removeWidget(card)
             card.deleteLater()
         self._voice_cards.clear()
 
-        card_width = 450
-
-        # 创建新卡片
         for voice in self._voices:
             card = VoiceCard(voice.voice_id, voice.voice_name, self.voice_container)
-            card.setFixedWidth(card_width)
+            card.setFixedWidth(260)
             card.voiceSelected.connect(self._on_voice_card_clicked)
-
             self._voice_cards[voice.voice_id] = card
             self.voice_flow_layout.addWidget(card)
+
+        self.count_label.setText(f'{len(self._voices)} 个')
+        self._apply_filter()
+        self._restore_selection()
+
+    def _restore_selection(self) -> None:
+        """恢复上一次选中的音色卡片状态"""
+        if self._current_voice_id in self._voice_cards:
+            self._voice_cards[self._current_voice_id].set_selected(True)
+
+    def _apply_filter(self) -> None:
+        """按搜索关键字过滤音色卡片"""
+        keyword = self.search_edit.text().strip().lower()
+        for voice_id, card in self._voice_cards.items():
+            matched = not keyword or keyword in card.voice_name.lower() or keyword in voice_id.lower()
+            card.setVisible(matched)
+
+    def _on_search_changed(self, _text: str) -> None:
+        """搜索框内容变化
+
+        Args:
+            _text: 搜索文本
+        """
+        self._apply_filter()
+
+    def _on_refresh_clicked(self, _checked: bool = False) -> None:
+        """刷新音色列表"""
+        self._load_voice_list()
 
     def _show_empty_state(self, message: str) -> None:
         """显示空状态提示
@@ -395,13 +498,12 @@ class MinimaxVoiceListInterface(QWidget):
         Args:
             message: 提示信息
         """
-        # 清空现有卡片
         for card in self._voice_cards.values():
             self.voice_flow_layout.removeWidget(card)
             card.deleteLater()
         self._voice_cards.clear()
+        self.count_label.setText('')
 
-        # 显示空状态消息卡片
         empty_card = CardWidget(self.voice_container)
         empty_layout = QVBoxLayout(empty_card)
         empty_label = BodyLabel(message)
@@ -416,14 +518,17 @@ class MinimaxVoiceListInterface(QWidget):
         Args:
             voice_id: 音色 ID
         """
-        # 取消之前选中的卡片
         if self._current_voice_id and self._current_voice_id in self._voice_cards:
             self._voice_cards[self._current_voice_id].set_selected(False)
 
-        # 选中新卡片
         self._current_voice_id = voice_id
         if voice_id in self._voice_cards:
-            self._voice_cards[voice_id].set_selected(True)
+            card = self._voice_cards[voice_id]
+            card.set_selected(True)
+            text = f'当前音色 · {card.voice_name}'
+            elided = self.selected_label.fontMetrics().elidedText(text, Qt.TextElideMode.ElideRight, 260)
+            self.selected_label.setText(elided)
+            self.selected_label.setToolTip(f'{card.voice_name}（{voice_id}）')
             logger.debug(f'选中音色: {voice_id}')
 
     def _on_model_changed(self, model: str) -> None:
@@ -457,12 +562,11 @@ class MinimaxVoiceListInterface(QWidget):
         Args:
             pitch: 音调值（浮点数，需转换为整数）
         """
-        self._temp_pitch = int(pitch)  # FloatRangeSettingCard 总是返回 float
+        self._temp_pitch = int(pitch)
 
     @asyncSlot()
     async def _on_play_clicked(self) -> None:
         """播放按钮点击事件"""
-        # 检查是否选中音色
         if not self._current_voice_id:
             InfoBar.warning(
                 title='未选择音色',
@@ -475,7 +579,6 @@ class MinimaxVoiceListInterface(QWidget):
             )
             return
 
-        # 检查文本
         text = self.text_edit.toPlainText().strip()
         if not text:
             InfoBar.warning(
@@ -489,15 +592,14 @@ class MinimaxVoiceListInterface(QWidget):
             )
             return
 
-        # 防止重复点击
         if self._is_playing:
             return
 
         self._is_playing = True
         self.play_button.setEnabled(False)
+        self.play_button.setText('合成中…')
 
         try:
-            # 调用 TTS 服务
             audio_bytes = await self._tts_service.text_to_speech(
                 text=text,
                 voice_id=self._current_voice_id,
@@ -506,19 +608,7 @@ class MinimaxVoiceListInterface(QWidget):
                 vol=self._temp_vol,
                 pitch=self._temp_pitch,
             )
-
-            # 播放音频
             await audio_player.play_bytes_async(audio_bytes)
-
-            InfoBar.success(
-                title='播放成功',
-                content='',
-                orient=Qt.Orientation.Horizontal,
-                isClosable=True,
-                position=InfoBarPosition.TOP,
-                duration=1000,
-                parent=self,
-            )
         except Exception as e:
             logger.exception(f'播放失败: {e}')
             InfoBar.error(
@@ -533,3 +623,4 @@ class MinimaxVoiceListInterface(QWidget):
         finally:
             self._is_playing = False
             self.play_button.setEnabled(True)
+            self.play_button.setText('试听')

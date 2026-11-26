@@ -61,12 +61,17 @@ jobs:
         with:
           name: Kinoko7Danmaku
 
+      - name: Generate checksum
+        run: sha256sum Kinoko7Danmaku.exe > Kinoko7Danmaku.exe.sha256
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref }}
           name: Release ${{ github.ref_name }}
-          files: Kinoko7Danmaku.exe
+          files: |
+            Kinoko7Danmaku.exe
+            Kinoko7Danmaku.exe.sha256
           draft: false
           prerelease: false
           generate_release_notes: true
