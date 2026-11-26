@@ -216,6 +216,7 @@ class MainWindow(FluentWindow):
         # 创建音频测试界面
         self.audio_test_interface = AudioTestInterface(self)
         self.audio_test_interface.setObjectName('audioTestInterface')
+        self.audio_test_interface.open_settings.connect(self._open_settings_page)
 
         # 创建 MiniMax 音色相关界面
         self.minimax_interface = MinimaxHomeInterface(self)

@@ -58,7 +58,12 @@ class StreamPlayer:
             device_info: dict = sd.query_devices(self.device_index)  # type: ignore
         except Exception:
             return None
-        return OutputDevice(index=self.device_index, name=device_info['name'])
+        return OutputDevice(
+            index=self.device_index,
+            name=device_info['name'],
+            sample_rate=int(device_info['default_samplerate']),
+            channels=int(device_info['max_output_channels']),
+        )
 
     def set_output_device_by_name(self, device_name: str) -> None:
         """根据设备名称设置输出设备"""
