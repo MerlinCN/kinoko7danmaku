@@ -14,21 +14,22 @@ from qfluentwidgets import (
     InfoBar,
     InfoBarPosition,
     LineEdit,
-    PrimaryPushButton,
+    PushButton,
     ScrollArea,
     StateToolTip,
     SubtitleLabel,
     SwitchButton,
     TextEdit,
-    TitleLabel,
     ToolButton,
 )
 from qfluentwidgets import FluentIcon as FIF
+from qfluentwidgets.common.style_sheet import setCustomStyleSheet
 
 from core.const import MINIMAX_MODELS
 from core.player import audio_player
 from core.qconfig import cfg
 from gui.components import SingleAudioUploadWidget
+from gui.components.minimax_kit import HeroCard, StepHeader, accent_button_qss
 from models.minimax import ClonePrompt, FilePurpose, VoiceCloneRequest, VoiceItem
 from tts_service.minimax import MinimaxService
 
@@ -57,9 +58,14 @@ class MinimaxVoiceCloneInterface(QWidget):
         main_layout.setContentsMargins(36, 36, 36, 36)
         main_layout.setSpacing(20)
 
-        # 标题
-        title = TitleLabel('音色克隆')
-        main_layout.addWidget(title)
+        # 主视觉
+        hero = HeroCard(
+            '音色克隆',
+            '把一段人声变成你的音色',
+            '上传清晰人声与示例音频，三步生成专属音色，再交给弹幕姬开口说话。',
+            self,
+        )
+        main_layout.addWidget(hero)
 
         # 滚动区域
         scroll_area = ScrollArea()
@@ -75,10 +81,10 @@ class MinimaxVoiceCloneInterface(QWidget):
         # === 步骤1：上传音频卡片 ===
         upload_card = CardWidget()
         upload_layout = QVBoxLayout(upload_card)
-        upload_layout.setContentsMargins(20, 20, 20, 20)
+        upload_layout.setContentsMargins(20, 16, 20, 16)
         upload_layout.setSpacing(12)
 
-        upload_title = SubtitleLabel('1. 导入您的音频')
+        upload_title = StepHeader(1, '导入音频', '上传一段 30 秒以内的清晰人声，作为克隆的源音频')
         upload_layout.addWidget(upload_title)
 
         # 源音频上传组件（单文件）
@@ -91,17 +97,11 @@ class MinimaxVoiceCloneInterface(QWidget):
         # === 步骤2：示例音频上传（必填）===
         example_card = CardWidget()
         example_layout = QVBoxLayout(example_card)
-        example_layout.setContentsMargins(20, 20, 20, 20)
+        example_layout.setContentsMargins(20, 16, 20, 16)
         example_layout.setSpacing(12)
 
-        example_title = SubtitleLabel('2. 示例音频上传（必填）')
+        example_title = StepHeader(2, '示例音频（必填）', '上传一段 8 秒以内的示例音频，并填写音频中念的台词')
         example_layout.addWidget(example_title)
-
-        # 说明文本
-        example_desc = CaptionLabel('上传一段 <8 秒的示例音频，并填写音频中念的台词，用于克隆音色')
-        example_desc.setTextColor('#606060', '#d2d2d2')
-        example_desc.setWordWrap(True)
-        example_layout.addWidget(example_desc)
 
         # 示例音频上传组件（单文件，时长<8秒，无最小时长限制）
         self.example_audio_upload_widget = SingleAudioUploadWidget(
@@ -137,10 +137,10 @@ class MinimaxVoiceCloneInterface(QWidget):
         # === 步骤3：高级设置卡片 ===
         advanced_card = CardWidget()
         advanced_layout = QVBoxLayout(advanced_card)
-        advanced_layout.setContentsMargins(20, 20, 20, 20)
+        advanced_layout.setContentsMargins(20, 16, 20, 16)
         advanced_layout.setSpacing(12)
 
-        advanced_title = SubtitleLabel('3. 高级设置')
+        advanced_title = StepHeader(3, '高级设置', '选择克隆使用的模型，可对源音频开启背景降噪')
         advanced_layout.addWidget(advanced_title)
 
         # 模型选择
@@ -159,6 +159,8 @@ class MinimaxVoiceCloneInterface(QWidget):
         denoise_layout = QHBoxLayout()
         denoise_label = BodyLabel('去除背景噪音')
         self.denoise_switch = SwitchButton()
+        self.denoise_switch.setOnText('')
+        self.denoise_switch.setOffText('')
         denoise_layout.addWidget(denoise_label)
         denoise_layout.addStretch()
         denoise_layout.addWidget(self.denoise_switch)
@@ -169,10 +171,10 @@ class MinimaxVoiceCloneInterface(QWidget):
         # === 步骤4：音色信息卡片 ===
         info_card = CardWidget()
         info_layout = QVBoxLayout(info_card)
-        info_layout.setContentsMargins(20, 20, 20, 20)
+        info_layout.setContentsMargins(20, 16, 20, 16)
         info_layout.setSpacing(12)
 
-        info_title = SubtitleLabel('4. 音色信息')
+        info_title = StepHeader(4, '音色信息', '为音色设置唯一 ID 与展示名称')
         info_layout.addWidget(info_title)
 
         # 音色ID
@@ -200,10 +202,10 @@ class MinimaxVoiceCloneInterface(QWidget):
         # === 步骤5：预览测试卡片 ===
         preview_card = CardWidget()
         preview_layout = QVBoxLayout(preview_card)
-        preview_layout.setContentsMargins(20, 20, 20, 20)
+        preview_layout.setContentsMargins(20, 16, 20, 16)
         preview_layout.setSpacing(12)
 
-        preview_title = SubtitleLabel('5. 预览测试（可选）')
+        preview_title = StepHeader(5, '预览测试（可选）', '生成前可先用示例文本试听克隆效果')
         preview_layout.addWidget(preview_title)
 
         # 测试文本
@@ -244,7 +246,9 @@ class MinimaxVoiceCloneInterface(QWidget):
         action_layout.addStretch()
 
         # 生成按钮
-        self.generate_button = PrimaryPushButton(FIF.ADD, '生成音色')
+        self.generate_button = PushButton('生成音色')
+        self.generate_button.setIcon(FIF.ADD)
+        setCustomStyleSheet(self.generate_button, accent_button_qss(), accent_button_qss())
         self.generate_button.clicked.connect(self._on_generate_clicked)
         action_layout.addWidget(self.generate_button)
 

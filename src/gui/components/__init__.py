@@ -9,6 +9,7 @@ from .home_panel import HomePanel
 from .int_setting_card import IntSettingCard
 from .login_panel import LoginPanel
 from .message_feed import MessageFeed
+from .minimax_kit import HeroCard, MetricTile, StepHeader
 from .readonly_info_card import ReadOnlyInfoCard
 from .room_header_card import RoomHeaderCard
 from .single_audio_upload_widget import SingleAudioUploadWidget
@@ -25,15 +26,18 @@ __all__ = [
     'BroadcastToggleCard',
     'DictEditCard',
     'FloatRangeSettingCard',
+    'HeroCard',
     'HomePanel',
     'IntSettingCard',
     'LoginPanel',
     'MessageFeed',
+    'MetricTile',
     'ReadOnlyInfoCard',
     'RoomHeaderCard',
     'SingleAudioUploadWidget',
     'StatsRow',
     'StatusPill',
+    'StepHeader',
     'StrSettingCard',
     'TtsSummaryCard',
     'UploadedFileCard',

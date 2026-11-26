@@ -221,6 +221,8 @@ class MainWindow(FluentWindow):
         # 创建 MiniMax 音色相关界面
         self.minimax_interface = MinimaxHomeInterface(self)
         self.minimax_interface.setObjectName('minimaxInterface')
+        self.minimax_interface.open_voice_list.connect(lambda: self.switchTo(self.minimax_voice_list_interface))
+        self.minimax_interface.open_voice_clone.connect(lambda: self.switchTo(self.minimax_voice_clone_interface))
 
         self.minimax_voice_list_interface = MinimaxVoiceListInterface(self)
         self.minimax_voice_list_interface.setObjectName('minimaxVoiceListInterface')
