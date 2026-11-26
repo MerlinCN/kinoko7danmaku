@@ -32,6 +32,7 @@ certifi==2026.1.4
     #   httpcore
     #   httpx
     #   requests
+    #   sentry-sdk
 cffi==2.0.0
     # via
     #   miniaudio
@@ -125,7 +126,9 @@ pycocoa==25.12.4 ; sys_platform == 'darwin'
 pycparser==3.0 ; implementation_name != 'PyPy'
     # via cffi
 pycryptodomex==3.23.0
-    # via bilibili-api-python
+    # via
+    #   bilibili-api-python
+    #   kinoko7danmaku
 pydantic==2.12.5
     # via
     #   kinoko7danmaku
@@ -901,6 +904,8 @@ requests==2.34.2
     # via kinoko7danmaku
 scipy==1.17.0
     # via pyside6-fluent-widgets
+sentry-sdk==3.0.1
+    # via kinoko7danmaku
 setuptools==80.10.2
     # via
     #   pyinstaller
@@ -943,7 +948,9 @@ tzdata==2025.3 ; sys_platform == 'win32'
 tzlocal==5.3.1
     # via apscheduler
 urllib3==2.7.0
-    # via requests
+    # via
+    #   requests
+    #   sentry-sdk
 virtualenv==20.36.1
     # via pre-commit
 win32-setctime==1.2.0 ; sys_platform == 'win32'
