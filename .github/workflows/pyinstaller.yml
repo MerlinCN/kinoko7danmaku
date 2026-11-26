@@ -40,6 +40,18 @@ jobs:
           uv sync --dev
           uv add pyinstaller
 
+      - name: Inject telemetry config
+        shell: pwsh
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: |
+          $json = @{ sentry_dsn = $env:SENTRY_DSN } | ConvertTo-Json -Compress
+          [System.IO.File]::WriteAllText(
+            (Join-Path (Get-Location).Path "resource/telemetry.json"),
+            $json,
+            [System.Text.UTF8Encoding]::new($false)
+          )
+
       - name: Build with PyInstaller
         run: uv run pyinstaller kinoko7danmaku.spec
 

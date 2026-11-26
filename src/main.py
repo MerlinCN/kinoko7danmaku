@@ -14,6 +14,7 @@ from loguru import logger
 from qasync import QApplication, QEventLoop
 
 from core.const import DATA_DIR
+from core.telemetry import init_telemetry, install_loop_hook
 from gui import MainWindow
 
 
@@ -36,6 +37,9 @@ def main() -> None:
         compression='zip',  # 压缩旧日志文件
     )
 
+    # 初始化错误上报（未配置 DSN 或用户关闭开关时自动跳过）
+    init_telemetry()
+
     # 启用高 DPI 支持（Qt6 默认启用，这里只设置缩放策略）
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
 
@@ -55,6 +59,7 @@ def main() -> None:
     # 创建 qasync 事件循环
     loop = QEventLoop(app)
     asyncio.set_event_loop(loop)
+    install_loop_hook(loop)
     # 创建主窗口
     window = MainWindow()
     window.show()

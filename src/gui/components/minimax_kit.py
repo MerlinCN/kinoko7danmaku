@@ -15,16 +15,19 @@ INK = '#181e25'
 INK_END = '#242c35'
 
 
-def accent_button_qss() -> str:
+def accent_button_qss(accent: str = ACCENT) -> str:
     """主视觉卡片内的强调色按钮样式
+
+    Args:
+        accent: 按钮底色
 
     Returns:
         QSS 字符串，浅色与深色主题通用
     """
     return (
-        'PushButton{background:#e73562;color:white;border:none;border-radius:6px;padding:6px 18px;}'
-        'PushButton:hover{background:#f04575;}'
-        'PushButton:pressed{background:#cf2c55;}'
+        f'PushButton{{background:{accent};color:white;border:none;border-radius:6px;padding:6px 18px;}}'
+        'PushButton:hover{background:rgba(255, 255, 255, 26);}'
+        'PushButton:pressed{background:rgba(0, 0, 0, 40);}'
     )
 
 
@@ -54,6 +57,7 @@ class HeroCard(QWidget):
         title: str,
         slogan: str,
         parent: QWidget | None = None,
+        accent: str = ACCENT,
     ) -> None:
         """初始化主视觉卡片
 
@@ -62,9 +66,11 @@ class HeroCard(QWidget):
             title: 大标题
             slogan: 副文案
             parent: 父组件
+            accent: 强调色
         """
         super().__init__(parent)
         self.setFixedHeight(178)
+        self.accent = accent
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(34, 22, 34, 22)
@@ -72,7 +78,7 @@ class HeroCard(QWidget):
 
         self.tag_label = QLabel(tag, self)
         self.tag_label.setFont(getFont(11, QFont.Weight.DemiBold))
-        self.tag_label.setStyleSheet(f'color: white; background: {ACCENT}; border-radius: 9px; padding: 1px 10px;')
+        self.tag_label.setStyleSheet(f'color: white; background: {accent}; border-radius: 9px; padding: 1px 10px;')
         layout.addWidget(self.tag_label, 0, Qt.AlignmentFlag.AlignLeft)
 
         self.title_label = QLabel(title, self)
@@ -114,7 +120,7 @@ class HeroCard(QWidget):
         painter.setBrush(gradient)
         painter.drawRoundedRect(self.rect(), 12, 12)
 
-        painter.setBrush(QColor(ACCENT))
+        painter.setBrush(QColor(self.accent))
         painter.drawRoundedRect(QRectF(0, 30, 4, 44), 2, 2)
 
         self._draw_wave(painter)
@@ -133,7 +139,7 @@ class HeroCard(QWidget):
         start_x = self.width() - 34 - len(heights) * (bar_width + gap) + gap
 
         for index, height in enumerate(heights):
-            color = QColor(ACCENT) if index % 2 == 0 else QColor(255, 255, 255)
+            color = QColor(self.accent) if index % 2 == 0 else QColor(255, 255, 255)
             color.setAlpha(110 if index % 2 == 0 else 40)
             painter.setBrush(color)
             rect = QRectF(start_x + index * (bar_width + gap), center_y - height / 2, bar_width, height)

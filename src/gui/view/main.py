@@ -38,10 +38,13 @@ from qfluentwidgets import (
 from bilibili import bili_service
 from core import updater
 from core.const import AUTHOR_BILIBILI_URL, GITHUB_URL, RESOURCE_DIR
+from core.omnivoice_runtime import omnivoice_runtime
 from core.player import audio_player
+from core.qconfig import cfg
 from core.update_checker import UpdateChecker, VersionInfo
 from gui.components import HomePanel, LoginPanel
 from gui.icons import CustomIcon
+from tts_service import reset_tts_service
 
 from .audio_test import AudioTestInterface
 from .minimax import (
@@ -49,6 +52,7 @@ from .minimax import (
     MinimaxVoiceCloneInterface,
     MinimaxVoiceListInterface,
 )
+from .omnivoice import OmniVoiceInterface
 from .settings import SettingsInterface
 
 
@@ -232,6 +236,10 @@ class MainWindow(FluentWindow):
         self.minimax_voice_clone_interface = MinimaxVoiceCloneInterface(self)
         self.minimax_voice_clone_interface.setObjectName('minimaxVoiceCloneInterface')
 
+        # 创建 OmniVoice 本地服务界面
+        self.omnivoice_interface = OmniVoiceInterface(self)
+        self.omnivoice_interface.setObjectName('omnivoiceInterface')
+
         # 创建设置界面
         self.settings_interface = SettingsInterface(self)
         self.settings_interface.setObjectName('settingsInterface')
@@ -268,6 +276,9 @@ class MainWindow(FluentWindow):
 
         # 启用 MiniMax 菜单的展开状态记忆
         self.navigationInterface.widget('minimaxInterface').setRememberExpandState(True)
+
+        # 添加 OmniVoice 界面到导航栏（位于 MiniMax 之后）
+        self.addSubInterface(self.omnivoice_interface, CustomIcon.OMNIVOICE, 'OmniVoice', NavigationItemPosition.TOP)
 
         self.navigationInterface.addItem(
             routeKey='update',
@@ -487,6 +498,7 @@ class MainWindow(FluentWindow):
         # 停止音频播放队列
         logger.info('应用退出，正在停止音频播放队列')
         await audio_player.stop_worker()
+        await omnivoice_runtime.stop(cfg.omnivoicePort.value)
 
         # run_forever() 返回后（QApplication.quit() 被调用后）
         # 在事件循环关闭前，手动清理 bilibili_api 的 session
@@ -504,3 +516,5 @@ class MainWindow(FluentWindow):
         """连接信号"""
         # 连接主题切换信号
         qconfig.themeChanged.connect(self._on_theme_changed)
+        # 切换 TTS 服务后重建服务实例
+        cfg.activeTTS.valueChanged.connect(reset_tts_service)

@@ -13,7 +13,7 @@
 
 ## 特性
 
-- **多 TTS 引擎** — 支持 MiniMax、Fish Speech、GPT-SoVITS、Piper、Edge 五种语音服务
+- **多 TTS 引擎** — 支持 MiniMax、OmniVoice 本地、Edge 三种语音服务
 - **实时监控** — 弹幕 / 礼物 / SC / 舰长 / 醒目留言实时捕获与播报
 - **礼物合并** — 短时间内的连续礼物自动合并播报，避免刷屏
 - **别名字典** — 支持特殊词汇的自定义发音替换
@@ -58,9 +58,7 @@ uv run src/main.py
 | 服务 | 说明 | 需要 API Key |
 |------|------|:---:|
 | MiniMax | 高品质云端语音合成 | ✅ |
-| Fish Speech | 开源语音合成 | 自部署 |
-| GPT-SoVITS | 少样本语音克隆 | 自部署 |
-| Piper | 本地离线 TTS | 自部署 |
+| OmniVoice 本地 | 零样本语音克隆，本机推理 | ❌ |
 | Edge | 微软免费 TTS | ❌ |
 
 ## 设置

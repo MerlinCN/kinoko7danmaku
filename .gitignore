@@ -171,6 +171,9 @@ ref_audio/
 # 打包时自动生成的版本文件
 resource/version.txt
 
+# 打包时由 CI 注入的上报配置
+resource/telemetry.json
+
 CLAUDE.md
 .claude
 data/

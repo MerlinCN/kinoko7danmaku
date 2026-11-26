@@ -3,32 +3,33 @@ from models.service import ServiceType
 
 from .base import TTSService
 from .edge import EdgeService
-from .fish_speech import FishSpeechService
-from .gpt_sovits import GPTSovitsService
 from .minimax import MinimaxService
-from .piper import PiperService
+from .omnivoice import OmniVoiceService
 
 _default_tts_service = None
 
 
-def get_tts_service() -> FishSpeechService | GPTSovitsService | MinimaxService | PiperService | EdgeService:
+def reset_tts_service() -> None:
+    """清除缓存的 TTS 服务实例
+
+    切换使用的 TTS 服务后调用，让 get_tts_service() 重新按配置创建。
+    """
+    global _default_tts_service
+    _default_tts_service = None
+
+
+def get_tts_service() -> MinimaxService | OmniVoiceService | EdgeService:
     """获取TTS服务"""
 
     global _default_tts_service
     if _default_tts_service is not None:
         return _default_tts_service
     model_type = cfg.activeTTS.value
-    if model_type == ServiceType.FISH_SPEECH:
-        _default_tts_service = FishSpeechService()
-
-    elif model_type == ServiceType.GPT_SOVITS:
-        _default_tts_service = GPTSovitsService()
-
-    elif model_type == ServiceType.MINIMAX:
+    if model_type == ServiceType.MINIMAX:
         _default_tts_service = MinimaxService()
 
-    elif model_type == ServiceType.PIPER:
-        _default_tts_service = PiperService()
+    elif model_type == ServiceType.OMNIVOICE:
+        _default_tts_service = OmniVoiceService()
 
     elif model_type == ServiceType.EDGE:
         _default_tts_service = EdgeService()
@@ -40,10 +41,9 @@ def get_tts_service() -> FishSpeechService | GPTSovitsService | MinimaxService |
 
 __all__ = [
     'EdgeService',
-    'FishSpeechService',
-    'GPTSovitsService',
     'MinimaxService',
-    'PiperService',
+    'OmniVoiceService',
     'TTSService',
     'get_tts_service',
+    'reset_tts_service',
 ]

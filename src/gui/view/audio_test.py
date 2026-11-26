@@ -185,8 +185,6 @@ class AudioTestInterface(ScrollArea):
 
         # 参数展示分组
         self.minimaxGroup = self._build_minimax_group()
-        self.fishSpeechGroup = self._build_fish_speech_group()
-        self.gptSovitsGroup = self._build_gpt_sovits_group()
 
     def _build_minimax_group(self) -> SettingCardGroup:
         """构建 Minimax 当前参数分组"""
@@ -248,79 +246,6 @@ class AudioTestInterface(ScrollArea):
         )
         return group
 
-    def _build_fish_speech_group(self) -> SettingCardGroup:
-        """构建 Fish Speech 当前参数分组"""
-        group = SettingCardGroup('Fish Speech 当前参数', self.scrollWidget)
-        group.addSettingCard(
-            ReadOnlyInfoCard(
-                configItem=cfg.fishSpeechApiUrl,
-                icon=FIF.LINK,
-                title='API 地址',
-                content='Fish Speech TTS 服务的 API 地址',
-                parent=group,
-            )
-        )
-        return group
-
-    def _build_gpt_sovits_group(self) -> SettingCardGroup:
-        """构建 GPT-SoVITS 当前参数分组（仅核心 6 项）"""
-        group = SettingCardGroup('GPT-SoVITS 当前参数', self.scrollWidget)
-        group.addSettingCard(
-            ReadOnlyInfoCard(
-                configItem=cfg.gptSovitsApiUrl,
-                icon=FIF.LINK,
-                title='API 地址',
-                content='GPT-SoVITS TTS 服务的 API 地址',
-                parent=group,
-            )
-        )
-        group.addSettingCard(
-            ReadOnlyInfoCard(
-                configItem=cfg.gptSovitsRefAudioPath,
-                icon=FIF.MUSIC,
-                title='参考音频路径',
-                content='当前使用的参考音频文件',
-                parent=group,
-            )
-        )
-        group.addSettingCard(
-            ReadOnlyInfoCard(
-                configItem=cfg.gptSovitsRefText,
-                icon=FIF.EDIT,
-                title='参考文本',
-                content='参考音频对应的文本内容',
-                parent=group,
-            )
-        )
-        group.addSettingCard(
-            ReadOnlyInfoCard(
-                configItem=cfg.gptSovitsTopK,
-                icon=FIF.TAG,
-                title='Top K',
-                content='采样时的 Top K 值',
-                parent=group,
-            )
-        )
-        group.addSettingCard(
-            ReadOnlyInfoCard(
-                configItem=cfg.gptSovitsTopP,
-                icon=FIF.TAG,
-                title='Top P',
-                content='采样时的 Top P 值',
-                parent=group,
-            )
-        )
-        group.addSettingCard(
-            ReadOnlyInfoCard(
-                configItem=cfg.gptSovitsTemperature,
-                icon=FIF.CARE_RIGHT_SOLID,
-                title='采样温度',
-                content='当前的采样温度',
-                parent=group,
-            )
-        )
-        return group
-
     def _init_layout(self) -> None:
         """初始化布局"""
         self.title_label.move(36, 30)
@@ -330,8 +255,6 @@ class AudioTestInterface(ScrollArea):
         self.expandLayout.addWidget(self.device_card)
         self.expandLayout.addWidget(self.test_card)
         self.expandLayout.addWidget(self.minimaxGroup)
-        self.expandLayout.addWidget(self.fishSpeechGroup)
-        self.expandLayout.addWidget(self.gptSovitsGroup)
 
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setViewportMargins(0, 80, 0, 20)
@@ -352,8 +275,6 @@ class AudioTestInterface(ScrollArea):
         """根据当前激活的 TTS 服务切换参数分组的可见性"""
         active = cfg.activeTTS.value
         self.minimaxGroup.setVisible(active == ServiceType.MINIMAX)
-        self.fishSpeechGroup.setVisible(active == ServiceType.FISH_SPEECH)
-        self.gptSovitsGroup.setVisible(active == ServiceType.GPT_SOVITS)
 
         service = ServiceType(active)
         self.test_card.service_label.setText(f'当前服务 · {SUPPORTED_SERVICES[service].description}')

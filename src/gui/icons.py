@@ -16,6 +16,7 @@ class CustomIcon(FluentIconBase, Enum):
 
     BILIBILI = 'bilibili'
     MINIMAX = 'minimax'
+    OMNIVOICE = 'omnivoice'
     YUAN = 'yuan'
     MERGE = 'merge'
     KEY = 'key'
