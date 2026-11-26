@@ -25,6 +25,7 @@ from qfluentwidgets import (
     InfoBar,
     InfoBarPosition,
     NavigationItemPosition,
+    StateToolTip,
     SystemTrayMenu,
     ToolButton,
     isDarkTheme,
@@ -35,9 +36,10 @@ from qfluentwidgets import (
 )
 
 from bilibili import bili_service
+from core import updater
 from core.const import AUTHOR_BILIBILI_URL, GITHUB_URL, RESOURCE_DIR
 from core.player import audio_player
-from core.update_checker import UpdateChecker
+from core.update_checker import UpdateChecker, VersionInfo
 from gui.components import HomePanel, LoginPanel
 from gui.icons import CustomIcon
 
@@ -309,29 +311,17 @@ class MainWindow(FluentWindow):
 
     @asyncSlot()
     async def _on_update(self, is_force: bool = False) -> None:
-        """更新"""
+        """检查更新
+
+        Args:
+            is_force: 是否强制检查（忽略检查间隔）
+        """
         self.progress_ring.start()
         version_info = await asyncio.to_thread(UpdateChecker.check_update, is_force)
         self.progress_ring.stop()
-        if version_info:
-            w = InfoBar.new(
-                icon=FIF.GITHUB,
-                title='版本检测',
-                content=(
-                    f'当前版本: v{UpdateChecker.get_current_version()}，最新版本: {version_info.version}，是否下载？'
-                ),
-                orient=Qt.Horizontal,
-                isClosable=True,
-                position=InfoBarPosition.BOTTOM,
-                duration=5000,
-                parent=self,
-            )
-            download_button = ToolButton(FIF.DOWNLOAD)
-            download_button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(version_info.download_url)))
-            w.addWidget(download_button)
-        else:
-            w = InfoBar.new(
-                icon=FIF.GITHUB,
+
+        if not version_info:
+            InfoBar.success(
                 title='版本检测',
                 content='没有发现新版本',
                 orient=Qt.Horizontal,
@@ -340,6 +330,79 @@ class MainWindow(FluentWindow):
                 duration=2000,
                 parent=self,
             )
+            return
+
+        bar = InfoBar.new(
+            icon=FIF.UPDATE,
+            title='发现新版本',
+            content=f'当前版本 v{UpdateChecker.get_current_version()}，最新版本 {version_info.version}',
+            orient=Qt.Horizontal,
+            isClosable=True,
+            position=InfoBarPosition.BOTTOM,
+            duration=-1,
+            parent=self,
+        )
+        download_button = ToolButton(FIF.DOWNLOAD)
+        download_button.setToolTip('自动更新' if self._can_auto_update(version_info) else '打开下载页面')
+        download_button.clicked.connect(lambda: self._start_update(version_info))
+        bar.addWidget(download_button)
+
+    @staticmethod
+    def _can_auto_update(version_info: VersionInfo) -> bool:
+        """判断当前环境能否自动更新
+
+        Args:
+            version_info: 版本信息
+
+        Returns:
+            支持自动更新且安装目录可写时返回 True
+        """
+        return (
+            updater.is_supported()
+            and bool(version_info.asset_url and version_info.checksum_url)
+            and updater.can_write_install_dir()
+        )
+
+    def _start_update(self, version_info: VersionInfo) -> None:
+        """开始更新，无法自动更新时打开下载页面
+
+        Args:
+            version_info: 版本信息
+        """
+        if not self._can_auto_update(version_info):
+            QDesktopServices.openUrl(QUrl(version_info.download_url))
+            return
+        self._download_and_apply(version_info)
+
+    @asyncSlot()
+    async def _download_and_apply(self, version_info: VersionInfo) -> None:
+        """下载更新包，完成后退出并重启
+
+        Args:
+            version_info: 版本信息
+        """
+        tooltip = StateToolTip('正在下载更新', '0%', self)
+        tooltip.move(tooltip.getSuitablePos())
+        tooltip.show()
+
+        try:
+            new_exe = await updater.download_update(
+                version_info.asset_url,
+                version_info.checksum_url,
+                lambda percent: tooltip.setContent(f'{percent}%'),
+            )
+        except Exception as e:
+            logger.warning(f'下载更新失败: {e!r}')
+            tooltip.setState(False)
+            tooltip.setTitle('更新失败')
+            tooltip.setContent(str(e))
+            return
+
+        tooltip.setState(True)
+        tooltip.setTitle('更新已就绪')
+        tooltip.setContent('应用将退出并重启完成更新')
+        updater.apply_update(new_exe)
+        QTimer.singleShot(1200, self.close)
 
     def _set_qss(self) -> None:
         """设置样式表

@@ -13,6 +13,9 @@ from loguru import logger
 from core.const import DATA_DIR
 from core.version import __version__
 
+ASSET_NAME = 'Kinoko7Danmaku.exe'
+CHECKSUM_ASSET_NAME = f'{ASSET_NAME}.sha256'
+
 
 class VersionInfo(NamedTuple):
     """版本信息"""
@@ -21,6 +24,28 @@ class VersionInfo(NamedTuple):
     download_url: str
     release_notes: str
     release_url: str
+    asset_url: str = ''
+    checksum_url: str = ''
+
+
+def _parse_asset_urls(release: dict) -> tuple[str, str]:
+    """从 Release 数据中提取 exe 与校验文件的下载地址
+
+    Args:
+        release: GitHub Release 接口返回的数据
+
+    Returns:
+        (exe 下载地址, sha256 文件下载地址)，缺失时为空字符串
+    """
+    asset_url = ''
+    checksum_url = ''
+    for asset in release.get('assets') or []:
+        name = asset.get('name', '')
+        if name == ASSET_NAME:
+            asset_url = asset.get('browser_download_url', '')
+        elif name == CHECKSUM_ASSET_NAME:
+            checksum_url = asset.get('browser_download_url', '')
+    return asset_url, checksum_url
 
 
 class UpdateChecker:
@@ -153,6 +178,8 @@ class UpdateChecker:
                     download_url=cached_release_info.get('download_url', ''),
                     release_notes=cached_release_info.get('release_notes', ''),
                     release_url=cached_release_info.get('release_url', ''),
+                    asset_url=cached_release_info.get('asset_url', ''),
+                    checksum_url=cached_release_info.get('checksum_url', ''),
                 )
         else:
             logger.info(f'当前已是最新版本: {current_version}')
@@ -218,10 +245,13 @@ class UpdateChecker:
 
             # 保存到缓存
             new_etag = response.headers.get('etag', etag)
+            asset_url, checksum_url = _parse_asset_urls(data)
             release_info = {
                 'download_url': data.get('html_url', ''),
                 'release_notes': data.get('body', ''),
                 'release_url': data.get('html_url', ''),
+                'asset_url': asset_url,
+                'checksum_url': checksum_url,
             }
             UpdateChecker._save_cache(new_etag, current_time, latest_version, release_info)
 
@@ -236,6 +266,8 @@ class UpdateChecker:
                 download_url=release_info['download_url'],
                 release_notes=release_info['release_notes'],
                 release_url=release_info['release_url'],
+                asset_url=asset_url,
+                checksum_url=checksum_url,
             )
 
         except httpx.TimeoutException:
