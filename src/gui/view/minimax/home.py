@@ -5,13 +5,23 @@ from PySide6.QtGui import QIcon, QMouseEvent, QShowEvent
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget
 from loguru import logger
 from qasync import asyncSlot
-from qfluentwidgets import BodyLabel, CardWidget, IconWidget, PushButton, SubtitleLabel
+from qfluentwidgets import (
+    BodyLabel,
+    CardWidget,
+    IconWidget,
+    InfoBar,
+    InfoBarPosition,
+    PushButton,
+    SubtitleLabel,
+    qconfig,
+)
 from qfluentwidgets import FluentIcon as FIF
 from qfluentwidgets.common.icon import FluentIconBase
 from qfluentwidgets.common.style_sheet import setCustomStyleSheet
 
 from core.qconfig import cfg
-from gui.components.minimax_kit import ACCENT, HeroCard, MetricTile, accent_button_qss, ghost_button_qss
+from gui.components.minimax_kit import ACCENT, HeroCard, MetricTile, accent_button_qss, ghost_button_qss, hero_icon
+from models.service import ServiceType
 from tts_service.minimax import MinimaxService
 
 _OK_COLOR = '#2fa84f'
@@ -110,6 +120,7 @@ class MinimaxHomeInterface(QWidget):
         self._init_ui()
         self._connect_signals()
         self._refresh_config_metrics()
+        self._refresh_use_button()
 
     def _init_ui(self) -> None:
         """初始化 UI"""
@@ -124,16 +135,22 @@ class MinimaxHomeInterface(QWidget):
             self,
         )
         browse_btn = PushButton('浏览音色', self.hero)
-        browse_btn.setIcon(FIF.MUSIC_FOLDER)
+        browse_btn.setIcon(hero_icon(FIF.MUSIC_FOLDER))
         setCustomStyleSheet(browse_btn, accent_button_qss(), accent_button_qss())
         browse_btn.clicked.connect(self.open_voice_list.emit)
         self.hero.add_action(browse_btn)
 
         clone_btn = PushButton('克隆音色', self.hero)
-        clone_btn.setIcon(FIF.MICROPHONE)
+        clone_btn.setIcon(hero_icon(FIF.MICROPHONE))
         setCustomStyleSheet(clone_btn, ghost_button_qss(), ghost_button_qss())
         clone_btn.clicked.connect(self.open_voice_clone.emit)
         self.hero.add_action(clone_btn)
+
+        self.use_button = PushButton('设为当前 TTS', self.hero)
+        self.use_button.setIcon(hero_icon(FIF.ACCEPT))
+        setCustomStyleSheet(self.use_button, ghost_button_qss(), ghost_button_qss())
+        self.use_button.clicked.connect(self._on_use_as_active)
+        self.hero.add_action(self.use_button)
         layout.addWidget(self.hero)
 
         metric_layout = QHBoxLayout()
@@ -176,11 +193,32 @@ class MinimaxHomeInterface(QWidget):
         cfg.voiceDict.valueChanged.connect(self._refresh_config_metrics)
         cfg.minimaxModel.valueChanged.connect(self._refresh_config_metrics)
         cfg.minimaxApiKey.valueChanged.connect(self._refresh_config_metrics)
+        cfg.activeTTS.valueChanged.connect(self._refresh_use_button)
 
     def refresh(self) -> None:
         """刷新指标数据"""
         self._refresh_config_metrics()
+        self._refresh_use_button()
         self._load_voice_count()
+
+    def _on_use_as_active(self) -> None:
+        """把当前 TTS 切换为 MiniMax"""
+        qconfig.set(cfg.activeTTS, ServiceType.MINIMAX)
+        InfoBar.success(
+            title='已切换',
+            content='当前 TTS 服务已切换为 MiniMax',
+            orient=Qt.Orientation.Horizontal,
+            isClosable=True,
+            position=InfoBarPosition.TOP,
+            duration=2000,
+            parent=self,
+        )
+
+    def _refresh_use_button(self, *_: object) -> None:
+        """同步「设为当前 TTS」按钮的状态"""
+        active = cfg.activeTTS.value == ServiceType.MINIMAX
+        self.use_button.setText('当前 TTS' if active else '设为当前 TTS')
+        self.use_button.setEnabled(not active)
 
     def _refresh_config_metrics(self, *_: object) -> None:
         """刷新当前配置相关指标"""

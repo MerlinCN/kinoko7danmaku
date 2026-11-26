@@ -614,7 +614,7 @@ wheels = [
 
 [[package]]
 name = "kinoko7danmaku"
-version = "3.8.0"
+version = "4.0.0"
 source = { virtual = "." }
 dependencies = [
     { name = "aiohttp" },
@@ -626,6 +626,7 @@ dependencies = [
     { name = "miniaudio" },
     { name = "mutagen" },
     { name = "pyaudio" },
+    { name = "pycryptodomex" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "pyside6" },
@@ -633,6 +634,7 @@ dependencies = [
     { name = "qasync" },
     { name = "qrcode" },
     { name = "requests" },
+    { name = "sentry-sdk" },
     { name = "sounddevice" },
     { name = "stream-gears" },
     { name = "tenacity" },
@@ -657,6 +659,7 @@ requires-dist = [
     { name = "miniaudio", specifier = ">=1.71" },
     { name = "mutagen", specifier = ">=1.47.0" },
     { name = "pyaudio", specifier = ">=0.2.14" },
+    { name = "pycryptodomex", specifier = ">=3.23" },
     { name = "pydantic", specifier = ">=2.11.7" },
     { name = "pydantic-settings", specifier = ">=2.11.0" },
     { name = "pyside6", specifier = ">=6.10.0" },
@@ -664,6 +667,7 @@ requires-dist = [
     { name = "qasync", specifier = ">=0.28.0" },
     { name = "qrcode", specifier = ">=8.2" },
     { name = "requests", specifier = ">=2.34.2" },
+    { name = "sentry-sdk", specifier = ">=2.20" },
     { name = "sounddevice", specifier = ">=0.5.2" },
     { name = "stream-gears", specifier = ">=0.2.4" },
     { name = "tenacity", specifier = ">=9.1.2" },
@@ -4402,6 +4406,19 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/ef/5e/e565bd73991d42023eb82bb99e51c5b3d9e2c588ca9d4b3e2cc1d3ca62a6/scipy-1.17.0-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:f9eb55bb97d00f8b7ab95cb64f873eb0bf54d9446264d9f3609130381233483f", size = 37457743, upload-time = "2026-01-10T21:30:34.819Z" },
     { url = "https://files.pythonhosted.org/packages/58/a8/a66a75c3d8f1fb2b83f66007d6455a06a6f6cf5618c3dc35bc9b69dd096e/scipy-1.17.0-cp314-cp314t-win_amd64.whl", hash = "sha256:1ff269abf702f6c7e67a4b7aad981d42871a11b9dd83c58d2d2ea624efbd1088", size = 37098574, upload-time = "2026-01-10T21:30:40.782Z" },
     { url = "https://files.pythonhosted.org/packages/56/a5/df8f46ef7da168f1bc52cd86e09a9de5c6f19cc1da04454d51b7d4f43408/scipy-1.17.0-cp314-cp314t-win_arm64.whl", hash = "sha256:031121914e295d9791319a1875444d55079885bbae5bdc9c5e0f2ee5f09d34ff", size = 25246266, upload-time = "2026-01-10T21:30:45.923Z" },
+]
+
+[[package]]
+name = "sentry-sdk"
+version = "3.0.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "certifi" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5a/25/705f7ede684ad1221c46b82f4dc41946cd3ad674b129fe43e8bbf09dfedb/sentry_sdk-3.0.1.tar.gz", hash = "sha256:f70e3b7e789e2bfbb8d5614615037ab73303647aa7f782cc442452c6289696d7", size = 894494, upload-time = "2026-11-25T13:07:08.45Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a3/42/71f6dc2a1179b54526ca93b429e7311953c944eafb5424ce4ed065a32a25/sentry_sdk-3.0.1-py3-none-any.whl", hash = "sha256:feb0c131d2e497842e968f13363ef5f065f61d2517be005328766bc00e28e4b8", size = 477923, upload-time = "2026-11-25T13:07:06.904Z" },
 ]
 
 [[package]]

@@ -24,8 +24,6 @@ from qfluentwidgets import (
 
 from core.const import (
     EDGE_VOICES,
-    GPT_SOVITS_LANGUAGES,
-    GPT_SOVITS_TEXT_SPLIT_METHODS,
     MINIMAX_ERROR_VOICE_ID,
     MINIMAX_MODELS,
     SUPPORTED_SERVICES,
@@ -322,233 +320,6 @@ class SettingsInterface(ScrollArea):
             parent=self.minimaxGroup,
         )
 
-        # Fish Speech 服务设置组
-        self.fishSpeechGroup = SettingCardGroup('Fish Speech 设置', self.scrollWidget)
-
-        self.fishSpeechApiUrlCard = StrSettingCard(
-            configItem=cfg.fishSpeechApiUrl,
-            icon=FIF.LINK,
-            title='API 地址',
-            content='设置 Fish Speech TTS 服务的 API 地址',
-            parent=self.fishSpeechGroup,
-            placeholder='http://localhost:8080/v1/tts',
-        )
-
-        # GPT-SoVITS 服务设置组
-        self.gptSovitsGroup = SettingCardGroup('GPT-SoVITS 设置', self.scrollWidget)
-
-        self.gptSovitsApiUrlCard = StrSettingCard(
-            configItem=cfg.gptSovitsApiUrl,
-            icon=FIF.LINK,
-            title='API 地址',
-            content='设置 GPT-SoVITS TTS 服务的 API 地址',
-            parent=self.gptSovitsGroup,
-            placeholder='http://localhost:19874',
-        )
-
-        self.gptSovitsSovitsModelCard = StrSettingCard(
-            configItem=cfg.gptSovitsSovitsModel,
-            icon=FIF.DOCUMENT,
-            title='SoVITS 模型权重',
-            content='设置 SoVITS 模型权重文件路径',
-            parent=self.gptSovitsGroup,
-            placeholder='模型文件路径',
-        )
-
-        self.gptSovitsGptModelCard = StrSettingCard(
-            configItem=cfg.gptSovitsGptModel,
-            icon=FIF.DOCUMENT,
-            title='GPT 模型权重',
-            content='设置 GPT 模型权重文件路径',
-            parent=self.gptSovitsGroup,
-            placeholder='模型文件路径',
-        )
-
-        self.gptSovitsTextLangCard = ComboBoxSettingCard(
-            configItem=cfg.gptSovitsTextLang,
-            icon=FIF.LANGUAGE,
-            title='文本语言',
-            content='设置文本语言',
-            texts=GPT_SOVITS_LANGUAGES,
-            parent=self.gptSovitsGroup,
-        )
-
-        self.gptSovitsRefAudioPathCard = StrSettingCard(
-            configItem=cfg.gptSovitsRefAudioPath,
-            icon=FIF.MUSIC,
-            title='参考音频路径',
-            content='设置参考音频文件路径',
-            parent=self.gptSovitsGroup,
-            placeholder='音频文件路径',
-        )
-
-        self.gptSovitsRefTextCard = StrSettingCard(
-            configItem=cfg.gptSovitsRefText,
-            icon=CustomIcon.FORMAT_QUOTE,
-            title='参考文本',
-            content='设置参考音频对应的文本内容',
-            parent=self.gptSovitsGroup,
-            placeholder='参考文本内容',
-        )
-
-        self.gptSovitsRefTextLangCard = ComboBoxSettingCard(
-            configItem=cfg.gptSovitsRefTextLang,
-            icon=FIF.LANGUAGE,
-            title='参考文本语言',
-            content='设置参考文本语言',
-            texts=GPT_SOVITS_LANGUAGES,
-            parent=self.gptSovitsGroup,
-        )
-
-        self.gptSovitsTopKCard = IntSettingCard(
-            configItem=cfg.gptSovitsTopK,
-            icon=FIF.TAG,
-            title='Top K',
-            content='设置采样时的 Top K 值',
-            parent=self.gptSovitsGroup,
-        )
-
-        self.gptSovitsTopPCard = FloatRangeSettingCard(
-            configItem=cfg.gptSovitsTopP,
-            icon=FIF.TAG,
-            title='Top P',
-            content=f'设置采样时的 Top P 值（{cfg.gptSovitsTopP.range[0]}-{cfg.gptSovitsTopP.range[1]}）',
-            step=0.1,
-            decimals=1,
-            parent=self.gptSovitsGroup,
-        )
-
-        self.gptSovitsTemperatureCard = FloatRangeSettingCard(
-            configItem=cfg.gptSovitsTemperature,
-            icon=CustomIcon.THERMOSTAT,
-            title='采样温度',
-            content=f'设置采样温度（{cfg.gptSovitsTemperature.range[0]}-{cfg.gptSovitsTemperature.range[1]}）',
-            step=0.1,
-            decimals=1,
-            parent=self.gptSovitsGroup,
-        )
-
-        self.gptSovitsTextSplitMethodCard = ComboBoxSettingCard(
-            configItem=cfg.gptSovitsTextSplitMethod,
-            icon=FIF.CUT,
-            title='文本切分方式',
-            content='设置文本切分方式',
-            texts=GPT_SOVITS_TEXT_SPLIT_METHODS,
-            parent=self.gptSovitsGroup,
-        )
-
-        self.gptSovitsSpeedFactorCard = FloatRangeSettingCard(
-            configItem=cfg.gptSovitsSpeedFactor,
-            icon=FIF.SPEED_OFF,
-            title='语速调整',
-            content=f'设置语速调整系数（{cfg.gptSovitsSpeedFactor.range[0]}-{cfg.gptSovitsSpeedFactor.range[1]}）',
-            step=0.1,
-            decimals=1,
-            parent=self.gptSovitsGroup,
-        )
-
-        self.gptSovitsRefTextFreeCard = SwitchSettingCard(
-            icon=FIF.CHECKBOX,
-            title='无参考文本模式',
-            content='是否启用无参考文本模式',
-            configItem=cfg.gptSovitsRefTextFree,
-            parent=self.gptSovitsGroup,
-        )
-
-        self.gptSovitsSampleStepsCard = IntSettingCard(
-            configItem=cfg.gptSovitsSampleSteps,
-            icon=CustomIcon.STAIRS,
-            title='采样步数',
-            content='设置采样步数',
-            parent=self.gptSovitsGroup,
-        )
-
-        self.gptSovitsSuperSamplingCard = SwitchSettingCard(
-            icon=FIF.ZOOM,
-            title='超采样',
-            content='是否启用超采样',
-            configItem=cfg.gptSovitsSuperSampling,
-            parent=self.gptSovitsGroup,
-        )
-
-        self.gptSovitsPauseSecondsCard = FloatRangeSettingCard(
-            configItem=cfg.gptSovitsPauseSeconds,
-            icon=FIF.PAUSE,
-            title='句间停顿秒数',
-            content=f'设置句间停顿时长（{cfg.gptSovitsPauseSeconds.range[0]}-{cfg.gptSovitsPauseSeconds.range[1]}秒）',
-            step=0.1,
-            decimals=1,
-            parent=self.gptSovitsGroup,
-        )
-
-        # Piper 服务设置组
-        self.piperGroup = SettingCardGroup('Piper 设置', self.scrollWidget)
-
-        self.piperApiUrlCard = StrSettingCard(
-            configItem=cfg.piperApiUrl,
-            icon=FIF.LINK,
-            title='API 地址',
-            content='设置 Piper TTS 服务的 API 地址',
-            parent=self.piperGroup,
-            placeholder='http://localhost:5000',
-        )
-
-        self.piperVoiceCard = StrSettingCard(
-            configItem=cfg.piperVoice,
-            icon=FIF.ROBOT,
-            title='语音模型',
-            content='设置 Piper TTS 使用的语音模型',
-            parent=self.piperGroup,
-            placeholder='语音模型名称',
-        )
-
-        self.piperSpeakerCard = StrSettingCard(
-            configItem=cfg.piperSpeaker,
-            icon=FIF.CHAT,
-            title='说话者',
-            content='设置多说话者模型的说话者',
-            parent=self.piperGroup,
-            placeholder='说话者名称',
-        )
-
-        self.piperSpeakerIdCard = IntSettingCard(
-            configItem=cfg.piperSpeakerId,
-            icon=FIF.TAG,
-            title='说话者ID',
-            content='设置多说话者模型的说话者ID（会覆盖名称设置）',
-            parent=self.piperGroup,
-        )
-
-        self.piperLengthScaleCard = FloatRangeSettingCard(
-            configItem=cfg.piperLengthScale,
-            icon=FIF.SPEED_OFF,
-            title='模型语速',
-            content='设置模型的说话语速（持续时间系数, 值越大越慢）',
-            step=0.1,
-            decimals=1,
-            parent=self.piperGroup,
-        )
-
-        self.piperNoiseScaleCard = FloatRangeSettingCard(
-            configItem=cfg.piperNoiseScale,
-            icon=FIF.PALETTE,
-            title='模型噪声比例',
-            content='设置模型的噪声比例（语音变化程度）',
-            step=0.001,
-            decimals=3,
-            parent=self.piperGroup,
-        )
-
-        self.piperNoiseWScaleCard = FloatRangeSettingCard(
-            configItem=cfg.piperNoiseWScale,
-            icon=FIF.PALETTE,
-            title='模型噪声宽度',
-            content='设置模型的噪声宽度（音素时长变化程度）',
-            step=0.01,
-            decimals=2,
-            parent=self.piperGroup,
-        )
-
         # Edge 服务设置组
         self.edgeGroup = SettingCardGroup('Edge TTS 设置', self.scrollWidget)
 
@@ -599,6 +370,17 @@ class SettingsInterface(ScrollArea):
             content='设置音频输出设备',
             parent=self.playerGroup,
             texts=[device.name for device in audio_player.get_output_devices()],
+        )
+
+        # 诊断设置组
+        self.diagnosticsGroup = SettingCardGroup('诊断', self.scrollWidget)
+
+        self.telemetryCard = SwitchSettingCard(
+            icon=FIF.FEEDBACK,
+            title='匿名错误上报',
+            content='把所有报错、异常堆栈与日志发送到 Sentry，不包含密钥、弹幕与登录信息',
+            configItem=cfg.telemetryEnabled,
+            parent=self.diagnosticsGroup,
         )
 
         # 初始化布局
@@ -707,36 +489,6 @@ class SettingsInterface(ScrollArea):
         self.minimaxGroup.addSettingCard(self.minimaxVolCard)
         self.minimaxGroup.addSettingCard(self.minimaxPitchCard)
 
-        # 添加 Fish Speech 服务设置卡片
-        self.fishSpeechGroup.addSettingCard(self.fishSpeechApiUrlCard)
-
-        # 添加 GPT-SoVITS 服务设置卡片
-        self.gptSovitsGroup.addSettingCard(self.gptSovitsApiUrlCard)
-        self.gptSovitsGroup.addSettingCard(self.gptSovitsSovitsModelCard)
-        self.gptSovitsGroup.addSettingCard(self.gptSovitsGptModelCard)
-        self.gptSovitsGroup.addSettingCard(self.gptSovitsTextLangCard)
-        self.gptSovitsGroup.addSettingCard(self.gptSovitsRefAudioPathCard)
-        self.gptSovitsGroup.addSettingCard(self.gptSovitsRefTextCard)
-        self.gptSovitsGroup.addSettingCard(self.gptSovitsRefTextLangCard)
-        self.gptSovitsGroup.addSettingCard(self.gptSovitsTopKCard)
-        self.gptSovitsGroup.addSettingCard(self.gptSovitsTopPCard)
-        self.gptSovitsGroup.addSettingCard(self.gptSovitsTemperatureCard)
-        self.gptSovitsGroup.addSettingCard(self.gptSovitsTextSplitMethodCard)
-        self.gptSovitsGroup.addSettingCard(self.gptSovitsSpeedFactorCard)
-        self.gptSovitsGroup.addSettingCard(self.gptSovitsRefTextFreeCard)
-        self.gptSovitsGroup.addSettingCard(self.gptSovitsSampleStepsCard)
-        self.gptSovitsGroup.addSettingCard(self.gptSovitsSuperSamplingCard)
-        self.gptSovitsGroup.addSettingCard(self.gptSovitsPauseSecondsCard)
-
-        # 添加 Piper 服务设置卡片
-        self.piperGroup.addSettingCard(self.piperApiUrlCard)
-        self.piperGroup.addSettingCard(self.piperVoiceCard)
-        self.piperGroup.addSettingCard(self.piperSpeakerCard)
-        self.piperGroup.addSettingCard(self.piperSpeakerIdCard)
-        self.piperGroup.addSettingCard(self.piperLengthScaleCard)
-        self.piperGroup.addSettingCard(self.piperNoiseScaleCard)
-        self.piperGroup.addSettingCard(self.piperNoiseWScaleCard)
-
         # 添加 Edge 服务设置卡片
         self.edgeGroup.addSettingCard(self.edgeVoiceCard)
         self.edgeGroup.addSettingCard(self.edgeRateCard)
@@ -746,6 +498,9 @@ class SettingsInterface(ScrollArea):
         # 添加播放器设置卡片
         self.playerGroup.addSettingCard(self.playerDeviceCard)
 
+        # 添加诊断设置卡片
+        self.diagnosticsGroup.addSettingCard(self.telemetryCard)
+
         # 设置展开布局
         self.expandLayout.setSpacing(28)
         self.expandLayout.setContentsMargins(36, 10, 36, 0)
@@ -754,10 +509,8 @@ class SettingsInterface(ScrollArea):
         self.expandLayout.addWidget(self.playerGroup)
         self.expandLayout.addWidget(self.ttsGroup)
         self.expandLayout.addWidget(self.minimaxGroup)
-        self.expandLayout.addWidget(self.fishSpeechGroup)
-        self.expandLayout.addWidget(self.gptSovitsGroup)
-        self.expandLayout.addWidget(self.piperGroup)
         self.expandLayout.addWidget(self.edgeGroup)
+        self.expandLayout.addWidget(self.diagnosticsGroup)
 
         # 设置滚动区域
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)

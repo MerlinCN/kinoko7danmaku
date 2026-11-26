@@ -4,10 +4,11 @@ import json
 
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, override
+from typing import Any, cast, override
 
 import httpx
 
+from loguru import logger
 from qfluentwidgets import (
     BoolValidator,
     ConfigItem,
@@ -25,13 +26,12 @@ from models.service import ServiceType
 from .const import (
     DATA_DIR,
     EDGE_VOICES,
-    GPT_SOVITS_LANGUAGES,
-    GPT_SOVITS_TEXT_SPLIT_METHODS,
     MINIMAX_ERROR_VOICE_ID,
     MINIMAX_MODELS,
     SUPPORTED_SERVICES,
 )
 from .player import audio_player
+from .secret import decrypt, encrypt, is_encrypted
 
 
 class ConfigGroup(StrEnum):
@@ -40,11 +40,10 @@ class ConfigGroup(StrEnum):
     BILI_SERVICE = 'BiliService'
     TTS_SERVICE = 'TTSService'
     MINIMAX_SERVICE = 'MinimaxService'
-    FISH_SPEECH_SERVICE = 'FishSpeechService'
-    GPT_SOVITS_SERVICE = 'GptSovitsService'
-    PIPER_SERVICE = 'PiperService'
+    OMNIVOICE_SERVICE = 'OmniVoiceService'
     EDGE_SERVICE = 'EdgeService'
     PLAYER = 'Player'
+    DIAGNOSTICS = 'Diagnostics'
 
 
 class ConfigKey(StrEnum):
@@ -81,35 +80,9 @@ class ConfigKey(StrEnum):
     MINIMAX_VOL = 'Vol'
     MINIMAX_PITCH = 'Pitch'
 
-    # Fish Speech 服务
-    FISH_SPEECH_API_URL = 'ApiUrl'
-
-    # GPT-SoVITS 服务
-    GPT_SOVITS_API_URL = 'ApiUrl'
-    GPT_SOVITS_SOVITS_MODEL = 'SovitsModel'
-    GPT_SOVITS_GPT_MODEL = 'GptModel'
-    GPT_SOVITS_TEXT_LANG = 'TextLang'
-    GPT_SOVITS_REF_AUDIO_PATH = 'RefAudioPath'
-    GPT_SOVITS_REF_TEXT = 'RefText'
-    GPT_SOVITS_REF_TEXT_LANG = 'RefTextLang'
-    GPT_SOVITS_TOP_K = 'TopK'
-    GPT_SOVITS_TOP_P = 'TopP'
-    GPT_SOVITS_TEMPERATURE = 'Temperature'
-    GPT_SOVITS_TEXT_SPLIT_METHOD = 'TextSplitMethod'
-    GPT_SOVITS_SPEED_FACTOR = 'SpeedFactor'
-    GPT_SOVITS_REF_TEXT_FREE = 'RefTextFree'
-    GPT_SOVITS_SAMPLE_STEPS = 'SampleSteps'
-    GPT_SOVITS_SUPER_SAMPLING = 'SuperSampling'
-    GPT_SOVITS_PAUSE_SECONDS = 'PauseSeconds'
-
-    # Piper 服务
-    PIPER_API_URL = 'ApiUrl'
-    PIPER_VOICE = 'Voice'
-    PIPER_SPEAKER = 'Speaker'
-    PIPER_SPEAKER_ID = 'SpeakerId'
-    PIPER_LENGTH_SCALE = 'LengthScale'
-    PIPER_NOISE_SCALE = 'NoiseScale'
-    PIPER_NOISE_W_SCALE = 'NoiseWScale'
+    # OmniVoice 本地服务
+    OMNIVOICE_PORT = 'Port'
+    OMNIVOICE_HF_ENDPOINT = 'HfEndpoint'
 
     # Edge 服务
     EDGE_VOICE = 'Voice'
@@ -125,6 +98,9 @@ class ConfigKey(StrEnum):
 
     # 音色字典
     VOICE_DICT = 'VoiceDict'
+
+    # 诊断
+    TELEMETRY_ENABLED = 'TelemetryEnabled'
 
 
 class DictValidator(ConfigValidator):
@@ -438,166 +414,19 @@ class Config(QConfig):
         validator=RangeValidator(-12, 12),
     )
 
-    # Fish Speech TTS 服务配置
-    fishSpeechApiUrl = ConfigItem(
-        group=ConfigGroup.FISH_SPEECH_SERVICE,
-        name=ConfigKey.FISH_SPEECH_API_URL,
-        default='http://localhost:8080/v1/tts',
-    )
-
-    # GPT-SoVITS TTS 服务配置
-    gptSovitsApiUrl = ConfigItem(
-        group=ConfigGroup.GPT_SOVITS_SERVICE,
-        name=ConfigKey.GPT_SOVITS_API_URL,
-        default='http://localhost:19874',
-    )
-
-    gptSovitsSovitsModel = ConfigItem(
-        group=ConfigGroup.GPT_SOVITS_SERVICE,
-        name=ConfigKey.GPT_SOVITS_SOVITS_MODEL,
-        default='',
-    )
-
-    gptSovitsGptModel = ConfigItem(
-        group=ConfigGroup.GPT_SOVITS_SERVICE,
-        name=ConfigKey.GPT_SOVITS_GPT_MODEL,
-        default='',
-    )
-
-    gptSovitsTextLang = OptionsConfigItem(
-        group=ConfigGroup.GPT_SOVITS_SERVICE,
-        name=ConfigKey.GPT_SOVITS_TEXT_LANG,
-        default='auto',
-        validator=OptionsValidator(GPT_SOVITS_LANGUAGES),
-    )
-
-    gptSovitsRefAudioPath = ConfigItem(
-        group=ConfigGroup.GPT_SOVITS_SERVICE,
-        name=ConfigKey.GPT_SOVITS_REF_AUDIO_PATH,
-        default='',
-    )
-
-    gptSovitsRefText = ConfigItem(
-        group=ConfigGroup.GPT_SOVITS_SERVICE,
-        name=ConfigKey.GPT_SOVITS_REF_TEXT,
-        default='',
-    )
-
-    gptSovitsRefTextLang = OptionsConfigItem(
-        group=ConfigGroup.GPT_SOVITS_SERVICE,
-        name=ConfigKey.GPT_SOVITS_REF_TEXT_LANG,
-        default='auto',
-        validator=OptionsValidator(GPT_SOVITS_LANGUAGES),
-    )
-
-    gptSovitsTopK = ConfigItem(
-        group=ConfigGroup.GPT_SOVITS_SERVICE,
-        name=ConfigKey.GPT_SOVITS_TOP_K,
-        default=5,
+    # OmniVoice 本地服务配置
+    omnivoicePort = ConfigItem(
+        group=ConfigGroup.OMNIVOICE_SERVICE,
+        name=ConfigKey.OMNIVOICE_PORT,
+        default=8017,
         validator=IntValidator(),
     )
 
-    gptSovitsTopP = RangeConfigItem(
-        group=ConfigGroup.GPT_SOVITS_SERVICE,
-        name=ConfigKey.GPT_SOVITS_TOP_P,
-        default=1.0,
-        validator=RangeValidator(0.0, 1.0),
-    )
-
-    gptSovitsTemperature = RangeConfigItem(
-        group=ConfigGroup.GPT_SOVITS_SERVICE,
-        name=ConfigKey.GPT_SOVITS_TEMPERATURE,
-        default=1.0,
-        validator=RangeValidator(0.0, 2.0),
-    )
-
-    gptSovitsTextSplitMethod = OptionsConfigItem(
-        group=ConfigGroup.GPT_SOVITS_SERVICE,
-        name=ConfigKey.GPT_SOVITS_TEXT_SPLIT_METHOD,
-        default='不切',
-        validator=OptionsValidator(GPT_SOVITS_TEXT_SPLIT_METHODS),
-    )
-
-    gptSovitsSpeedFactor = RangeConfigItem(
-        group=ConfigGroup.GPT_SOVITS_SERVICE,
-        name=ConfigKey.GPT_SOVITS_SPEED_FACTOR,
-        default=1.0,
-        validator=RangeValidator(0.5, 2.0),
-    )
-
-    gptSovitsRefTextFree = ConfigItem(
-        group=ConfigGroup.GPT_SOVITS_SERVICE,
-        name=ConfigKey.GPT_SOVITS_REF_TEXT_FREE,
-        default=False,
-        validator=BoolValidator(),
-    )
-
-    gptSovitsSampleSteps = ConfigItem(
-        group=ConfigGroup.GPT_SOVITS_SERVICE,
-        name=ConfigKey.GPT_SOVITS_SAMPLE_STEPS,
-        default=8,
-        validator=IntValidator(),
-    )
-
-    gptSovitsSuperSampling = ConfigItem(
-        group=ConfigGroup.GPT_SOVITS_SERVICE,
-        name=ConfigKey.GPT_SOVITS_SUPER_SAMPLING,
-        default=False,
-        validator=BoolValidator(),
-    )
-
-    gptSovitsPauseSeconds = RangeConfigItem(
-        group=ConfigGroup.GPT_SOVITS_SERVICE,
-        name=ConfigKey.GPT_SOVITS_PAUSE_SECONDS,
-        default=0.3,
-        validator=RangeValidator(0.0, 5.0),
-    )
-
-    # Piper TTS 服务配置
-    piperApiUrl = ConfigItem(
-        group=ConfigGroup.PIPER_SERVICE,
-        name=ConfigKey.PIPER_API_URL,
-        default='http://localhost:5000',
-    )
-
-    piperVoice = ConfigItem(
-        group=ConfigGroup.PIPER_SERVICE,
-        name=ConfigKey.PIPER_VOICE,
-        default='',
-    )
-
-    piperSpeaker = ConfigItem(
-        group=ConfigGroup.PIPER_SERVICE,
-        name=ConfigKey.PIPER_SPEAKER,
-        default='',
-    )
-
-    piperSpeakerId = ConfigItem(
-        group=ConfigGroup.PIPER_SERVICE,
-        name=ConfigKey.PIPER_SPEAKER_ID,
-        default=0,
-        validator=IntValidator(),
-    )
-
-    piperLengthScale = RangeConfigItem(
-        group=ConfigGroup.PIPER_SERVICE,
-        name=ConfigKey.PIPER_LENGTH_SCALE,
-        default=1.0,
-        validator=RangeValidator(0.0, 3.0),
-    )
-
-    piperNoiseScale = RangeConfigItem(
-        group=ConfigGroup.PIPER_SERVICE,
-        name=ConfigKey.PIPER_NOISE_SCALE,
-        default=0.667,
-        validator=RangeValidator(0.0, 1.0),
-    )
-
-    piperNoiseWScale = RangeConfigItem(
-        group=ConfigGroup.PIPER_SERVICE,
-        name=ConfigKey.PIPER_NOISE_W_SCALE,
-        default=0.8,
-        validator=RangeValidator(0.0, 1.0),
+    omnivoiceHfEndpoint = OptionsConfigItem(
+        group=ConfigGroup.OMNIVOICE_SERVICE,
+        name=ConfigKey.OMNIVOICE_HF_ENDPOINT,
+        default='https://hf-mirror.com',
+        validator=OptionsValidator(['https://hf-mirror.com', 'https://huggingface.co']),
     )
 
     # Edge TTS 服务配置
@@ -636,6 +465,37 @@ class Config(QConfig):
         default=audio_player.default_output_index,  # 在实际使用时会通过 validator 修正为有效值
         validator=OutputDeviceValidator(),
     )
+
+    # 诊断
+    telemetryEnabled = ConfigItem(
+        group=ConfigGroup.DIAGNOSTICS,
+        name=ConfigKey.TELEMETRY_ENABLED,
+        default=True,
+        validator=BoolValidator(),
+    )
+
+    @override
+    def toDict(self, serialize: bool = True) -> dict[str, Any]:
+        """导出配置，写入文件前加密敏感字段
+
+        Args:
+            serialize: 是否使用 ConfigItem 的序列化结果
+
+        Returns:
+            配置字典，敏感字段为密文
+        """
+        data = super().toDict(serialize)
+        for item in SECRET_ITEMS:
+            group = cast('dict[str, str]', data[item.group])
+            value = group[item.name]
+            if not value or is_encrypted(value):
+                continue
+            try:
+                group[item.name] = encrypt(value)
+            except Exception as e:
+                # 加密失败不能丢配置，宁可这次写明文并留下告警
+                logger.warning(f'敏感配置加密失败: {e!r}')
+        return data
 
 
 def _migrate_voice_dict_to_minimax(config_path: Path) -> None:
@@ -688,3 +548,23 @@ _preload_voice_dict(DATA_DIR / 'config.json')
 
 # 加载配置文件
 qconfig.load(str(DATA_DIR / 'config.json'), cfg)
+
+SECRET_ITEMS = (Config.minimaxApiKey,)
+
+
+def _decrypt_secrets() -> None:
+    """把配置里的敏感字段解密回内存，并把遗留的明文重新加密保存"""
+    plaintext = False
+    for item in SECRET_ITEMS:
+        value = cast('str', item.value)
+        if not value:
+            continue
+        if is_encrypted(value):
+            item.value = decrypt(value)
+        else:
+            plaintext = True
+    if plaintext:
+        qconfig.save()
+
+
+_decrypt_secrets()
