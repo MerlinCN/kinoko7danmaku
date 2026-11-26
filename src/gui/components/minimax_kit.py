@@ -4,15 +4,30 @@
 """
 
 from PySide6.QtCore import QRectF, Qt
-from PySide6.QtGui import QColor, QFont, QLinearGradient, QPaintEvent, QPainter
+from PySide6.QtGui import QColor, QFont, QIcon, QLinearGradient, QPaintEvent, QPainter
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QWidget
 from qfluentwidgets import BodyLabel, CaptionLabel, CardWidget, TitleLabel
 from qfluentwidgets.common.font import getFont
+from qfluentwidgets.common.icon import FluentIconBase
 
 ACCENT = '#e73562'
 ACCENT_SOFT = 'rgba(231, 53, 98, 38)'
 INK = '#181e25'
 INK_END = '#242c35'
+
+
+def hero_icon(icon: FluentIconBase) -> QIcon:
+    """主视觉卡片上的按钮图标
+
+    卡片背景恒为深色，图标固定用白色，否则浅色主题下取到的是黑色图标，糊在背景里看不见。
+
+    Args:
+        icon: qfluentwidgets 图标
+
+    Returns:
+        白色版本图标
+    """
+    return icon.icon(color='#ffffff')
 
 
 def accent_button_qss(accent: str = ACCENT) -> str:
@@ -28,6 +43,7 @@ def accent_button_qss(accent: str = ACCENT) -> str:
         f'PushButton{{background:{accent};color:white;border:none;border-radius:6px;padding:6px 18px;}}'
         'PushButton:hover{background:rgba(255, 255, 255, 26);}'
         'PushButton:pressed{background:rgba(0, 0, 0, 40);}'
+        'PushButton:disabled{background:rgba(255, 255, 255, 24);color:rgba(255, 255, 255, 110);}'
     )
 
 
@@ -42,6 +58,7 @@ def ghost_button_qss() -> str:
         'border-radius:6px;padding:6px 18px;}'
         'PushButton:hover{background:rgba(255,255,255,20);}'
         'PushButton:pressed{background:rgba(255,255,255,10);}'
+        'PushButton:disabled{background:transparent;color:rgba(255,255,255,100);border:1px solid rgba(255,255,255,36);}'
     )
 
 

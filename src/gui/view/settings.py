@@ -378,7 +378,7 @@ class SettingsInterface(ScrollArea):
         self.telemetryCard = SwitchSettingCard(
             icon=FIF.FEEDBACK,
             title='匿名错误上报',
-            content='崩溃时把异常堆栈、日志和系统信息发送到 Sentry，不包含密钥、弹幕与登录信息',
+            content='把所有报错、异常堆栈与日志发送到 Sentry，不包含密钥、弹幕与登录信息',
             configItem=cfg.telemetryEnabled,
             parent=self.diagnosticsGroup,
         )

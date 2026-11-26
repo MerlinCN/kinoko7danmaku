@@ -43,7 +43,7 @@ from core.omnivoice_settings import load_settings, save_settings
 from core.player import audio_player
 from core.qconfig import cfg
 from gui.components import HeroCard, IntSettingCard, MetricTile
-from gui.components.minimax_kit import accent_button_qss, ghost_button_qss
+from gui.components.minimax_kit import accent_button_qss, ghost_button_qss, hero_icon
 from models.service import ServiceType
 from tts_service.omnivoice import OmniVoiceService
 
@@ -106,22 +106,22 @@ class OmniVoiceInterface(QWidget):
             accent=ACCENT,
         )
         self.install_button = PushButton('安装本地运行时', self.hero)
-        self.install_button.setIcon(FIF.DOWNLOAD)
+        self.install_button.setIcon(hero_icon(FIF.DOWNLOAD))
         setCustomStyleSheet(self.install_button, accent_button_qss(ACCENT), accent_button_qss(ACCENT))
         self.hero.add_action(self.install_button)
 
         self.start_button = PushButton('启动服务', self.hero)
-        self.start_button.setIcon(FIF.PLAY)
+        self.start_button.setIcon(hero_icon(FIF.PLAY))
         setCustomStyleSheet(self.start_button, accent_button_qss(ACCENT), accent_button_qss(ACCENT))
         self.hero.add_action(self.start_button)
 
         self.stop_button = PushButton('停止服务', self.hero)
-        self.stop_button.setIcon(FIF.PAUSE)
+        self.stop_button.setIcon(hero_icon(FIF.PAUSE))
         setCustomStyleSheet(self.stop_button, ghost_button_qss(), ghost_button_qss())
         self.hero.add_action(self.stop_button)
 
         self.use_button = PushButton('设为当前 TTS', self.hero)
-        self.use_button.setIcon(FIF.ACCEPT)
+        self.use_button.setIcon(hero_icon(FIF.ACCEPT))
         setCustomStyleSheet(self.use_button, accent_button_qss(ACCENT), accent_button_qss(ACCENT))
         self.hero.add_action(self.use_button)
 
