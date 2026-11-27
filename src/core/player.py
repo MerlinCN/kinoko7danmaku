@@ -22,29 +22,32 @@ class StreamPlayer:
         return sd.default.device[1]
 
     def get_output_devices(self) -> list[OutputDevice]:
-        """获取设备选择列表（使用sounddevice）- 返回元组列表格式"""
+        """获取输出设备列表
 
-        # 获取所有设备
+        Returns:
+            可用的输出设备；系统没有任何输出设备时返回空列表
+        """
         all_devices: list[dict] = sd.query_devices()  # type: ignore
-        # 如果没有输出设备就报错
-        if len(all_devices) == 0:
-            raise RuntimeError('没有找到输出设备')
-        default_output_index: int = sd.default.device[1]  # type: ignore
+        if not all_devices:
+            return []
 
-        default_output_device: dict = all_devices[default_output_index]  # type: ignore
+        hostapis: list[dict] = sd.query_hostapis()  # type: ignore
+        default_index: int = sd.default.device[1]  # type: ignore
+        # 只保留与默认设备同一套 hostapi 的条目，避免同一个设备被多个 API 重复列出
+        default_api = (
+            hostapis[all_devices[default_index]['hostapi']]['name']  # type: ignore
+            if 0 <= default_index < len(all_devices)
+            else ''
+        )
 
         choices = []
-
-        default_api: str = sd.query_hostapis()[default_output_device['hostapi']]['name']  # type: ignore
-        # 遍历所有设备，只添加纯输出设备
-        for idx, device in enumerate(all_devices):
+        for index, device in enumerate(all_devices):
             if device['max_output_channels'] <= 0:
                 continue
-            name = device['name']
-            api_name: str = sd.query_hostapis()[device['hostapi']]['name']  # type: ignore
-            if default_api not in api_name:
+            api_name: str = hostapis[device['hostapi']]['name']  # type: ignore
+            if default_api and default_api not in api_name:
                 continue
-            choices.append(OutputDevice(index=idx, name=name))  # (显示名称, 实际索引)
+            choices.append(OutputDevice(index=index, name=device['name']))
 
         return choices
 
@@ -78,6 +81,9 @@ class StreamPlayer:
         try:
             if device_index == -1:
                 device_index = sd.default.device[1]  # type: ignore
+            if device_index < 0:
+                logger.warning('未检测到输出设备，跳过设备切换')
+                return False
             device_info: dict = sd.query_devices(device_index)  # type: ignore
             if int(device_info['max_output_channels']) > 0:  # type: ignore
                 logger.info(f'已设置输出设备: {device_info["name"]}')

@@ -142,10 +142,22 @@ class OutputDeviceValidator(OptionsValidator):
     """输出设备验证器
 
     动态获取输出设备列表，验证设备索引是否有效。
+    系统没有输出设备时用 -1（跟随系统默认设备）占位，
+    否则下拉框没有任何可选项，界面构造会直接失败。
     """
 
     def __init__(self) -> None:
-        self.options = [device.index for device in audio_player.get_output_devices()]
+        self._refresh()
+
+    def _refresh(self) -> list[int]:
+        """刷新可选项
+
+        Returns:
+            有效的设备索引；没有输出设备时为 [-1]
+        """
+        indexes = [device.index for device in audio_player.get_output_devices()]
+        self.options = indexes or [-1]
+        return self.options
 
     @override
     def validate(self, value: object) -> bool:
@@ -157,9 +169,7 @@ class OutputDeviceValidator(OptionsValidator):
         Returns:
             bool: 索引是否有效
         """
-
-        self.options = [device.index for device in audio_player.get_output_devices()]
-        return value in self.options
+        return value in self._refresh()
 
     @override
     def correct(self, value: object) -> int:
@@ -169,9 +179,11 @@ class OutputDeviceValidator(OptionsValidator):
             value: 设备索引
 
         Returns:
-            int: 有效的设备索引
+            int: 有效的设备索引；没有输出设备时为 -1
         """
-        return value if self.validate(value) else self.options[0]
+        if self.validate(value):
+            return cast('int', value)
+        return self.options[0]
 
 
 class VoiceIdValidator(ConfigValidator):
