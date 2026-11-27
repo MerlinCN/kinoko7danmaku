@@ -14,8 +14,24 @@ from loguru import logger
 from qasync import QApplication, QEventLoop
 
 from core.const import DATA_DIR
-from core.telemetry import init_telemetry, install_loop_hook
+from core.selftest import SELFTEST, write_report
+from core.telemetry import TELEMETRY_FILE, init_telemetry, install_loop_hook
 from gui import MainWindow
+
+
+def run_selftest() -> int:
+    """构建主窗口并绘制一帧，验证打包产物的依赖与资源
+
+    不跑事件循环、不显示窗口，所以不会触发登录恢复、房间信息、更新检查等网络请求。
+
+    Returns:
+        进程退出码，0 表示通过；失败时 traceback 由 `core.selftest` 的钩子写进报告
+    """
+    _app = QApplication([sys.argv[0]])
+    window = MainWindow()
+    window.grab()
+    write_report(f'ok\ntelemetry: {"已注入" if TELEMETRY_FILE.exists() else "未注入"}')
+    return 0
 
 
 def main() -> None:
@@ -71,4 +87,4 @@ def main() -> None:
 
 if __name__ == '__main__':
     multiprocessing.freeze_support()
-    main()
+    sys.exit(run_selftest() if SELFTEST else main())

@@ -35,10 +35,19 @@ jobs:
           }
           echo "version=$version" >> $env:GITHUB_OUTPUT
 
-      - name: Install dependencies
+      - name: Verify version matches tag
+        shell: pwsh
+        env:
+          TAG_VERSION: ${{ steps.get_version.outputs.version }}
         run: |
-          uv sync --dev
-          uv add pyinstaller
+          $version = (python -c "import pathlib, tomllib; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text(encoding='utf-8'))['project']['version'])").Trim()
+          if ($version -ne $env:TAG_VERSION) {
+            throw "pyproject.toml 的版本 $version 与 tag v$env:TAG_VERSION 不一致"
+          }
+          Write-Host "版本校验通过：$version"
+
+      - name: Install dependencies
+        run: uv sync --dev
 
       - name: Inject telemetry config
         shell: pwsh
@@ -54,6 +63,31 @@ jobs:
 
       - name: Build with PyInstaller
         run: uv run pyinstaller kinoko7danmaku.spec
+
+      - name: Smoke test packaged exe
+        shell: pwsh
+        run: |
+          # 判定以报告内容为准：报告是在主窗口构建并绘制完成之后才写的，
+          # 进程退出阶段的抖动不该拦发布
+          $report = "selftest.txt"
+          Remove-Item $report -ErrorAction SilentlyContinue
+          $p = Start-Process "dist/Kinoko7Danmaku.exe" -ArgumentList '--selftest' `
+                 -WorkingDirectory (Get-Location) -PassThru -WindowStyle Hidden
+          if (-not $p.WaitForExit(180000)) {
+            $p.Kill()
+            throw "自检超时（180s）"
+          }
+          if (-not (Test-Path $report)) {
+            throw "自检没有产出报告，退出码 $($p.ExitCode)"
+          }
+          $content = Get-Content $report -Raw
+          Write-Host $content
+          if (-not $content.TrimStart().StartsWith('ok')) {
+            throw "自检失败，退出码 $($p.ExitCode)"
+          }
+          if ($p.ExitCode -ne 0) {
+            Write-Warning "自检通过，但进程退出码为 $($p.ExitCode)"
+          }
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
