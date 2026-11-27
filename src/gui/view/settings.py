@@ -363,14 +363,16 @@ class SettingsInterface(ScrollArea):
         # 播放器设置组
         self.playerGroup = SettingCardGroup('音频设置', self.scrollWidget)
 
+        devices = audio_player.get_output_devices()
         self.playerDeviceCard = ComboBoxSettingCard(
             configItem=cfg.playerDevice,
             icon=FIF.SPEAKERS,
             title='输出设备',
             content='设置音频输出设备',
             parent=self.playerGroup,
-            texts=[device.name for device in audio_player.get_output_devices()],
+            texts=[device.name for device in devices] or ['未检测到输出设备'],
         )
+        self.playerDeviceCard.setEnabled(bool(devices))
 
         # 诊断设置组
         self.diagnosticsGroup = SettingCardGroup('诊断', self.scrollWidget)
